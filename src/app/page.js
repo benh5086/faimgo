@@ -13,7 +13,7 @@ export default function Home() {
           <a href="#how-it-works" className="text-sm font-medium" style={{color: '#FAF7F2'}}>How It Works</a>
           <a href="#examples" className="text-sm font-medium" style={{color: '#FAF7F2'}}>Examples</a>
           <a href="#faq" className="text-sm font-medium" style={{color: '#FAF7F2'}}>FAQ</a>
-          <a href="#start" className="px-5 py-2 rounded-full text-sm font-semibold transition-all"
+          <a href="/assessment" className="px-5 py-2 rounded-full text-sm font-semibold transition-all"
             style={{backgroundColor: '#C49A3C', color: '#1B3A2D'}}>
             Get Started
           </a>
@@ -23,10 +23,10 @@ export default function Home() {
       {/* Hero */}
       <section className="px-8 py-24 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
         <div className="flex-1">
-          <span className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-sm font-medium mb-6"
+          <a href="/assessment" className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-sm font-medium mb-6"
             style={{backgroundColor: '#F0EBE1', color: '#1B3A2D'}}>
             ● NEW &nbsp; Take the 3–5 minute assessment →
-          </span>
+          </a>
           <h1 className="text-5xl font-bold leading-tight mb-6" style={{color: '#1B3A2D'}}>
             Find, Aim, and <span style={{color: '#C49A3C'}}>Grow</span> Your Side Income
           </h1>
@@ -36,7 +36,7 @@ export default function Home() {
             Faimgo finds your hidden opportunity and gives you a clear path to act on it.
           </p>
           <div className="flex flex-wrap gap-4">
-            <a href="#start" className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90"
+            <a href="/assessment" className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90"
               style={{backgroundColor: '#1B3A2D', color: '#FAF7F2'}}>
               Start My Assessment
             </a>
@@ -182,7 +182,7 @@ export default function Home() {
           Take the free assessment and get your personalized opportunity map in minutes.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
-          <a href="#" className="px-10 py-4 rounded-full font-semibold text-base transition-all hover:opacity-90"
+          <a href="/assessment" className="px-10 py-4 rounded-full font-semibold text-base transition-all hover:opacity-90"
             style={{backgroundColor: '#C49A3C', color: '#1B3A2D'}}>
             Start Free Assessment
           </a>
