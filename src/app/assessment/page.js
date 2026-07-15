@@ -345,12 +345,12 @@ export default function Assessment() {
         <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
         {rf === "red" && (
           <div className="mt-4 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
-            <b>A heads-up before your results:</b> the path you named is one of the slowest to first dollar, you&apos;re new to it, and you want money this week. Those three don&apos;t fit together — your results will show the honest ramp, plus what actually can pay you this week.
+            <b>A heads-up before your results:</b>{" "}the path you named is one of the slowest to first dollar, you&apos;re new to it, and you want money this week. Those three don&apos;t fit together — your results will show the honest ramp, plus what actually can pay you this week.
           </div>
         )}
         {rf === "yellow" && (
           <div className="mt-4 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.yellowSoft, borderLeft: `4px solid ${C.gold}`, color: C.ink }}>
-            <b>One honest note:</b> the path you named has a longer ramp than your timeline wants. Your results will show the real numbers — and a faster path to run alongside it.
+            <b>One honest note:</b>{" "}the path you named has a longer ramp than your timeline wants. Your results will show the real numbers — and a faster path to run alongside it.
           </div>
         )}
         <p className="mt-3 text-sm" style={{ color: C.gray }}>Down to {pathsInPlay(A)} paths.</p>
@@ -383,16 +383,16 @@ export default function Assessment() {
         <ResultCard key="chosen" badge={vmap[rf][1]} badgeStyle={vmap[rf][0]} icon="🎯" title={`Your Chosen Path: ${p.name}`} meta={`First dollar: typically ${p.dollar} · Ceiling ${"★".repeat(p.ceiling)}`}>
           {rf === "red" && (
             <div className="mb-3 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
-              You want your first dollar <b>this week</b>, from a path that typically takes <b>{p.dollar}</b>, starting with little experience. Possible? Technically. Realistic? No. The honest timeline for you on {p.name.toLowerCase()} is measured in months, not days. If you still want it after reading that — and some people should — here&apos;s step one below, and a second path that pays while you build.
+              You want your first dollar <b>this week</b>, from a path that typically takes <b>{p.dollar}</b>, starting with little experience. Possible? Technically. Realistic? No. The honest timeline for you on {p.name.toLowerCase()}{" "}is measured in months, not days. If you still want it after reading that — and some people should — here&apos;s step one below, and a second path that pays while you build.
             </div>
           )}
           {rf === "yellow" && (
             <div className="mb-3 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.yellowSoft, borderLeft: `4px solid ${C.gold}`, color: C.ink }}>
-              The real ramp for {p.name.toLowerCase()} at your experience level: <b>{p.dollar} at best, usually longer</b>. It&apos;s a good path — it just won&apos;t match the timeline you picked. The second card below is what covers the gap.
+              The real ramp for {p.name.toLowerCase()}{" "}at your experience level: <b>{p.dollar} at best, usually longer</b>. It&apos;s a good path — it just won&apos;t match the timeline you picked. The second card below is what covers the gap.
             </div>
           )}
           <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
-            {whyFits(A, p)} {A.q2 === "money" ? 'One honest note: "it looks like good money" is a reason to test it — not yet a reason to bet on it. The first 3 moves below are the cheapest possible test.' : ""}
+            {whyFits(A, p)}{" "}{A.q2 === "money" ? 'One honest note: "it looks like good money" is a reason to test it — not yet a reason to bet on it. The first 3 moves below are the cheapest possible test.' : ""}
           </p>
           <Moves moves={p.moves} />
           {needsKit(A, p) && p.kit.length > 0 && <Kit items={p.kit} />}
@@ -406,13 +406,13 @@ export default function Assessment() {
             <Moves moves={fw.moves} />
           </ResultCard>,
           <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
-            How they work together: {fw.name} money funds your first months of {p.name.toLowerCase()} — you&apos;re earning by day 30 while the real goal ramps toward day 90.
+            How they work together: {fw.name}{" "}money funds your first months of {p.name.toLowerCase()}{" "}— you&apos;re earning by day 30 while the real goal ramps toward day 90.
           </div>
         );
       } else if (fw && rf === "green") {
         cards.push(
           <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
-            You don&apos;t need a bridge income — your chosen path IS a fast path for you. If you want a backup anyway: {fw.name.toLowerCase()} scored next highest.
+            You don&apos;t need a bridge income — your chosen path IS a fast path for you. If you want a backup anyway: {fw.name.toLowerCase()}{" "}scored next highest.
           </div>
         );
       }
@@ -436,7 +436,7 @@ export default function Assessment() {
       if (lt) cards.push(<LtCard key="lt" lt={lt} />);
       if (fw && lt) cards.push(
         <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
-          How they work together: {fw.name} pays your first 60 days while {lt.name.toLowerCase()} compounds toward the real ceiling.
+          How they work together: {fw.name}{" "}pays your first 60 days while {lt.name.toLowerCase()}{" "}compounds toward the real ceiling.
         </div>
       );
     }
@@ -445,7 +445,7 @@ export default function Assessment() {
         {cards}
         <div className="p-7 rounded-2xl text-center" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
           <h3 className="text-xl font-bold" style={{ color: C.green }}>This is the map. The walkthrough is the product.</h3>
-          <p className="text-sm leading-relaxed my-3" style={{ color: C.ink }}>{tone} Faimgo walks you from these first moves to your first dollar — step by step, honestly.</p>
+          <p className="text-sm leading-relaxed my-3" style={{ color: C.ink }}>{tone}{" "}Faimgo walks you from these first moves to your first dollar — step by step, honestly.</p>
           <a href="/#start" className="inline-block px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
             Start my 30/60/90 →
           </a>
@@ -514,7 +514,7 @@ export default function Assessment() {
               Find your <span style={{ color: C.gold }}>two paths</span>.
             </h1>
             <p className="text-[15px] leading-relaxed mb-6" style={{ color: C.gray }}>
-              Answer honestly — about 3 minutes. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b> and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b> on it. No fluff, no &quot;just believe in yourself.&quot;
+              Answer honestly — about 3 minutes. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b>{" "}and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b>{" "}on it. No fluff, no &quot;just believe in yourself.&quot;
             </p>
             <button onClick={() => setStep(0)} className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
               Start
