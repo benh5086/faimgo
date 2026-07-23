@@ -3,10 +3,11 @@
 import { useState } from "react";
 
 /* ============================================================
-   FAIMGO ASSESSMENT v2
-   Everything tailorable lives in the CONFIG section below:
-   question wording, options, path library, scoring weights,
-   verdict copy. Edit text freely — the engine reads from here.
+   FAIMGO ASSESSMENT v3
+   Shorter (8 questions with a named path, 6 for "match me"),
+   every question passes the dual test: it changes the output
+   AND it leaves the user stronger than it found them.
+   Everything tailorable lives in the CONFIG section below.
    ============================================================ */
 
 /* ---------- BRAND ---------- */
@@ -56,7 +57,7 @@ const PATHS = [
 ];
 const pathById = (id) => PATHS.find((p) => p.id === id);
 
-/* ---------- CONFIG: QUESTIONS ---------- */
+/* ---------- CONFIG: QUESTIONS (v3) ---------- */
 const QUESTIONS = [
   { key: "q1", section: "Your Direction", title: "Do you already have something in mind?", opts: [
     { t: "Yes — a specific thing I want to do", v: "yes" },
@@ -64,115 +65,103 @@ const QUESTIONS = [
     { t: "No — that's why I'm here. Match me.", v: "no" }] },
   { key: "q1b", condKey: "named", section: "Your Direction", title: "Which of these is closest to it?", other: true,
     opts: [...PATHS.map((p) => ({ t: p.plain, v: p.id })), { t: "Something else", v: "other", s: "tell us in a few words" }] },
-  { key: "q2", condKey: "named", section: "Your Direction", title: "What's pulling you toward it?", opts: [
-    { t: "I've done it before, or something close to it", v: "done" },
-    { t: "It's something I love or already do for fun", v: "love" },
-    { t: "It looks like good money", v: "money" },
-    { t: "I've seen others succeed at it and want in", v: "seen" }] },
-  { key: "q3", condKey: "named", section: "Your Direction", title: "How much do you actually know about it?", opts: [
+  { key: "qrel", condKey: "named", section: "Your Direction", title: "What's your relationship with it?", opts: [
     { t: "I've done it professionally or seriously", v: "pro" },
-    { t: "Hobby level — informal but real", v: "hobby" },
-    { t: "I've researched it but never done it", v: "research" },
-    { t: "Almost nothing yet, just interested", v: "none" }] },
-  { key: "q4", section: "Your Direction", title: "How many hours a week can you realistically give this — working on it, learning it, all of it?", opts: [
-    { t: "Less than 5 — squeezing it in", v: "lt5" },
-    { t: "5–10 — a few evenings", v: "5to10" },
+    { t: "I do it informally — it's something I love", v: "hobby" },
+    { t: "I've studied it — the money potential drew me in", v: "moneyresearch" },
+    { t: "Brand new — I'd be learning from day one", v: "new", s: "everyone's day one looks like this" }] },
+  { key: "qhours", section: "Your Direction", title: "How many hours a week can you realistically give this — working on it, learning it, all of it?", opts: [
+    { t: "Less than 5 — squeezing it in", v: "lt5", s: "plenty of paths fit this" },
+    { t: "5–10 — a few evenings", v: "5to10", s: "plenty of paths fit this" },
     { t: "10–20 — serious side commitment", v: "10to20" },
     { t: "20+ — this is a priority", v: "20plus" }] },
   { key: "break1", type: "insight1" },
-  { key: "q5", section: "Your Resources & Reality", title: "How much could you put in to start — without stressing about it?", opts: [
-    { t: "$0 — needs to be free to start", v: "0" },
-    { t: "Under $100", v: "100" },
-    { t: "$100–$500", v: "500" },
-    { t: "$500+ — I can invest in this", v: "500plus" }] },
-  { key: "q6", section: "Your Resources & Reality", title: "What do you already have that could help you start?", multi: true, opts: [
+  { key: "qinv", section: "Your Starting Inventory", title: "What are you already holding that could help you start?", multi: true, sub: "Count what you own — select all that apply.", opts: [
     { t: "A reliable car", v: "car" },
     { t: "A computer + solid internet", v: "computer" },
     { t: "Tools or equipment (lawn, cleaning, craft, camera…)", v: "tools" },
     { t: "Spare space (garage, storage, a spare room)", v: "space" },
-    { t: "None of these right now", v: "none" }] },
-  { key: "q7", section: "Your Resources & Reality", title: "How soon do you want to see your first dollar from this?", opts: [
+    { t: "Some cash I can put in ($100+)", v: "cash" },
+    { t: "None of these right now", v: "none", s: "several paths need nothing but time and follow-through" }] },
+  { key: "qtime", section: "Your Starting Inventory", title: "How soon do you want to see your first dollar from this?", opts: [
     { t: "This week if possible", v: "week" },
     { t: "Within a month", v: "month" },
     { t: "1–3 months is fine", v: "quarter" },
     { t: "No rush — I'm building something bigger", v: "norush" }] },
-  { key: "q8", section: "Your Resources & Reality", title: "Which sounds more like you?", opts: [
-    { t: "Give me guaranteed small money over a risky big win", v: "safe" },
-    { t: "Mostly sure things, with a little upside", v: "mostlysafe" },
-    { t: "Balanced — some safe, some bets", v: "balanced" },
-    { t: "I'll bet my time on a bigger payoff", v: "bet" }] },
   { key: "break2", type: "insight2" },
-  { key: "q9", section: "How You Work", title: "What gives you energy?", opts: [
-    { t: "Being around people, face to face", v: "people" },
-    { t: "People in small doses — online is ideal", v: "online" },
-    { t: "Mostly working alone", v: "alone" },
-    { t: "Strictly solo, headphones on", v: "solo" }] },
-  { key: "q10", section: "How You Work", title: "How do you feel about putting yourself out there online?", opts: [
-    { t: "Love it — camera doesn't scare me", v: "camera" },
-    { t: "Happy to post, prefer not on camera", v: "post" },
-    { t: "Behind the scenes only", v: "behind" },
-    { t: "I'd rather work offline entirely", v: "offline" }] },
-  { key: "q11", section: "How You Work", title: "Which feels most like you?", opts: [
+  { key: "qwork", section: "How You Work", title: "How do you like to work?", opts: [
+    { t: "Face to face with people", v: "face" },
+    { t: "Online, behind the scenes", v: "onlineBehind" },
+    { t: "Online, and happy to be visible", v: "onlineVisible" },
+    { t: "Offline and solo — headphones on", v: "offlineSolo" }] },
+  { key: "qstyle", section: "How You Work", title: "Which feels most like you?", opts: [
     { t: "Making and creating things", v: "make" },
     { t: "Selling, negotiating, closing", v: "sell" },
     { t: "Helping and taking care of people", v: "help" },
     { t: "Building systems and keeping things running", v: "systems" }] },
-  { key: "q12", section: "How You Work", title: "What's gotten in the way before?", opts: [
-    { t: "Never knew where to start", v: "start" },
-    { t: "Started things but lost steam", v: "steam" },
-    { t: "Time — life keeps eating it", v: "time" },
-    { t: "Scared of wasting money", v: "scared" },
-    { t: "This is my first real attempt", v: "first" }] },
   { key: "gate", type: "gate" },
   { key: "results", type: "results" },
 ];
 
-/* ---------- SCORING ENGINE ---------- */
+const PROTECT_OPTS = [
+  { t: "Not knowing where to start", v: "start" },
+  { t: "Losing steam after starting", v: "steam" },
+  { t: "Life eating my time", v: "time" },
+  { t: "Wasting money", v: "scared" },
+  { t: "Nothing — this is my first real attempt", v: "first" },
+];
+
+/* ---------- SCORING ENGINE (v3) ---------- */
 function computeScores(A) {
   const scores = {};
   const excluded = new Set();
   PATHS.forEach((p) => (scores[p.id] = 0));
   const add = (id, n) => { if (scores[id] !== undefined) scores[id] += n; };
-  const assets = A.q6 || [];
-  if (!assets.includes("car")) excluded.add("gig");
+  const inv = A.qinv || [];
+  const cash = inv.includes("cash");
+  // hard filters + inventory weights (silent — never shown to the user)
+  if (!inv.includes("car")) excluded.add("gig");
   else { add("gig", 2); add("local", 2); }
-  if (!assets.includes("computer")) ["freelance", "va", "digital", "content"].forEach((i) => add(i, -2));
+  if (!inv.includes("computer")) ["freelance", "va", "digital", "content"].forEach((i) => add(i, -2));
   else ["freelance", "va", "digital", "content"].forEach((i) => add(i, 1));
-  if (assets.includes("tools")) add("local", 2);
-  if (!assets.includes("space")) add("resell", -1); else add("resell", 2);
-  const hourBoost = { lt5: ["gig", "resell", "care"], "5to10": ["resell", "care", "local", "tutor"], "10to20": ["freelance", "local", "tutor", "va"], "20plus": ["freelance", "digital", "content"] }[A.q4] || [];
+  if (inv.includes("tools")) add("local", 2);
+  if (!inv.includes("space")) add("resell", -1); else add("resell", 2);
+  if (cash) { add("resell", 1); add("local", 1); }
+  else { add("resell", -1); ["va", "tutor", "care", "freelance"].forEach((i) => add(i, 1)); }
+  // hours
+  const hourBoost = { lt5: ["gig", "resell", "care"], "5to10": ["resell", "care", "local", "tutor"], "10to20": ["freelance", "local", "tutor", "va"], "20plus": ["freelance", "digital", "content"] }[A.qhours] || [];
   hourBoost.forEach((i) => add(i, 2));
-  if (A.q5 === "0") { add("resell", -1); ["va", "tutor", "care", "freelance"].forEach((i) => add(i, 1)); }
-  if (A.q5 === "500plus") ["digital", "content", "freelance", "local"].forEach((i) => add(i, 1));
-  if (A.q7 === "week") PATHS.filter((p) => p.speed === 5).forEach((p) => add(p.id, 2));
-  if (A.q7 === "norush") PATHS.filter((p) => p.ceiling >= 4).forEach((p) => add(p.id, 1));
-  if (A.q8 === "safe" || A.q8 === "mostlysafe") PATHS.filter((p) => p.speed >= 4).forEach((p) => add(p.id, 1));
-  if (A.q8 === "bet") PATHS.filter((p) => p.ceiling >= 4).forEach((p) => add(p.id, 2));
-  const energyBoost = { people: ["local", "care", "tutor"], online: ["va", "tutor", "freelance"], alone: ["freelance", "digital", "resell"], solo: ["digital", "freelance", "content"] }[A.q9] || [];
-  energyBoost.forEach((i) => add(i, 2));
-  if (A.q10 === "camera") add("content", 3);
-  if (A.q10 === "offline") { excluded.add("content"); ["freelance", "va", "digital"].forEach((i) => add(i, -1)); ["local", "care", "resell"].forEach((i) => add(i, 1)); }
-  if (A.q10 === "behind") add("content", -2);
-  const styleBoost = { make: ["digital", "freelance", "content"], sell: ["resell", "freelance", "local"], help: ["care", "tutor", "local"], systems: ["va", "freelance"] }[A.q11] || [];
+  // timeline (also carries the risk posture: urgency = sure things, patience = bigger bets)
+  if (A.qtime === "week") PATHS.filter((p) => p.speed === 5).forEach((p) => add(p.id, 2));
+  if (A.qtime === "week" || A.qtime === "month") PATHS.filter((p) => p.speed >= 4).forEach((p) => add(p.id, 1));
+  if (A.qtime === "norush") PATHS.filter((p) => p.ceiling >= 4).forEach((p) => add(p.id, 3));
+  // work style (merged energy + online comfort)
+  if (A.qwork === "face") ["local", "care", "tutor"].forEach((i) => add(i, 2));
+  if (A.qwork === "onlineBehind") { ["va", "freelance"].forEach((i) => add(i, 2)); add("digital", 1); add("content", -2); }
+  if (A.qwork === "onlineVisible") { add("content", 3); ["tutor", "freelance", "va"].forEach((i) => add(i, 1)); }
+  if (A.qwork === "offlineSolo") { excluded.add("content"); add("resell", 2); add("local", 1); add("care", 1); ["freelance", "va", "digital"].forEach((i) => add(i, -1)); }
+  // identity style
+  const styleBoost = { make: ["digital", "freelance", "content"], sell: ["resell", "freelance", "local"], help: ["care", "tutor", "local"], systems: ["va", "freelance"] }[A.qstyle] || [];
   styleBoost.forEach((i) => add(i, 2));
+  // desire boost + relationship weight
   if (A.q1b && A.q1b !== "other") {
     add(A.q1b, 4);
-    add(A.q1b, { done: 3, love: 2, seen: 1, money: 0 }[A.q2] || 0);
+    add(A.q1b, { pro: 3, hobby: 2, new: 1, moneyresearch: 0 }[A.qrel] || 0);
   }
   return { scores, excluded };
 }
-function pathsInPlay(A) {
+function strongFits(A) {
   const { scores, excluded } = computeScores(A);
   return PATHS.filter((p) => !excluded.has(p.id) && scores[p.id] > -2).length;
 }
 function realityFlag(A) {
   if (!A.q1b || A.q1b === "other") return null;
   const p = pathById(A.q1b);
-  const noExp = A.q3 === "research" || A.q3 === "none";
-  const fast = A.q7 === "week";
+  const noExp = A.qrel === "moneyresearch" || A.qrel === "new";
+  const fast = A.qtime === "week";
   const slow = p.speed <= 2;
   if (slow && noExp && fast) return "red";
-  if ((slow && noExp) || (slow && fast) || (noExp && fast && A.q2 === "money")) return "yellow";
+  if ((slow && noExp) || (slow && fast) || (noExp && fast && A.qrel === "moneyresearch")) return "yellow";
   return "green";
 }
 function fastestWin(A, exceptId) {
@@ -189,27 +178,53 @@ function longTerm(A, exceptId) {
 }
 function whyFits(A, p) {
   const bits = [];
-  const assets = A.q6 || [];
+  const inv = A.qinv || [];
   if (A.q1b === p.id) bits.push("you told us this is where you want to go");
-  if (p.id === "local" && assets.includes("tools")) bits.push("you already own tools most people would have to buy");
-  if ((p.id === "gig" || p.id === "local") && assets.includes("car")) bits.push("you have the car it runs on");
-  if (["freelance", "va", "digital", "content"].includes(p.id) && assets.includes("computer")) bits.push("your computer is the only equipment it needs");
-  if (A.q9 === "people" && ["local", "care", "tutor"].includes(p.id)) bits.push("it puts you face to face with people, which is where you get energy");
-  if ((A.q9 === "alone" || A.q9 === "solo") && ["freelance", "digital", "resell"].includes(p.id)) bits.push("you can run it mostly solo");
-  if (A.q11 === "help" && ["care", "tutor"].includes(p.id)) bits.push("it's built on taking care of people — your natural mode");
-  if (A.q11 === "make" && ["digital", "content", "freelance"].includes(p.id)) bits.push("it rewards making things");
-  if (A.q11 === "sell" && ["resell", "local"].includes(p.id)) bits.push("it rewards your seller instincts");
-  if (A.q7 === "week" && p.speed >= 5) bits.push("it can genuinely pay within days");
-  if (bits.length === 0) bits.push("it scored highest across your time, resources, and working style");
+  if (p.id === "local" && inv.includes("tools")) bits.push("you already own tools most people would have to buy");
+  if ((p.id === "gig" || p.id === "local") && inv.includes("car")) bits.push("you have the car it runs on");
+  if (["freelance", "va", "digital", "content"].includes(p.id) && inv.includes("computer")) bits.push("your computer is the only equipment it needs");
+  if (p.id === "resell" && inv.includes("cash")) bits.push("your starting cash covers the first inventory run");
+  if (A.qwork === "face" && ["local", "care", "tutor"].includes(p.id)) bits.push("it puts you face to face with people, which is how you like to work");
+  if (A.qwork === "offlineSolo" && ["resell", "local"].includes(p.id)) bits.push("you can run it offline and mostly solo");
+  if ((A.qwork === "onlineBehind") && ["freelance", "va", "digital"].includes(p.id)) bits.push("it runs online without putting you on camera");
+  if (A.qstyle === "help" && ["care", "tutor"].includes(p.id)) bits.push("it's built on taking care of people — your natural mode");
+  if (A.qstyle === "make" && ["digital", "content", "freelance"].includes(p.id)) bits.push("it rewards making things");
+  if (A.qstyle === "sell" && ["resell", "local"].includes(p.id)) bits.push("it rewards your seller instincts");
+  if (A.qtime === "week" && p.speed >= 5) bits.push("it can genuinely pay within days");
+  if (bits.length === 0) bits.push("it scored highest across your time, inventory, and working style");
   return "This fits because " + bits.slice(0, 3).join(", ") + ".";
 }
 function needsKit(A, p) {
-  const assets = A.q6 || [];
-  if (p.id === "local" && !assets.includes("tools")) return true;
-  if (p.id === "resell" && (A.q5 === "0" || !assets.includes("space"))) return true;
-  if (["freelance", "digital", "content", "va"].includes(p.id) && !assets.includes("computer")) return true;
-  if ((p.id === "tutor" || p.id === "care") && A.q5 === "0") return true;
+  const inv = A.qinv || [];
+  if (p.id === "local" && !inv.includes("tools")) return true;
+  if (p.id === "resell" && (!inv.includes("cash") || !inv.includes("space"))) return true;
+  if (["freelance", "digital", "content", "va"].includes(p.id) && !inv.includes("computer")) return true;
+  if ((p.id === "tutor" || p.id === "care") && !inv.includes("cash")) return true;
   return false;
+}
+function computeResults(A) {
+  const named = A.q1 === "yes" || A.q1 === "sortof";
+  if (named && A.q1b && A.q1b !== "other") {
+    const p = pathById(A.q1b);
+    const rf = realityFlag(A);
+    const fw = fastestWin(A, p.id);
+    return { mode: "chosen", chosen: p.id, verdict: rf, fastestWin: fw ? fw.id : null };
+  }
+  const fw = fastestWin(A);
+  const lt = longTerm(A, fw ? fw.id : undefined);
+  return { mode: named ? "other" : "match", fastestWin: fw ? fw.id : null, longTerm: lt ? lt.id : null };
+}
+
+/* ---------- ANALYTICS (fire and forget) ---------- */
+function track(sid, name, extra) {
+  try {
+    fetch("/api/lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "event", name, sid, ts: new Date().toISOString(), ...(extra || {}) }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (e) { /* analytics must never break the flow */ }
 }
 
 /* ---------- UI PIECES ---------- */
@@ -252,11 +267,13 @@ function Kit({ items }) {
 /* ---------- MAIN COMPONENT ---------- */
 export default function Assessment() {
   const [A, setA] = useState({});
-  const [step, setStep] = useState(-1); // -1 = intro
+  const [step, setStep] = useState(-1);
   const [email, setEmail] = useState("");
   const [emailErr, setEmailErr] = useState("");
   const [otherTxt, setOtherTxt] = useState("");
+  const [protectFrom, setProtectFrom] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [sid] = useState(() => (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)));
 
   const named = A.q1 === "yes" || A.q1 === "sortof";
   const steps = QUESTIONS.filter((q) => !q.condKey || (q.condKey === "named" && named));
@@ -275,44 +292,64 @@ export default function Assessment() {
         nx[key] = cur;
       } else {
         nx[key] = v;
-        if (key === "q1" && v === "no") { delete nx.q1b; delete nx.q2; delete nx.q3; }
+        if (key === "q1" && v === "no") { delete nx.q1b; delete nx.qrel; }
       }
       return nx;
     });
   }
-  const next = () => { setStep((s) => s + 1); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const next = () => {
+    const cur = steps[step];
+    if (cur && cur.type === "insight1") track(sid, "s1_done");
+    if (cur && cur.type === "insight2") track(sid, "s2_done");
+    setStep((s) => s + 1);
+    const nxt = steps[Math.min(step + 1, steps.length - 1)];
+    if (nxt && nxt.type === "gate") track(sid, "gate_view");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const back = () => setStep((s) => Math.max(-1, s - 1));
-  const restart = () => { setA({}); setStep(-1); setEmail(""); setOtherTxt(""); };
+  const restart = () => { setA({}); setStep(-1); setEmail(""); setOtherTxt(""); setProtectFrom(null); };
+  const start = () => { track(sid, "start"); setStep(0); };
 
   async function submitGate() {
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!ok) { setEmailErr("Please enter a valid email so we can send your plan."); return; }
     setEmailErr("");
     setSubmitting(true);
+    const results = computeResults(A);
     try {
       await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, answers: A, otherIdea: otherTxt || undefined, ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v3", ts: new Date().toISOString() }),
       });
     } catch (e) { /* never block results on network issues */ }
     setSubmitting(false);
     next();
   }
 
-  /* ---------- RENDER HELPERS ---------- */
   const canContinue = q && !q.type && (q.multi ? (A[q.key] || []).length > 0 : A[q.key] !== undefined);
+
+  function NavRow({ onBack, onNext, nextLabel, nextDisabled }) {
+    return (
+      <div className="flex justify-between items-center mt-6">
+        <button onClick={onBack} className="px-4 py-2.5 text-sm font-medium" style={{ color: C.gray }}>Back</button>
+        <button onClick={onNext} disabled={nextDisabled}
+          className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ backgroundColor: C.green, color: C.cream }}>{nextLabel}</button>
+      </div>
+    );
+  }
 
   function Insight1() {
     let chipBg = C.greenSoft, chipColor = C.green, chip, head, body;
     if (named) {
       const label = A.q1b === "other" ? (otherTxt || "your idea") : (A.q1b ? pathById(A.q1b).name.toLowerCase() : "your idea");
-      if (A.q2 === "done" || A.q3 === "pro") { chip = "Pro start"; head = "You're not starting from zero."; body = `You've got real experience behind ${label}. Your plan will skip the beginner steps and go straight to getting paid.`; }
-      else if (A.q2 === "love" || A.q3 === "hobby") { chip = "Warm start"; head = "You've got a real foundation."; body = `You know ${label} well enough to move fast — the gap is turning it from something you do into something you charge for.`; }
-      else { chip = "Cold start"; chipBg = C.yellowSoft; chipColor = C.yellow; head = "You're starting from zero on this one."; body = `That's allowed — everyone starts somewhere. But the plan has to respect it: ${label} will take real ramp-up time, and we'll pair it with something that pays sooner.`; }
+      if (A.qrel === "pro") { chip = "Pro start"; head = "You're not starting from zero."; body = `You've got real experience behind ${label}. Your plan will skip the beginner steps and go straight to getting paid.`; }
+      else if (A.qrel === "hobby") { chip = "Warm start"; head = "You've got a real foundation."; body = `You know ${label} well enough to move fast — the gap is turning it from something you do into something you charge for.`; }
+      else { chip = "Fresh start"; chipBg = C.yellowSoft; chipColor = C.yellow; head = "You're starting from day one — that's allowed."; body = `Everyone's day one looks like this. The plan just has to respect it: ${label} will take real ramp-up time, and we'll pair it with something that pays sooner. You're not behind — you're at the start.`; }
     } else {
-      if (A.q4 === "lt5" || A.q4 === "5to10") { chip = "Sprinter profile"; head = "We're optimizing for speed."; body = "With your hours, the plan prioritizes paths that pay in days, not months."; }
-      else if (A.q4 === "20plus") { chip = "Builder profile"; head = "You can afford to build."; body = "20+ hours a week means paths with a real ceiling are on the table, not just quick cash."; }
+      if (A.qhours === "lt5" || A.qhours === "5to10") { chip = "Sprinter profile"; head = "We're optimizing for speed."; body = "With your hours, the plan prioritizes paths that pay in days, not months."; }
+      else if (A.qhours === "20plus") { chip = "Builder profile"; head = "You can afford to build."; body = "20+ hours a week means paths with a real ceiling are on the table, not just quick cash."; }
       else { chip = "Hybrid profile"; head = "A quick win and a long game."; body = "Your time supports both — which is exactly the two-path plan Faimgo builds."; }
     }
     return (
@@ -320,23 +357,23 @@ export default function Assessment() {
         <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: chipBg, color: chipColor }}>{chip}</span>
         <h2 className="text-2xl font-bold mb-2" style={{ color: C.green }}>{head}</h2>
         <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
-        <p className="mt-3 text-sm" style={{ color: C.gray }}>{pathsInPlay(A)} of 9 paths still in play.</p>
+        <p className="mt-3 text-sm" style={{ color: C.gray }}>Narrowing to your strongest fits — {strongFits(A)} paths still match you.</p>
         <NavRow onBack={back} onNext={next} nextLabel="Continue" />
       </div>
     );
   }
 
   function Insight2() {
-    const assets = A.q6 || [];
+    const inv = A.qinv || [];
     const bits = [];
-    if (assets.includes("car")) bits.push("a car");
-    if (assets.includes("tools")) bits.push("tools");
-    if (assets.includes("computer")) bits.push("a computer");
-    if (assets.includes("space")) bits.push("spare space");
-    const money = { 0: "$0", 100: "under $100", 500: "up to $500", "500plus": "$500+" }[A.q5];
+    if (inv.includes("car")) bits.push("a car");
+    if (inv.includes("tools")) bits.push("tools");
+    if (inv.includes("computer")) bits.push("a computer");
+    if (inv.includes("space")) bits.push("spare space");
+    if (inv.includes("cash")) bits.push("starting cash");
     const body = bits.length
-      ? `You're working with ${bits.join(", ")} and ${money} to start. That's a real launch kit — several paths could take their first paying job within days.`
-      : `Starting lean — no gear, ${money} in. Good news: several of the nine paths need nothing but time and follow-through, and your plan will include the cheapest possible way to get anything else.`;
+      ? `You're holding ${bits.join(", ")}. That's a real launch kit — several paths could take their first paying job within days.`
+      : `Starting with pure time and follow-through — and that's a real inventory too: several of the nine paths need nothing else, and your plan will include the cheapest possible way to get anything extra.`;
     const rf = realityFlag(A);
     return (
       <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
@@ -353,7 +390,7 @@ export default function Assessment() {
             <b>One honest note:</b>{" "}the path you named has a longer ramp than your timeline wants. Your results will show the real numbers — and a faster path to run alongside it.
           </div>
         )}
-        <p className="mt-3 text-sm" style={{ color: C.gray }}>Down to {pathsInPlay(A)} paths.</p>
+        <p className="mt-3 text-sm" style={{ color: C.gray }}>Narrowing to your strongest fits — {strongFits(A)} paths still match you.</p>
         <NavRow onBack={back} onNext={next} nextLabel="Continue" />
       </div>
     );
@@ -369,12 +406,29 @@ export default function Assessment() {
       </div>
     );
   }
+  function FwCard({ fw }) {
+    return (
+      <ResultCard badge="Fastest first win" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="⚡" title={fw.name} meta={`First dollar: typically ${fw.dollar}`}>
+        <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
+        <Moves moves={fw.moves} />
+        {needsKit(A, fw) && fw.kit.length > 0 && <Kit items={fw.kit} />}
+      </ResultCard>
+    );
+  }
+  function LtCard({ lt }) {
+    return (
+      <ResultCard badge="Long-term path" badgeStyle={{ backgroundColor: C.yellowSoft, color: C.yellow }} icon="🏔" title={lt.name} meta={`First dollar: typically ${lt.dollar} · Ceiling ${"★".repeat(lt.ceiling)}`}>
+        <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, lt)}</p>
+        <Moves moves={lt.moves} />
+      </ResultCard>
+    );
+  }
 
   function Results() {
     const rf = realityFlag(A);
     const cards = [];
     const toneMap = { steam: "Your plan is built as a day-by-day walkthrough — the thing that kills momentum is deciding what's next, so we decide it for you.", scared: "Every step starts with the $0 version. You don't spend until something has already worked.", start: "Step one is deliberately tiny. You'll know exactly where to start because it's the only thing on the list.", time: "The plan fits your real hours — short, fixed sessions, nothing that needs a free weekend.", first: "First real attempt — good. No bad habits to unlearn. The plan assumes nothing and explains everything." };
-    const tone = toneMap[A.q12] || "";
+    const tone = toneMap[protectFrom] || "";
 
     if (named && A.q1b && A.q1b !== "other") {
       const p = pathById(A.q1b);
@@ -392,7 +446,7 @@ export default function Assessment() {
             </div>
           )}
           <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
-            {whyFits(A, p)}{" "}{A.q2 === "money" ? 'One honest note: "it looks like good money" is a reason to test it — not yet a reason to bet on it. The first 3 moves below are the cheapest possible test.' : ""}
+            {whyFits(A, p)}{" "}{A.qrel === "moneyresearch" ? "One honest note: money potential is a reason to test it — not yet a reason to bet on it. The first 3 moves below are the cheapest possible test." : ""}
           </p>
           <Moves moves={p.moves} />
           {needsKit(A, p) && p.kit.length > 0 && <Kit items={p.kit} />}
@@ -456,33 +510,6 @@ export default function Assessment() {
       </div>
     );
   }
-  function FwCard({ fw }) {
-    return (
-      <ResultCard badge="Fastest first win" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="⚡" title={fw.name} meta={`First dollar: typically ${fw.dollar}`}>
-        <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
-        <Moves moves={fw.moves} />
-        {needsKit(A, fw) && fw.kit.length > 0 && <Kit items={fw.kit} />}
-      </ResultCard>
-    );
-  }
-  function LtCard({ lt }) {
-    return (
-      <ResultCard badge="Long-term path" badgeStyle={{ backgroundColor: C.yellowSoft, color: C.yellow }} icon="🏔" title={lt.name} meta={`First dollar: typically ${lt.dollar} · Ceiling ${"★".repeat(lt.ceiling)}`}>
-        <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, lt)}</p>
-        <Moves moves={lt.moves} />
-      </ResultCard>
-    );
-  }
-  function NavRow({ onBack, onNext, nextLabel, nextDisabled }) {
-    return (
-      <div className="flex justify-between items-center mt-6">
-        <button onClick={onBack} className="px-4 py-2.5 text-sm font-medium" style={{ color: C.gray }}>Back</button>
-        <button onClick={onNext} disabled={nextDisabled}
-          className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ backgroundColor: C.green, color: C.cream }}>{nextLabel}</button>
-      </div>
-    );
-  }
 
   /* ---------- PAGE ---------- */
   return (
@@ -502,7 +529,7 @@ export default function Assessment() {
             </div>
             <div className="flex justify-between text-xs mb-6" style={{ color: C.gray }}>
               <span>{q?.section || (q?.type === "results" ? "Your plan" : q?.type === "gate" ? "Almost there" : "Insight")}</span>
-              <span>{q && !q.type && step > 0 ? `${pathsInPlay(A)} of 9 paths in play` : ""}</span>
+              <span></span>
             </div>
           </>
         )}
@@ -514,9 +541,9 @@ export default function Assessment() {
               Find your <span style={{ color: C.gold }}>two paths</span>.
             </h1>
             <p className="text-[15px] leading-relaxed mb-6" style={{ color: C.gray }}>
-              Answer honestly — about 3 minutes. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b>{" "}and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b>{" "}on it. No fluff, no &quot;just believe in yourself.&quot;
+              About 2 minutes, and every answer counts toward your plan. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b>{" "}and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b>{" "}on it. No fluff, no &quot;just believe in yourself.&quot;
             </p>
-            <button onClick={() => setStep(0)} className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
+            <button onClick={start} className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
               Start
             </button>
           </div>
@@ -526,7 +553,7 @@ export default function Assessment() {
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>{q.section}</Tag>
             <h2 className="text-2xl font-bold mb-1 leading-snug" style={{ color: C.green }}>{q.title}</h2>
-            {q.multi && <p className="text-sm mb-2" style={{ color: C.gray }}>Select all that apply.</p>}
+            {q.sub && <p className="text-sm mb-2" style={{ color: C.gray }}>{q.sub}</p>}
             <div className="flex flex-col gap-2.5 mt-5">
               {q.opts.map((o) => (
                 <Opt key={o.v} label={o.t} sub={o.s}
@@ -553,7 +580,17 @@ export default function Assessment() {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com"
               className="w-full px-4 py-3.5 rounded-xl border-2 text-[15px]" style={{ borderColor: emailErr ? C.red : C.beige, backgroundColor: "#FFFFFF" }} />
             {emailErr && <p className="text-[13px] mt-2" style={{ color: C.red }}>{emailErr}</p>}
-            <p className="text-xs mt-3 leading-relaxed" style={{ color: C.gray }}>No spam — you can unsubscribe anytime. Your answers stay private.</p>
+            <p className="text-sm font-medium mt-5 mb-2" style={{ color: C.ink }}>What should your plan protect you from?{" "}<span style={{ color: C.gray, fontWeight: 400 }}>(optional)</span></p>
+            <div className="flex flex-wrap gap-2">
+              {PROTECT_OPTS.map((o) => (
+                <button key={o.v} onClick={() => setProtectFrom(protectFrom === o.v ? null : o.v)}
+                  className="px-3.5 py-2 rounded-full text-[13px] border-2 transition-all"
+                  style={{ borderColor: protectFrom === o.v ? C.green : C.beige, backgroundColor: protectFrom === o.v ? C.greenSoft : "#FFFFFF", color: C.ink, fontWeight: protectFrom === o.v ? 600 : 400 }}>
+                  {o.t}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs mt-4 leading-relaxed" style={{ color: C.gray }}>No spam — you can unsubscribe anytime. Your answers stay private.</p>
             <div className="flex justify-between items-center mt-6">
               <button onClick={back} className="px-4 py-2.5 text-sm font-medium" style={{ color: C.gray }}>Back</button>
               <button onClick={submitGate} disabled={submitting}

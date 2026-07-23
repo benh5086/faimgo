@@ -38,14 +38,20 @@ Designed assessment v1: 12 questions (3 sections × 4), insight break after each
 **Jul 13–14 — Task: "Faimgo migration" (this session)**
 Moved all Faimgo chats/tasks into the Faimgo project. Ben redesigned the assessment logic → **v2**: desire-first flow (want → why → experience → time), resources & reality section (money → tools → timeline → risk) with a reality-check engine (slow path + no experience + fast timeline = honest verdict), Start Cheap Kit for missing gear, and a results page that reality-checks a named dream path (green/yellow/red-but-kind) paired with a Fastest First Win framed as the funder. Built a working single-file HTML prototype of v2 with live scoring. Files saved to the repo's docs/ folder.
 
+**Jul 14–15 — same session: assessment SHIPPED to production**
+Built v2 into the Next.js site as `/assessment` (src/app/assessment/page.js — questions/paths/weights in a CONFIG block for easy tailoring) + `/api/lead` stub (leads log to Vercel function logs, search "FAIMGO LEAD"). Homepage buttons now link to /assessment; site metadata fixed ("Create Next App" → real title). Ben pushed via git; **live and verified end-to-end at faimgo.vercel.app/assessment** (red-verdict scenario tested in production; test lead submitted). Fixed a Vercel/SWC bug that stripped spaces after bold tags (explicit {" "} separators).
+
+**Jul 16 — same session: assessment v3 built + simulation-verified (not yet deployed)**
+Applied Ben's dual test (every question must change the output AND motivate). v3: 8 questions named / 6 match-me (~2 min, was 14). Merged motivation+experience → "What's your relationship with it?" (every option a legitimate starting position); merged energy+online-comfort → "How do you like to work?"; budget folded into "Starting Inventory" as a cash asset; risk question cut with its signal derived from timeline (urgency→sure things, patience→ceiling, weights matched to v2); obstacle question moved to email screen as optional "What should your plan protect you from?" (forward-framed). Counter reframed to "narrowing to your strongest fits." Funnel instrumentation added (events: start, s1_done, s2_done, gate_view → Vercel logs, "FAIMGO EVENT"); leads now stored WITH the results shown (version v3); /api/lead forwards everything to LEAD_WEBHOOK_URL env var when set (zero-code path to a real Google Sheet/webhook destination later). Simulation over all 303,104 answer combinations: 0 invariant failures, verdicts 100% identical to v2, 97% of output differences are near-tie tie-breaks (v2 gap ≤2), none exceed gap 3. Report: docs/faimgo-v3-simulation-report.md. Honest finding: the "risk question is near-zero weight" assumption was wrong (could flip outputs in 44.8% of combos) — cut stays safe because timeline now carries the signal deterministically. **Pending: save 4 files to laptop folder (was offline) + Ben's git push.**
+
 ## Decisions made
 
 Assessment = two outputs (fastest win + long-term path). v2 = desire-first with reality-check engine. Simple subscription model. AI features come later. Action-focused, not idea lists. Name in use: Faimgo. Domain owned: aimfpg.com (final domain/brand decision open).
 
 ## Open threads
 
-1. **Tailor v2** — open items: bluntness of the red verdict, plain-word path picker labels, whether the risk question (Q8) stays, Start Cheap Kit depth (static vs personalized).
-2. **Build the assessment page** into the Next.js site once v2 is approved; decide email destination (Vercel serverless + Sheet/Resend vs Formspree).
-3. **Name/domain final call** — Faimgo vs aimfpg.com vs alternatives; DNS unconfigured on Namecheap either way.
+1. **Real email backend** — leads currently go to Vercel logs only; wire to Google Sheet/Resend (or Formspree). Page code won't need changes.
+2. **Tailor v2 wording** — red-verdict bluntness, path picker labels, whether the risk question (Q8) stays, Start Cheap Kit depth. Also: hide the "X of 9 paths in play" counter until Section 2 (reads oddly early because unanswered asset questions filter paths).
+3. **Name/domain final call** — Faimgo vs aimfpg.com vs alternatives; connect a custom domain to Vercel (DNS unconfigured on Namecheap).
 4. **Market-gap answers** — Ben's answers to the two domain-gap questions (grain trading + industrial sourcing).
-5. Phase 2 of the 0→1 plan (first 10 free users, documented results, community space) comes after the assessment page ships.
+5. Phase 2 of the 0→1 plan (first 10 free users, documented results, community space) — the assessment is live, so this is next up.
