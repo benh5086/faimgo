@@ -111,6 +111,40 @@ const PROTECT_OPTS = [
   { t: "Nothing — this is my first real attempt", v: "first" },
 ];
 
+
+/* ---------- CONFIG: "SOMETHING ELSE" RESOLVER ---------- */
+/* Free-text ideas are never dead ends. We (a) catch doubt/questions and
+   route them to matching with warmth, (b) keyword-match ideas that are
+   really one of our paths in different words, (c) give true custom ideas
+   the full validation treatment — positive-first. */
+const OTHER_KEYWORDS = [
+  { id: "care", words: ["babysit", "baby sit", "childcare", "child care", "pet ", "pets", "dog", "cat", "senior", "elder", "nanny", "caregiv"] },
+  { id: "local", words: ["clean", "lawn", "mow", "landscap", "pressure wash", "power wash", "handyman", "paint", "moving help", "snow", "junk", "detail"] },
+  { id: "tutor", words: ["tutor", "teach", "coach", "lesson", "training", "fitness", "language", "piano", "math", "mentor"] },
+  { id: "resell", words: ["resell", "reselling", "flip", "thrift", "ebay", "garage sale", "vintage", "sneaker", "consign"] },
+  { id: "gig", words: ["uber", "lyft", "doordash", "door dash", "instacart", "deliver", "rideshare", "task app"] },
+  { id: "digital", words: ["template", "printable", "course", "ebook", "e-book", "planner", "digital product", "digital download"] },
+  { id: "content", words: ["youtube", "tiktok", "podcast", "blog", "newsletter", "instagram", "influenc", "streaming", "content", "video channel"] },
+  { id: "va", words: ["virtual assistant", "bookkeep", "data entry", "scheduling", "admin support", "online assistant"] },
+  { id: "freelance", words: ["freelance", "writing", "copywrit", "design", "logo", "coding", "programming", "website", "web site", "app for", "marketing", "resume", "translat", "editing", "photograph"] },
+];
+const DOUBT_PATTERNS = [/\?/, /\bnot sure\b/i, /\bno idea\b/i, /\bdon'?t know\b/i, /\bunsure\b/i, /\bcan i\b/i, /\bcould i\b/i, /\bhelp me\b/i, /\bwhat should\b/i, /\bany idea\b/i];
+function resolveOther(txt) {
+  const t = (txt || "").trim().toLowerCase();
+  if (!t) return { kind: "doubt" };
+  if (DOUBT_PATTERNS.some((r) => r.test(t))) return { kind: "doubt" };
+  for (const k of OTHER_KEYWORDS) {
+    if (k.words.some((w) => t.includes(w))) return { kind: "matched", pathId: k.id };
+  }
+  return { kind: "custom" };
+}
+function effectiveChosen(A) {
+  if (!A.q1b) return null;
+  if (A.q1b !== "other") return A.q1b;
+  const r = resolveOther(A.otherTxt);
+  return r.kind === "matched" ? r.pathId : null;
+}
+
 /* ---------- SCORING ENGINE (v3) ---------- */
 function computeScores(A) {
   const scores = {};
@@ -143,10 +177,11 @@ function computeScores(A) {
   // identity style
   const styleBoost = { make: ["digital", "freelance", "content"], sell: ["resell", "freelance", "local"], help: ["care", "tutor", "local"], systems: ["va", "freelance"] }[A.qstyle] || [];
   styleBoost.forEach((i) => add(i, 2));
-  // desire boost + relationship weight
-  if (A.q1b && A.q1b !== "other") {
-    add(A.q1b, 4);
-    add(A.q1b, { pro: 3, hobby: 2, new: 1, moneyresearch: 0 }[A.qrel] || 0);
+  // desire boost + relationship weight (also applies to keyword-matched "something else" ideas)
+  const chosen = effectiveChosen(A);
+  if (chosen) {
+    add(chosen, 4);
+    add(chosen, { pro: 3, hobby: 2, new: 1, moneyresearch: 0 }[A.qrel] || 0);
   }
   return { scores, excluded };
 }
@@ -155,8 +190,9 @@ function strongFits(A) {
   return PATHS.filter((p) => !excluded.has(p.id) && scores[p.id] > -2).length;
 }
 function realityFlag(A) {
-  if (!A.q1b || A.q1b === "other") return null;
-  const p = pathById(A.q1b);
+  const chosenId = effectiveChosen(A);
+  if (!chosenId) return null;
+  const p = pathById(chosenId);
   const noExp = A.qrel === "moneyresearch" || A.qrel === "new";
   const fast = A.qtime === "week";
   const slow = p.speed <= 2;
@@ -204,15 +240,18 @@ function needsKit(A, p) {
 }
 function computeResults(A) {
   const named = A.q1 === "yes" || A.q1 === "sortof";
-  if (named && A.q1b && A.q1b !== "other") {
-    const p = pathById(A.q1b);
+  const chosenId = named ? effectiveChosen(A) : null;
+  if (chosenId) {
+    const p = pathById(chosenId);
     const rf = realityFlag(A);
     const fw = fastestWin(A, p.id);
-    return { mode: "chosen", chosen: p.id, verdict: rf, fastestWin: fw ? fw.id : null };
+    const matchedFromText = A.q1b === "other";
+    return { mode: matchedFromText ? "matchedOther" : "chosen", chosen: p.id, verdict: rf, fastestWin: fw ? fw.id : null };
   }
   const fw = fastestWin(A);
   const lt = longTerm(A, fw ? fw.id : undefined);
-  return { mode: named ? "other" : "match", fastestWin: fw ? fw.id : null, longTerm: lt ? lt.id : null };
+  const otherKind = named && A.q1b === "other" ? resolveOther(A.otherTxt).kind : null;
+  return { mode: named ? (otherKind || "other") : "match", fastestWin: fw ? fw.id : null, longTerm: lt ? lt.id : null };
 }
 
 /* ---------- ANALYTICS (fire and forget) ---------- */
@@ -270,7 +309,7 @@ export default function Assessment() {
   const [step, setStep] = useState(-1);
   const [email, setEmail] = useState("");
   const [emailErr, setEmailErr] = useState("");
-  const [otherTxt, setOtherTxt] = useState("");
+  const otherTxt = A.otherTxt || "";
   const [protectFrom, setProtectFrom] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [sid] = useState(() => (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)));
@@ -307,7 +346,7 @@ export default function Assessment() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const back = () => setStep((s) => Math.max(-1, s - 1));
-  const restart = () => { setA({}); setStep(-1); setEmail(""); setOtherTxt(""); setProtectFrom(null); };
+  const restart = () => { setA({}); setStep(-1); setEmail(""); setProtectFrom(null); };
   const start = () => { track(sid, "start"); setStep(0); };
 
   async function submitGate() {
@@ -343,7 +382,8 @@ export default function Assessment() {
   function Insight1() {
     let chipBg = C.greenSoft, chipColor = C.green, chip, head, body;
     if (named) {
-      const label = A.q1b === "other" ? (otherTxt || "your idea") : (A.q1b ? pathById(A.q1b).name.toLowerCase() : "your idea");
+      const eff = effectiveChosen(A);
+      const label = eff ? pathById(eff).name.toLowerCase() : (otherTxt || "your idea");
       if (A.qrel === "pro") { chip = "Pro start"; head = "You're not starting from zero."; body = `You've got real experience behind ${label}. Your plan will skip the beginner steps and go straight to getting paid.`; }
       else if (A.qrel === "hobby") { chip = "Warm start"; head = "You've got a real foundation."; body = `You know ${label} well enough to move fast — the gap is turning it from something you do into something you charge for.`; }
       else { chip = "Fresh start"; chipBg = C.yellowSoft; chipColor = C.yellow; head = "You're starting from day one — that's allowed."; body = `Everyone's day one looks like this. The plan just has to respect it: ${label} will take real ramp-up time, and we'll pair it with something that pays sooner. You're not behind — you're at the start.`; }
@@ -430,8 +470,10 @@ export default function Assessment() {
     const toneMap = { steam: "Your plan is built as a day-by-day walkthrough — the thing that kills momentum is deciding what's next, so we decide it for you.", scared: "Every step starts with the $0 version. You don't spend until something has already worked.", start: "Step one is deliberately tiny. You'll know exactly where to start because it's the only thing on the list.", time: "The plan fits your real hours — short, fixed sessions, nothing that needs a free weekend.", first: "First real attempt — good. No bad habits to unlearn. The plan assumes nothing and explains everything." };
     const tone = toneMap[protectFrom] || "";
 
-    if (named && A.q1b && A.q1b !== "other") {
-      const p = pathById(A.q1b);
+    const chosenId = named ? effectiveChosen(A) : null;
+    const matchedFromText = chosenId && A.q1b === "other";
+    if (chosenId) {
+      const p = pathById(chosenId);
       const vmap = { green: [{ backgroundColor: C.greenSoft, color: "#0F6B3F" }, "You can start this now"], yellow: [{ backgroundColor: C.yellowSoft, color: C.yellow }, "You can get there — here's the real ramp"], red: [{ backgroundColor: C.redSoft, color: C.red }, "Here's the truth about this path for you today"] };
       cards.push(
         <ResultCard key="chosen" badge={vmap[rf][1]} badgeStyle={vmap[rf][0]} icon="🎯" title={`Your Chosen Path: ${p.name}`} meta={`First dollar: typically ${p.dollar} · Ceiling ${"★".repeat(p.ceiling)}`}>
@@ -444,6 +486,11 @@ export default function Assessment() {
             <div className="mb-3 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.yellowSoft, borderLeft: `4px solid ${C.gold}`, color: C.ink }}>
               The real ramp for {p.name.toLowerCase()}{" "}at your experience level: <b>{p.dollar} at best, usually longer</b>. It&apos;s a good path — it just won&apos;t match the timeline you picked. The second card below is what covers the gap.
             </div>
+          )}
+          {matchedFromText && (
+            <p className="text-sm leading-relaxed mb-2" style={{ color: C.gray }}>
+              In your words: &quot;{otherTxt}&quot; — that&apos;s {p.plain.toLowerCase()}. Here&apos;s the honest read on it.
+            </p>
           )}
           <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
             {whyFits(A, p)}{" "}{A.qrel === "moneyresearch" ? "One honest note: money potential is a reason to test it — not yet a reason to bet on it. The first 3 moves below are the cheapest possible test." : ""}
@@ -470,19 +517,41 @@ export default function Assessment() {
           </div>
         );
       }
-    } else if (named && A.q1b === "other") {
-      const idea = otherTxt || "your idea";
+    } else if (named && A.q1b === "other" && resolveOther(otherTxt).kind === "doubt") {
       const fw = fastestWin(A);
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(
-        <ResultCard key="other" badge="Outside the current library" badgeStyle={{ backgroundColor: C.yellowSoft, color: C.yellow }} icon="🎯" title={`Your idea: "${idea}"`} meta="Custom path">
+        <ResultCard key="doubt" badge="You're in good hands" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="🤝" title="You don't need the answer yet — that's our job." meta="Matched from everything you told us">
           <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
-            Honest answer: &quot;{idea}&quot; isn&apos;t one of the nine paths we score yet — so instead of pretending, here&apos;s the universal validation play: (1) find 3 people already doing it and study how they actually get paid, (2) define the smallest version you could sell in 30 days, (3) pitch it to 5 real people before building anything. Meanwhile, the two cards below are your highest-scoring proven paths.
+            {otherTxt ? <>You wrote: &quot;{otherTxt}&quot;. </> : null}Most people start exactly here — real skills, no target yet. That&apos;s not a gap, it&apos;s the normal starting point, and finding the target is what this assessment is for. Based on your time, your inventory, and how you like to work, here are the two paths that fit you best. Pick one, start small, and build up from there — we&apos;ll walk you through finding it, aiming it at real earnings, and growing it.
           </p>
         </ResultCard>
       );
       if (fw) cards.push(<FwCard key="fw" fw={fw} />);
       if (lt) cards.push(<LtCard key="lt" lt={lt} />);
+      if (fw && lt) cards.push(
+        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
+          How they work together: {fw.name}{" "}pays your first 60 days while {lt.name.toLowerCase()}{" "}compounds toward the real ceiling.
+        </div>
+      );
+    } else if (named && A.q1b === "other") {
+      const idea = otherTxt || "your idea";
+      const fw = fastestWin(A);
+      const lt = longTerm(A, fw ? fw.id : undefined);
+      cards.push(
+        <ResultCard key="other" badge="Your own path — we're on it with you" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="🎯" title={`Your idea: "${idea}"`} meta="Custom path — full validation treatment">
+          <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
+            You&apos;re carving your own path, and that deserves a real plan, not a canned one. Here&apos;s how we&apos;d validate any idea worth your time: (1) find 3 people already doing it and study how they actually get paid, (2) define the smallest version you could sell in 30 days, (3) pitch it to 5 real people before building anything. Run those three and you&apos;ll know more than months of thinking could tell you. And below are the two proven paths your answers scored highest — either one can fund the idea while you validate it.
+          </p>
+        </ResultCard>
+      );
+      if (fw) cards.push(<FwCard key="fw" fw={fw} />);
+      if (lt) cards.push(<LtCard key="lt" lt={lt} />);
+      if (fw && lt) cards.push(
+        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
+          How they work together: {fw.name}{" "}funds the runway while your own idea proves itself — earning while validating beats waiting.
+        </div>
+      );
     } else {
       const fw = fastestWin(A);
       const lt = longTerm(A, fw ? fw.id : undefined);
@@ -562,7 +631,7 @@ export default function Assessment() {
               ))}
             </div>
             {q.other && A[q.key] === "other" && (
-              <input type="text" value={otherTxt} onChange={(e) => setOtherTxt(e.target.value)} placeholder="What is it? (a few words)"
+              <input type="text" value={otherTxt} onChange={(e) => { const v = e.target.value; setA((prev) => ({ ...prev, otherTxt: v })); }} placeholder="What is it? (a few words)"
                 className="w-full mt-3 px-4 py-3 rounded-xl border-2 text-[15px]" style={{ borderColor: C.beige, backgroundColor: "#FFFFFF" }} />
             )}
             <NavRow onBack={back} onNext={next} nextLabel="Continue" nextDisabled={!canContinue} />
