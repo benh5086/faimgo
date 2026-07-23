@@ -23,11 +23,11 @@ export default function Home() {
       {/* Hero */}
       <section className="px-8 py-24 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
         <div className="flex-1">
-          <a href="/assessment" className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-sm font-medium mb-6"
+          <a href="/assessment" className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-6 transition-all hover:opacity-80"
             style={{backgroundColor: '#F0EBE1', color: '#1B3A2D'}}>
-            ● NEW &nbsp; Take the 3–5 minute assessment →
+            Free 2-minute assessment →
           </a>
-          <h1 className="text-5xl font-bold leading-tight mb-6" style={{color: '#1B3A2D'}}>
+          <h1 className="font-display text-5xl md:text-6xl leading-[1.08] mb-6" style={{color: '#1B3A2D'}}>
             Find, Aim, and <span style={{color: '#C49A3C'}}>Grow</span> Your Side Income
           </h1>
           <p className="text-lg leading-relaxed mb-8" style={{color: '#6B7280'}}>
@@ -86,7 +86,7 @@ export default function Home() {
       <section className="px-8 py-20" style={{backgroundColor: '#F0EBE1'}}>
         <div className="max-w-6xl mx-auto">
           <p className="text-sm font-bold tracking-widest uppercase mb-3" style={{color: '#C49A3C'}}>Problem</p>
-          <h2 className="text-4xl font-bold mb-3" style={{color: '#1B3A2D'}}>
+          <h2 className="font-display text-4xl mb-3" style={{color: '#1B3A2D'}}>
             Why Most People Never Start
           </h2>
           <p className="text-lg mb-12 max-w-2xl" style={{color: '#6B7280'}}>
@@ -94,13 +94,13 @@ export default function Home() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              {icon: '🔀', title: 'Too many conflicting ideas', desc: 'You jump between options, second-guess yourself, and never commit to a path that actually fits you.'},
-              {icon: '🧩', title: "Generic advice that doesn't apply", desc: 'Most "business advice" ignores your skills, budget, and experience — sending you in the wrong direction.'},
-              {icon: '🗺️', title: 'No clear roadmap', desc: 'Even a solid idea falls apart without realistic milestones and next steps you can actually follow.'},
-              {icon: '🎯', title: 'No alignment with your strengths', desc: "You don't know which opportunities match what you can realistically do today — so you waste time."},
+              {title: 'Too many conflicting ideas', desc: 'You jump between options, second-guess yourself, and never commit to a path that actually fits you.'},
+              {title: "Generic advice that doesn't apply", desc: 'Most "business advice" ignores your skills, budget, and experience — sending you in the wrong direction.'},
+              {title: 'No clear roadmap', desc: 'Even a solid idea falls apart without realistic milestones and next steps you can actually follow.'},
+              {title: 'No alignment with your strengths', desc: "You don't know which opportunities match what you can realistically do today — so you waste time."},
             ].map((item, i) => (
-              <div key={i} className="p-6 rounded-2xl" style={{backgroundColor: '#FAF7F2'}}>
-                <div className="text-3xl mb-4">{item.icon}</div>
+              <div key={i} className="p-7 rounded-2xl" style={{backgroundColor: '#FAF7F2'}}>
+                <p className="text-sm font-bold mb-3 tracking-widest" style={{color: '#C49A3C'}}>{String(i + 1).padStart(2, '0')}</p>
                 <h3 className="font-semibold text-lg mb-2" style={{color: '#1B3A2D'}}>{item.title}</h3>
                 <p className="text-sm leading-relaxed" style={{color: '#6B7280'}}>{item.desc}</p>
               </div>
@@ -112,7 +112,7 @@ export default function Home() {
       {/* How It Works */}
       <section id="how-it-works" className="px-8 py-20 max-w-6xl mx-auto">
         <p className="text-sm font-bold tracking-widest uppercase mb-3" style={{color: '#C49A3C'}}>How It Works</p>
-        <h2 className="text-4xl font-bold mb-12" style={{color: '#1B3A2D'}}>Four Steps to Your Income Path</h2>
+        <h2 className="font-display text-4xl mb-12" style={{color: '#1B3A2D'}}>Four Steps to Your Income Path</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {[
             {step: '01', title: 'Find', desc: 'Answer questions about your background, skills, and goals.'},
@@ -133,7 +133,7 @@ export default function Home() {
       <section id="examples" className="px-8 py-20" style={{backgroundColor: '#F0EBE1'}}>
         <div className="max-w-6xl mx-auto">
           <p className="text-sm font-bold tracking-widest uppercase mb-3" style={{color: '#C49A3C'}}>Example Outputs</p>
-          <h2 className="text-4xl font-bold mb-12" style={{color: '#1B3A2D'}}>Real Paths for Real People</h2>
+          <h2 className="font-display text-4xl mb-12" style={{color: '#1B3A2D'}}>Real Paths for Real People</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {persona: 'Corporate Professional', path: 'AI Consulting', why: 'Leverages domain expertise + client communication skills.', time: '2–4 weeks to first offer', budget: 'Low — tools + outreach'},
@@ -157,7 +157,7 @@ export default function Home() {
       {/* FAQ */}
       <section id="faq" className="px-8 py-20 max-w-4xl mx-auto">
         <p className="text-sm font-bold tracking-widest uppercase mb-3" style={{color: '#C49A3C'}}>FAQ</p>
-        <h2 className="text-4xl font-bold mb-12" style={{color: '#1B3A2D'}}>Common Questions</h2>
+        <h2 className="font-display text-4xl mb-12" style={{color: '#1B3A2D'}}>Common Questions</h2>
         <div className="flex flex-col gap-6">
           {[
             {q: 'What kinds of opportunities does Faimgo find?', a: 'Faimgo matches you with realistic side income opportunities based on your skills, available time, budget, and goals — from consulting and freelancing to digital products and local services.'},
@@ -175,7 +175,7 @@ export default function Home() {
 
       {/* Bottom CTA */}
       <section id="start" className="px-8 py-24 text-center" style={{backgroundColor: '#1B3A2D'}}>
-        <h2 className="text-4xl font-bold mb-4" style={{color: '#FAF7F2'}}>
+        <h2 className="font-display text-4xl mb-4" style={{color: '#FAF7F2'}}>
           Your Income Is Already <span style={{color: '#C49A3C'}}>Waiting</span>
         </h2>
         <p className="text-lg mb-10 max-w-xl mx-auto" style={{color: '#A3B8AE'}}>

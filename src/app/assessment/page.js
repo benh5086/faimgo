@@ -55,6 +55,7 @@ const PATHS = [
     moves: ["Create profiles on Rover/Care.com and tell your own network you're available", "Get 3 references lined up — trust is the entire product", "Nail the first bookings, ask every happy client for a review and a referral"],
     kit: ["Certifications (CPR, first aid) cost ~$30–50 online and double your credibility — worth it after first jobs, not before"] },
 ];
+const CEILING_LABEL = { 2: "Modest", 3: "Solid", 4: "High", 5: "Very high" };
 const pathById = (id) => PATHS.find((p) => p.id === id);
 
 /* ---------- CONFIG: QUESTIONS (v3) ---------- */
@@ -295,7 +296,7 @@ function Moves({ moves }) {
 function Kit({ items }) {
   return (
     <div className="mt-3 p-4 rounded-xl border border-dashed" style={{ backgroundColor: C.cream, borderColor: C.gold }}>
-      <p className="text-[13px] font-bold mb-2" style={{ color: C.yellow }}>🧰 Start Cheap Kit — how to not overspend getting started</p>
+      <p className="text-[11px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.yellow }}>Start Cheap Kit — how to not overspend getting started</p>
       <ul className="list-disc pl-5">
         {items.map((k, i) => <li key={i} className="text-[13px] leading-relaxed mb-1" style={{ color: C.gray }}>{k}</li>)}
       </ul>
@@ -388,7 +389,7 @@ export default function Assessment() {
         return (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: C.greenSoft, color: C.green }}>Finding your target</span>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: C.green }}>Still choosing? Good — that&apos;s what this is for.</h2>
+            <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>Still choosing? Good — that&apos;s what this is for.</h2>
             <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>You don&apos;t need to know the answer walking in. Keep answering honestly — the matching gets sharper with every question, and your plan will pair a fast first win with a longer build you can grow into.</p>
             <p className="mt-3 text-sm" style={{ color: C.gray }}>Narrowing to your strongest fits — {strongFits(A)} paths still match you.</p>
             <NavRow onBack={back} onNext={next} nextLabel="Continue" />
@@ -407,7 +408,7 @@ export default function Assessment() {
     return (
       <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
         <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: chipBg, color: chipColor }}>{chip}</span>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: C.green }}>{head}</h2>
+        <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>{head}</h2>
         <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
         <p className="mt-3 text-sm" style={{ color: C.gray }}>Narrowing to your strongest fits — {strongFits(A)} paths still match you.</p>
         <NavRow onBack={back} onNext={next} nextLabel="Continue" />
@@ -430,7 +431,7 @@ export default function Assessment() {
     return (
       <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
         <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: C.greenSoft, color: C.green }}>Your launch window</span>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: C.green }}>Here&apos;s what you&apos;re working with.</h2>
+        <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>Here&apos;s what you&apos;re working with.</h2>
         <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
         {rf === "red" && (
           <div className="mt-4 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
@@ -448,11 +449,11 @@ export default function Assessment() {
     );
   }
 
-  function ResultCard({ badge, badgeStyle, icon, title, meta, children }) {
+  function ResultCard({ badge, badgeStyle, title, meta, children }) {
     return (
       <div className="p-7 rounded-2xl mb-4" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
         <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full mb-2.5" style={badgeStyle}>{badge}</span>
-        <h3 className="text-xl font-bold" style={{ color: C.green }}>{icon} {title}</h3>
+        <h3 className="font-display text-[22px]" style={{ color: C.green }}>{title}</h3>
         <p className="text-[13px] mt-0.5 mb-3" style={{ color: C.gray }}>{meta}</p>
         {children}
       </div>
@@ -460,7 +461,7 @@ export default function Assessment() {
   }
   function FwCard({ fw }) {
     return (
-      <ResultCard badge="Fastest first win" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="⚡" title={fw.name} meta={`First dollar: typically ${fw.dollar}`}>
+      <ResultCard badge="Fastest first win" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={fw.name} meta={`First dollar: typically ${fw.dollar}`}>
         <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
         <Moves moves={fw.moves} />
         {needsKit(A, fw) && fw.kit.length > 0 && <Kit items={fw.kit} />}
@@ -469,7 +470,7 @@ export default function Assessment() {
   }
   function LtCard({ lt }) {
     return (
-      <ResultCard badge="Long-term path" badgeStyle={{ backgroundColor: C.yellowSoft, color: C.yellow }} icon="🏔" title={lt.name} meta={`First dollar: typically ${lt.dollar} · Ceiling ${"★".repeat(lt.ceiling)}`}>
+      <ResultCard badge="Long-term path" badgeStyle={{ backgroundColor: C.yellowSoft, color: C.yellow }} title={lt.name} meta={`First dollar: typically ${lt.dollar} · Income ceiling: ${CEILING_LABEL[lt.ceiling]}`}>
         <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, lt)}</p>
         <Moves moves={lt.moves} />
       </ResultCard>
@@ -488,7 +489,7 @@ export default function Assessment() {
       const p = pathById(chosenId);
       const vmap = { green: [{ backgroundColor: C.greenSoft, color: "#0F6B3F" }, "You can start this now"], yellow: [{ backgroundColor: C.yellowSoft, color: C.yellow }, "You can get there — here's the real ramp"], red: [{ backgroundColor: C.redSoft, color: C.red }, "Here's the truth about this path for you today"] };
       cards.push(
-        <ResultCard key="chosen" badge={vmap[rf][1]} badgeStyle={vmap[rf][0]} icon="🎯" title={`Your Chosen Path: ${p.name}`} meta={`First dollar: typically ${p.dollar} · Ceiling ${"★".repeat(p.ceiling)}`}>
+        <ResultCard key="chosen" badge={vmap[rf][1]} badgeStyle={vmap[rf][0]} title={`Your Chosen Path: ${p.name}`} meta={`First dollar: typically ${p.dollar} · Income ceiling: ${CEILING_LABEL[p.ceiling]}`}>
           {rf === "red" && (
             <div className="mb-3 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
               You want your first dollar <b>this week</b>, from a path that typically takes <b>{p.dollar}</b>, starting with little experience. Possible? Technically. Realistic? No. The honest timeline for you on {p.name.toLowerCase()}{" "}is measured in months, not days. If you still want it after reading that — and some people should — here&apos;s step one below, and a second path that pays while you build.
@@ -514,7 +515,7 @@ export default function Assessment() {
       const fw = fastestWin(A, p.id);
       if (fw && rf !== "green") {
         cards.push(
-          <ResultCard key="fw" badge="Pays while you build" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="⚡" title={`Your Fastest First Win: ${fw.name}`} meta={`First dollar: typically ${fw.dollar}`}>
+          <ResultCard key="fw" badge="Pays while you build" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={`Your Fastest First Win: ${fw.name}`} meta={`First dollar: typically ${fw.dollar}`}>
             <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
             <Moves moves={fw.moves} />
           </ResultCard>,
@@ -533,7 +534,7 @@ export default function Assessment() {
       const fw = fastestWin(A);
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(
-        <ResultCard key="doubt" badge="You're in good hands" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="🤝" title="You don't need the answer yet — that's our job." meta="Matched from everything you told us">
+        <ResultCard key="doubt" badge="You're in good hands" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title="You don't need the answer yet — that's our job." meta="Matched from everything you told us">
           <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
             {otherTxt ? <>You wrote: &quot;{otherTxt}&quot;. </> : null}Most people start exactly here — real skills, no target yet. That&apos;s not a gap, it&apos;s the normal starting point, and finding the target is what this assessment is for. Based on your time, your inventory, and how you like to work, here are the two paths that fit you best. Pick one, start small, and build up from there — we&apos;ll walk you through finding it, aiming it at real earnings, and growing it.
           </p>
@@ -551,7 +552,7 @@ export default function Assessment() {
       const fw = fastestWin(A);
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(
-        <ResultCard key="other" badge="Your own path — we're on it with you" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} icon="🎯" title={`Your idea: "${idea}"`} meta="Custom path — full validation treatment">
+        <ResultCard key="other" badge="Your own path — we're on it with you" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={`Your idea: "${idea}"`} meta="Custom path — full validation treatment">
           <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
             You&apos;re carving your own path, and that deserves a real plan, not a canned one. Here&apos;s how we&apos;d validate any idea worth your time: (1) find 3 people already doing it and study how they actually get paid, (2) define the smallest version you could sell in 30 days, (3) pitch it to 5 real people before building anything. Run those three and you&apos;ll know more than months of thinking could tell you. And below are the two proven paths your answers scored highest — either one can fund the idea while you validate it.
           </p>
@@ -579,14 +580,14 @@ export default function Assessment() {
       <div>
         {cards}
         <div className="p-7 rounded-2xl text-center" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
-          <h3 className="text-xl font-bold" style={{ color: C.green }}>This is the map. The walkthrough is the product.</h3>
+          <h3 className="font-display text-[22px]" style={{ color: C.green }}>This is the map. The walkthrough is the product.</h3>
           <p className="text-sm leading-relaxed my-3" style={{ color: C.ink }}>{tone}{" "}Faimgo walks you from these first moves to your first dollar — step by step, honestly.</p>
           <a href="/#start" className="inline-block px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
             Start my 30/60/90 →
           </a>
         </div>
         <div className="text-center mt-6">
-          <button onClick={restart} className="text-sm underline" style={{ color: C.gray }}>↺ Retake the assessment</button>
+          <button onClick={restart} className="text-sm underline" style={{ color: C.gray }}>Retake the assessment</button>
         </div>
       </div>
     );
@@ -618,7 +619,7 @@ export default function Assessment() {
         {step === -1 && (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>Faimgo Assessment</Tag>
-            <h1 className="text-4xl font-bold leading-tight mb-3" style={{ color: C.green }}>
+            <h1 className="font-display text-4xl md:text-5xl leading-[1.1] mb-3" style={{ color: C.green }}>
               Find your <span style={{ color: C.gold }}>two paths</span>.
             </h1>
             <p className="text-[15px] leading-relaxed mb-6" style={{ color: C.gray }}>
@@ -633,7 +634,7 @@ export default function Assessment() {
         {q && !q.type && (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>{q.section}</Tag>
-            <h2 className="text-2xl font-bold mb-1 leading-snug" style={{ color: C.green }}>{q.title}</h2>
+            <h2 className="font-display text-[26px] mb-1 leading-snug" style={{ color: C.green }}>{q.title}</h2>
             {q.sub && <p className="text-sm mb-2" style={{ color: C.gray }}>{q.sub}</p>}
             <div className="flex flex-col gap-2.5 mt-5">
               {q.opts.map((o) => (
@@ -656,7 +657,7 @@ export default function Assessment() {
         {q?.type === "gate" && (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>One last thing</Tag>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: C.green }}>Your two paths are ready.</h2>
+            <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>Your two paths are ready.</h2>
             <p className="text-[15px] mb-4" style={{ color: C.gray }}>Where should we send your plan so you don&apos;t lose it?</p>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com"
               className="w-full px-4 py-3.5 rounded-xl border-2 text-[15px]" style={{ borderColor: emailErr ? C.red : C.beige, backgroundColor: "#FFFFFF" }} />
