@@ -383,7 +383,19 @@ export default function Assessment() {
     let chipBg = C.greenSoft, chipColor = C.green, chip, head, body;
     if (named) {
       const eff = effectiveChosen(A);
-      const label = eff ? pathById(eff).name.toLowerCase() : (otherTxt || "your idea");
+      const otherKind = A.q1b === "other" && !eff ? resolveOther(otherTxt).kind : null;
+      if (otherKind === "doubt") {
+        return (
+          <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
+            <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: C.greenSoft, color: C.green }}>Finding your target</span>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: C.green }}>Still choosing? Good — that&apos;s what this is for.</h2>
+            <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>You don&apos;t need to know the answer walking in. Keep answering honestly — the matching gets sharper with every question, and your plan will pair a fast first win with a longer build you can grow into.</p>
+            <p className="mt-3 text-sm" style={{ color: C.gray }}>Narrowing to your strongest fits — {strongFits(A)} paths still match you.</p>
+            <NavRow onBack={back} onNext={next} nextLabel="Continue" />
+          </div>
+        );
+      }
+      const label = eff ? pathById(eff).name.toLowerCase() : "your own idea";
       if (A.qrel === "pro") { chip = "Pro start"; head = "You're not starting from zero."; body = `You've got real experience behind ${label}. Your plan will skip the beginner steps and go straight to getting paid.`; }
       else if (A.qrel === "hobby") { chip = "Warm start"; head = "You've got a real foundation."; body = `You know ${label} well enough to move fast — the gap is turning it from something you do into something you charge for.`; }
       else { chip = "Fresh start"; chipBg = C.yellowSoft; chipColor = C.yellow; head = "You're starting from day one — that's allowed."; body = `Everyone's day one looks like this. The plan just has to respect it: ${label} will take real ramp-up time, and we'll pair it with something that pays sooner. You're not behind — you're at the start.`; }
