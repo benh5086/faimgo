@@ -12,12 +12,12 @@ import { useState } from "react";
 
 /* ---------- BRAND ---------- */
 const C = {
-  cream: "#FAF7F2",
+  cream: "#F1F4F2",   // page background (cards sit on this as white)
   green: "#1B3A2D",
-  gold: "#C49A3C",
-  beige: "#F0EBE1",
-  gray: "#6B7280",
-  ink: "#1C1C1C",
+  gold: "#8A6A14",    // readable accent on light
+  beige: "#E4E8E5",   // hairline borders
+  gray: "#464C54",    // readable body text (was light #6B7280)
+  ink: "#15181B",
   greenSoft: "#E4EEE9",
   yellowSoft: "#FBF3DE",
   yellow: "#8A6A14",
@@ -271,10 +271,10 @@ function track(sid, name, extra) {
 function Opt({ label, sub, selected, onClick }) {
   return (
     <button onClick={onClick}
-      className="block w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all text-[15px] leading-snug"
+      className="block w-full text-left px-4 py-4 rounded-xl border-2 transition-all text-[17px] leading-snug"
       style={{ borderColor: selected ? C.green : C.beige, backgroundColor: selected ? C.greenSoft : "#FFFFFF", color: C.ink, fontWeight: selected ? 600 : 400 }}>
       {label}
-      {sub && <span className="block text-[13px] mt-0.5" style={{ color: C.gray, fontWeight: 400 }}>{sub}</span>}
+      {sub && <span className="block text-[14px] mt-0.5" style={{ color: C.gray, fontWeight: 400 }}>{sub}</span>}
     </button>
   );
 }
@@ -285,7 +285,7 @@ function Moves({ moves }) {
   return (
     <ol className="mt-3 mb-1">
       {moves.map((m, i) => (
-        <li key={i} className="flex gap-3 items-start py-2.5 text-sm leading-relaxed" style={{ borderTop: i ? `1px dashed ${C.beige}` : "none", color: C.ink }}>
+        <li key={i} className="flex gap-3 items-start py-2.5 text-[16px] leading-relaxed" style={{ borderTop: i ? `1px dashed ${C.beige}` : "none", color: C.ink }}>
           <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: C.beige, color: C.green }}>{i + 1}</span>
           {m}
         </li>
@@ -296,9 +296,9 @@ function Moves({ moves }) {
 function Kit({ items }) {
   return (
     <div className="mt-3 p-4 rounded-xl border border-dashed" style={{ backgroundColor: C.cream, borderColor: C.gold }}>
-      <p className="text-[11px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.yellow }}>Start Cheap Kit — how to not overspend getting started</p>
+      <p className="text-[12px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.yellow }}>Start Cheap Kit — how to not overspend getting started</p>
       <ul className="list-disc pl-5">
-        {items.map((k, i) => <li key={i} className="text-[13px] leading-relaxed mb-1" style={{ color: C.gray }}>{k}</li>)}
+        {items.map((k, i) => <li key={i} className="text-[14px] leading-relaxed mb-1" style={{ color: C.gray }}>{k}</li>)}
       </ul>
     </div>
   );
@@ -372,7 +372,7 @@ export default function Assessment() {
   function NavRow({ onBack, onNext, nextLabel, nextDisabled }) {
     return (
       <div className="flex justify-between items-center mt-6">
-        <button onClick={onBack} className="px-4 py-2.5 text-sm font-medium" style={{ color: C.gray }}>Back</button>
+        <button onClick={onBack} className="px-4 py-2.5 text-[15px] font-medium" style={{ color: C.gray }}>Back</button>
         <button onClick={onNext} disabled={nextDisabled}
           className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ backgroundColor: C.green, color: C.cream }}>{nextLabel}</button>
@@ -388,9 +388,9 @@ export default function Assessment() {
       if (otherKind === "doubt") {
         return (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
-            <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: C.greenSoft, color: C.green }}>Finding your target</span>
+            <span className="inline-block text-[14px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: C.greenSoft, color: C.green }}>Finding your target</span>
             <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>Still choosing? Good — that&apos;s what this is for.</h2>
-            <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>You don&apos;t need to know the answer walking in. Keep answering honestly — the matching gets sharper with every question, and your plan will pair a fast first win with a longer build you can grow into.</p>
+            <p className="text-[17px] leading-relaxed" style={{ color: C.ink }}>You don&apos;t need to know the answer walking in. Keep answering honestly — the matching gets sharper with every question, and your plan will pair a fast first win with a longer build you can grow into.</p>
             <p className="mt-3 text-sm" style={{ color: C.gray }}>Narrowing to your strongest fits — {strongFits(A)} paths still match you.</p>
             <NavRow onBack={back} onNext={next} nextLabel="Continue" />
           </div>
@@ -407,9 +407,9 @@ export default function Assessment() {
     }
     return (
       <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
-        <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: chipBg, color: chipColor }}>{chip}</span>
+        <span className="inline-block text-[14px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: chipBg, color: chipColor }}>{chip}</span>
         <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>{head}</h2>
-        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
+        <p className="text-[17px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
         <p className="mt-3 text-sm" style={{ color: C.gray }}>Narrowing to your strongest fits — {strongFits(A)} paths still match you.</p>
         <NavRow onBack={back} onNext={next} nextLabel="Continue" />
       </div>
@@ -430,16 +430,16 @@ export default function Assessment() {
     const rf = realityFlag(A);
     return (
       <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
-        <span className="inline-block text-[13px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: C.greenSoft, color: C.green }}>Your launch window</span>
+        <span className="inline-block text-[14px] font-bold px-3.5 py-1 rounded-full mb-3" style={{ backgroundColor: C.greenSoft, color: C.green }}>Your launch window</span>
         <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>Here&apos;s what you&apos;re working with.</h2>
-        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
+        <p className="text-[17px] leading-relaxed" style={{ color: C.ink }}>{body}</p>
         {rf === "red" && (
-          <div className="mt-4 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
+          <div className="mt-4 p-4 rounded-r-xl text-[16px] leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
             <b>A heads-up before your results:</b>{" "}the path you named is one of the slowest to first dollar, you&apos;re new to it, and you want money this week. Those three don&apos;t fit together — your results will show the honest ramp, plus what actually can pay you this week.
           </div>
         )}
         {rf === "yellow" && (
-          <div className="mt-4 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.yellowSoft, borderLeft: `4px solid ${C.gold}`, color: C.ink }}>
+          <div className="mt-4 p-4 rounded-r-xl text-[16px] leading-relaxed" style={{ backgroundColor: C.yellowSoft, borderLeft: `4px solid ${C.gold}`, color: C.ink }}>
             <b>One honest note:</b>{" "}the path you named has a longer ramp than your timeline wants. Your results will show the real numbers — and a faster path to run alongside it.
           </div>
         )}
@@ -452,9 +452,9 @@ export default function Assessment() {
   function ResultCard({ badge, badgeStyle, title, meta, children }) {
     return (
       <div className="p-7 rounded-2xl mb-4" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
-        <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full mb-2.5" style={badgeStyle}>{badge}</span>
+        <span className="inline-block text-[12px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full mb-2.5" style={badgeStyle}>{badge}</span>
         <h3 className="font-display text-[22px]" style={{ color: C.green }}>{title}</h3>
-        <p className="text-[13px] mt-0.5 mb-3" style={{ color: C.gray }}>{meta}</p>
+        <p className="text-[14px] mt-0.5 mb-3" style={{ color: C.gray }}>{meta}</p>
         {children}
       </div>
     );
@@ -462,7 +462,7 @@ export default function Assessment() {
   function FwCard({ fw }) {
     return (
       <ResultCard badge="Fastest first win" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={fw.name} meta={`First dollar: typically ${fw.dollar}`}>
-        <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
+        <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
         <Moves moves={fw.moves} />
         {needsKit(A, fw) && fw.kit.length > 0 && <Kit items={fw.kit} />}
       </ResultCard>
@@ -471,7 +471,7 @@ export default function Assessment() {
   function LtCard({ lt }) {
     return (
       <ResultCard badge="Long-term path" badgeStyle={{ backgroundColor: C.yellowSoft, color: C.yellow }} title={lt.name} meta={`First dollar: typically ${lt.dollar} · Income ceiling: ${CEILING_LABEL[lt.ceiling]}`}>
-        <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, lt)}</p>
+        <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>{whyFits(A, lt)}</p>
         <Moves moves={lt.moves} />
       </ResultCard>
     );
@@ -491,21 +491,21 @@ export default function Assessment() {
       cards.push(
         <ResultCard key="chosen" badge={vmap[rf][1]} badgeStyle={vmap[rf][0]} title={`Your Chosen Path: ${p.name}`} meta={`First dollar: typically ${p.dollar} · Income ceiling: ${CEILING_LABEL[p.ceiling]}`}>
           {rf === "red" && (
-            <div className="mb-3 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
+            <div className="mb-3 p-4 rounded-r-xl text-[16px] leading-relaxed" style={{ backgroundColor: C.redSoft, borderLeft: `4px solid ${C.red}`, color: C.ink }}>
               You want your first dollar <b>this week</b>, from a path that typically takes <b>{p.dollar}</b>, starting with little experience. Possible? Technically. Realistic? No. The honest timeline for you on {p.name.toLowerCase()}{" "}is measured in months, not days. If you still want it after reading that — and some people should — here&apos;s step one below, and a second path that pays while you build.
             </div>
           )}
           {rf === "yellow" && (
-            <div className="mb-3 p-4 rounded-r-xl text-sm leading-relaxed" style={{ backgroundColor: C.yellowSoft, borderLeft: `4px solid ${C.gold}`, color: C.ink }}>
+            <div className="mb-3 p-4 rounded-r-xl text-[16px] leading-relaxed" style={{ backgroundColor: C.yellowSoft, borderLeft: `4px solid ${C.gold}`, color: C.ink }}>
               The real ramp for {p.name.toLowerCase()}{" "}at your experience level: <b>{p.dollar} at best, usually longer</b>. It&apos;s a good path — it just won&apos;t match the timeline you picked. The second card below is what covers the gap.
             </div>
           )}
           {matchedFromText && (
-            <p className="text-sm leading-relaxed mb-2" style={{ color: C.gray }}>
+            <p className="text-[16px] leading-relaxed mb-2" style={{ color: C.gray }}>
               In your words: &quot;{otherTxt}&quot; — that&apos;s {p.plain.toLowerCase()}. Here&apos;s the honest read on it.
             </p>
           )}
-          <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
+          <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
             {whyFits(A, p)}{" "}{A.qrel === "moneyresearch" ? "One honest note: money potential is a reason to test it — not yet a reason to bet on it. The first 3 moves below are the cheapest possible test." : ""}
           </p>
           <Moves moves={p.moves} />
@@ -516,16 +516,16 @@ export default function Assessment() {
       if (fw && rf !== "green") {
         cards.push(
           <ResultCard key="fw" badge="Pays while you build" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={`Your Fastest First Win: ${fw.name}`} meta={`First dollar: typically ${fw.dollar}`}>
-            <p className="text-sm leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
+            <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
             <Moves moves={fw.moves} />
           </ResultCard>,
-          <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
+          <div key="bridge" className="p-5 rounded-2xl mb-4 text-[17px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
             How they work together: {fw.name}{" "}money funds your first months of {p.name.toLowerCase()}{" "}— you&apos;re earning by day 30 while the real goal ramps toward day 90.
           </div>
         );
       } else if (fw && rf === "green") {
         cards.push(
-          <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
+          <div key="bridge" className="p-5 rounded-2xl mb-4 text-[17px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
             You don&apos;t need a bridge income — your chosen path IS a fast path for you. If you want a backup anyway: {fw.name.toLowerCase()}{" "}scored next highest.
           </div>
         );
@@ -535,7 +535,7 @@ export default function Assessment() {
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(
         <ResultCard key="doubt" badge="You're in good hands" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title="You don't need the answer yet — that's our job." meta="Matched from everything you told us">
-          <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
+          <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
             {otherTxt ? <>You wrote: &quot;{otherTxt}&quot;. </> : null}Most people start exactly here — real skills, no target yet. That&apos;s not a gap, it&apos;s the normal starting point, and finding the target is what this assessment is for. Based on your time, your inventory, and how you like to work, here are the two paths that fit you best. Pick one, start small, and build up from there — we&apos;ll walk you through finding it, aiming it at real earnings, and growing it.
           </p>
         </ResultCard>
@@ -543,7 +543,7 @@ export default function Assessment() {
       if (fw) cards.push(<FwCard key="fw" fw={fw} />);
       if (lt) cards.push(<LtCard key="lt" lt={lt} />);
       if (fw && lt) cards.push(
-        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
+        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[17px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
           How they work together: {fw.name}{" "}pays your first 60 days while {lt.name.toLowerCase()}{" "}compounds toward the real ceiling.
         </div>
       );
@@ -553,7 +553,7 @@ export default function Assessment() {
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(
         <ResultCard key="other" badge="Your own path — we're on it with you" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={`Your idea: "${idea}"`} meta="Custom path — full validation treatment">
-          <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
+          <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
             You&apos;re carving your own path, and that deserves a real plan, not a canned one. Here&apos;s how we&apos;d validate any idea worth your time: (1) find 3 people already doing it and study how they actually get paid, (2) define the smallest version you could sell in 30 days, (3) pitch it to 5 real people before building anything. Run those three and you&apos;ll know more than months of thinking could tell you. And below are the two proven paths your answers scored highest — either one can fund the idea while you validate it.
           </p>
         </ResultCard>
@@ -561,7 +561,7 @@ export default function Assessment() {
       if (fw) cards.push(<FwCard key="fw" fw={fw} />);
       if (lt) cards.push(<LtCard key="lt" lt={lt} />);
       if (fw && lt) cards.push(
-        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
+        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[17px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
           How they work together: {fw.name}{" "}funds the runway while your own idea proves itself — earning while validating beats waiting.
         </div>
       );
@@ -571,7 +571,7 @@ export default function Assessment() {
       if (fw) cards.push(<FwCard key="fw" fw={fw} />);
       if (lt) cards.push(<LtCard key="lt" lt={lt} />);
       if (fw && lt) cards.push(
-        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[15px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
+        <div key="bridge" className="p-5 rounded-2xl mb-4 text-[17px] leading-relaxed font-medium" style={{ backgroundColor: C.green, color: C.cream }}>
           How they work together: {fw.name}{" "}pays your first 60 days while {lt.name.toLowerCase()}{" "}compounds toward the real ceiling.
         </div>
       );
@@ -587,7 +587,7 @@ export default function Assessment() {
           </a>
         </div>
         <div className="text-center mt-6">
-          <button onClick={restart} className="text-sm underline" style={{ color: C.gray }}>Retake the assessment</button>
+          <button onClick={restart} className="text-[15px] underline" style={{ color: C.gray }}>Retake the assessment</button>
         </div>
       </div>
     );
@@ -622,7 +622,7 @@ export default function Assessment() {
             <h1 className="font-display text-4xl md:text-5xl leading-[1.1] mb-3" style={{ color: C.green }}>
               Find your <span style={{ color: C.gold }}>two paths</span>.
             </h1>
-            <p className="text-[15px] leading-relaxed mb-6" style={{ color: C.gray }}>
+            <p className="text-[17px] leading-relaxed mb-6" style={{ color: C.gray }}>
               About 2 minutes, and every answer counts toward your plan. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b>{" "}and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b>{" "}on it. No fluff, no &quot;just believe in yourself.&quot;
             </p>
             <button onClick={start} className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
@@ -635,7 +635,7 @@ export default function Assessment() {
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>{q.section}</Tag>
             <h2 className="font-display text-[26px] mb-1 leading-snug" style={{ color: C.green }}>{q.title}</h2>
-            {q.sub && <p className="text-sm mb-2" style={{ color: C.gray }}>{q.sub}</p>}
+            {q.sub && <p className="text-[15px] mb-2" style={{ color: C.gray }}>{q.sub}</p>}
             <div className="flex flex-col gap-2.5 mt-5">
               {q.opts.map((o) => (
                 <Opt key={o.v} label={o.t} sub={o.s}
@@ -645,7 +645,7 @@ export default function Assessment() {
             </div>
             {q.other && A[q.key] === "other" && (
               <input type="text" value={otherTxt} onChange={(e) => { const v = e.target.value; setA((prev) => ({ ...prev, otherTxt: v })); }} placeholder="What is it? (a few words)"
-                className="w-full mt-3 px-4 py-3 rounded-xl border-2 text-[15px]" style={{ borderColor: C.beige, backgroundColor: "#FFFFFF" }} />
+                className="w-full mt-3 px-4 py-3 rounded-xl border-2 text-[17px]" style={{ borderColor: C.beige, backgroundColor: "#FFFFFF" }} />
             )}
             <NavRow onBack={back} onNext={next} nextLabel="Continue" nextDisabled={!canContinue} />
           </div>
@@ -658,15 +658,15 @@ export default function Assessment() {
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>One last thing</Tag>
             <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>Your two paths are ready.</h2>
-            <p className="text-[15px] mb-4" style={{ color: C.gray }}>Where should we send your plan so you don&apos;t lose it?</p>
+            <p className="text-[17px] mb-4" style={{ color: C.gray }}>Where should we send your plan so you don&apos;t lose it?</p>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com"
-              className="w-full px-4 py-3.5 rounded-xl border-2 text-[15px]" style={{ borderColor: emailErr ? C.red : C.beige, backgroundColor: "#FFFFFF" }} />
-            {emailErr && <p className="text-[13px] mt-2" style={{ color: C.red }}>{emailErr}</p>}
+              className="w-full px-4 py-3.5 rounded-xl border-2 text-[17px]" style={{ borderColor: emailErr ? C.red : C.beige, backgroundColor: "#FFFFFF" }} />
+            {emailErr && <p className="text-[14px] mt-2" style={{ color: C.red }}>{emailErr}</p>}
             <p className="text-sm font-medium mt-5 mb-2" style={{ color: C.ink }}>What should your plan protect you from?{" "}<span style={{ color: C.gray, fontWeight: 400 }}>(optional)</span></p>
             <div className="flex flex-wrap gap-2">
               {PROTECT_OPTS.map((o) => (
                 <button key={o.v} onClick={() => setProtectFrom(protectFrom === o.v ? null : o.v)}
-                  className="px-3.5 py-2 rounded-full text-[13px] border-2 transition-all"
+                  className="px-3.5 py-2 rounded-full text-[14px] border-2 transition-all"
                   style={{ borderColor: protectFrom === o.v ? C.green : C.beige, backgroundColor: protectFrom === o.v ? C.greenSoft : "#FFFFFF", color: C.ink, fontWeight: protectFrom === o.v ? 600 : 400 }}>
                   {o.t}
                 </button>
@@ -674,7 +674,7 @@ export default function Assessment() {
             </div>
             <p className="text-xs mt-4 leading-relaxed" style={{ color: C.gray }}>No spam — you can unsubscribe anytime. Your answers stay private.</p>
             <div className="flex justify-between items-center mt-6">
-              <button onClick={back} className="px-4 py-2.5 text-sm font-medium" style={{ color: C.gray }}>Back</button>
+              <button onClick={back} className="px-4 py-2.5 text-[15px] font-medium" style={{ color: C.gray }}>Back</button>
               <button onClick={submitGate} disabled={submitting}
                 className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: C.gold, color: C.green }}>
