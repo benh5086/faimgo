@@ -31,6 +31,7 @@ export default function Home() {
           <a href="#how-it-works" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>How It Works</a>
           <a href="#examples" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>Examples</a>
           <a href="#faq" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>FAQ</a>
+          <FeedbackWidget trigger="nav" kind="contact" navLabel="Contact" context="header-contact" />
           <a href="/assessment" className="press px-5 py-2.5 rounded-full text-[15px] font-semibold hover:opacity-90"
             style={{backgroundColor: C.goldBright, color: C.green}}>
             Get Started
@@ -240,10 +241,9 @@ export default function Home() {
         </span>
         <p className="text-[14px]" style={{color: '#9DB0A6'}}>© 2026 Faimgo. All rights reserved.</p>
         <div className="flex gap-6 items-center">
-          <FeedbackWidget variant="link" context="site-footer" />
           <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Privacy</a>
           <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Terms</a>
-          <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Contact</a>
+          <FeedbackWidget trigger="link" kind="contact" navLabel="Contact" context="footer-contact" />
         </div>
       </footer>
 

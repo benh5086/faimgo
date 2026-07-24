@@ -30,9 +30,9 @@ async function forward(payload) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { rating, message, email, context, page, ts } = body || {};
-    console.log("[FAIMGO FEEDBACK]", JSON.stringify({ rating, message, email, context, page, ts }));
-    await forward({ rating, message, email, context, page, ts });
+    const { kind, rating, category, message, email, context, page, ts } = body || {};
+    console.log("[FAIMGO FEEDBACK]", JSON.stringify({ kind, rating, category, message, email, context, page, ts }));
+    await forward({ kind, rating, category, message, email, context, page, ts });
     return Response.json({ ok: true });
   } catch (e) {
     console.error("[FAIMGO FEEDBACK ERROR]", e?.message);

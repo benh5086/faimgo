@@ -588,7 +588,7 @@ export default function Assessment() {
           </a>
         </div>
         <div className="mt-4">
-          <FeedbackWidget variant="inline" context={"results:" + computeResults(A).mode} />
+          <FeedbackWidget trigger="inline" kind="feedback" context={"results:" + computeResults(A).mode} />
         </div>
         <div className="text-center mt-6">
           <button onClick={restart} className="text-[15px] underline" style={{ color: C.gray }}>Retake the assessment</button>
