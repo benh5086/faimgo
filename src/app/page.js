@@ -1,4 +1,5 @@
 import Reveal from "./Reveal";
+import FeedbackWidget from "./FeedbackWidget";
 
 export default function Home() {
   // Crisp modern palette
@@ -238,7 +239,8 @@ export default function Home() {
           faim<span style={{color: C.goldBright}}>go</span>
         </span>
         <p className="text-[14px]" style={{color: '#9DB0A6'}}>© 2026 Faimgo. All rights reserved.</p>
-        <div className="flex gap-6">
+        <div className="flex gap-6 items-center">
+          <FeedbackWidget variant="link" context="site-footer" />
           <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Privacy</a>
           <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Terms</a>
           <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Contact</a>

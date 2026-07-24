@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FeedbackWidget from "../FeedbackWidget";
 
 /* ============================================================
    FAIMGO ASSESSMENT v3
@@ -585,6 +586,9 @@ export default function Assessment() {
           <a href="/#start" className="inline-block px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
             Start my 30/60/90 →
           </a>
+        </div>
+        <div className="mt-4">
+          <FeedbackWidget variant="inline" context={"results:" + computeResults(A).mode} />
         </div>
         <div className="text-center mt-6">
           <button onClick={restart} className="text-[15px] underline" style={{ color: C.gray }}>Retake the assessment</button>
