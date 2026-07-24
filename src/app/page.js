@@ -47,38 +47,38 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Hero Card Mockup */}
+        {/* Hero Card — mirrors a real assessment result */}
         <div className="flex-1 w-full rounded-2xl p-8" style={{backgroundColor: '#F0EBE1'}}>
-          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{color: '#C49A3C'}}>Your Opportunity Match</p>
-          <div className="rounded-xl p-5 mb-4" style={{backgroundColor: '#FAF7F2'}}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{color: '#C49A3C'}}>Your two paths</p>
+          <div className="rounded-xl p-5 mb-3" style={{backgroundColor: '#FAF7F2'}}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold" style={{color: '#1B3A2D'}}>AI Consulting</span>
-              <span className="text-xs px-2 py-1 rounded-full font-medium" style={{backgroundColor: '#1B3A2D', color: '#C49A3C'}}>Top Match</span>
+              <span className="text-sm font-semibold" style={{color: '#1B3A2D'}}>Freelancing Your Skill</span>
+              <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{backgroundColor: '#E4EEE9', color: '#0F6B3F'}}>Fastest first win</span>
             </div>
-            <p className="text-xs mb-3" style={{color: '#6B7280'}}>Leverages your expertise + client communication skills.</p>
-            <div className="flex gap-4">
+            <p className="text-xs mb-3" style={{color: '#6B7280'}}>Your computer is the only equipment it needs.</p>
+            <div className="flex gap-6">
               <div>
-                <p className="text-xs font-semibold" style={{color: '#1B3A2D'}}>Time to start</p>
-                <p className="text-xs" style={{color: '#6B7280'}}>2–4 weeks</p>
+                <p className="text-[11px] font-semibold" style={{color: '#1B3A2D'}}>First dollar</p>
+                <p className="text-xs" style={{color: '#6B7280'}}>1–3 weeks</p>
               </div>
               <div>
-                <p className="text-xs font-semibold" style={{color: '#1B3A2D'}}>Budget needed</p>
-                <p className="text-xs" style={{color: '#6B7280'}}>Low</p>
+                <p className="text-[11px] font-semibold" style={{color: '#1B3A2D'}}>To start</p>
+                <p className="text-xs" style={{color: '#6B7280'}}>$0</p>
               </div>
               <div>
-                <p className="text-xs font-semibold" style={{color: '#1B3A2D'}}>Income potential</p>
-                <p className="text-xs" style={{color: '#6B7280'}}>$2k–$8k/mo</p>
+                <p className="text-[11px] font-semibold" style={{color: '#1B3A2D'}}>Income ceiling</p>
+                <p className="text-xs" style={{color: '#6B7280'}}>High</p>
               </div>
             </div>
           </div>
-          <div className="rounded-xl p-4 opacity-60" style={{backgroundColor: '#FAF7F2'}}>
+          <div className="rounded-xl p-4" style={{backgroundColor: '#FAF7F2'}}>
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-semibold" style={{color: '#1B3A2D'}}>Digital Products</span>
-              <span className="text-xs px-2 py-1 rounded-full font-medium" style={{backgroundColor: '#F0EBE1', color: '#1B3A2D'}}>Strong Fit</span>
+              <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{backgroundColor: '#FBF3DE', color: '#8A6A14'}}>Long-term path</span>
             </div>
-            <p className="text-xs" style={{color: '#6B7280'}}>Flexible schedule + compounding content assets.</p>
+            <p className="text-xs" style={{color: '#6B7280'}}>Build it once — it keeps earning while you build the next.</p>
           </div>
-          <p className="text-xs mt-4 text-center" style={{color: '#6B7280'}}>Based on your skills, time, budget and goals</p>
+          <p className="text-xs mt-4 text-center" style={{color: '#6B7280'}}>Based on your time, inventory, and how you work</p>
         </div>
       </section>
 
@@ -136,9 +136,9 @@ export default function Home() {
           <h2 className="font-display text-4xl mb-12" style={{color: '#1B3A2D'}}>Real Paths for Real People</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              {persona: 'Corporate Professional', path: 'AI Consulting', why: 'Leverages domain expertise + client communication skills.', time: '2–4 weeks to first offer', budget: 'Low — tools + outreach'},
-              {persona: 'Stay-at-Home Parent', path: 'Digital Products + Content', why: 'Flexible schedule + compounding content assets.', time: '1–2 weeks to publish', budget: 'Low — platform + basic tools'},
-              {persona: 'Skilled Trades Worker', path: 'Local Service + Online Lead Gen', why: 'High-demand services + simple lead capture.', time: '1–3 weeks to first leads', budget: 'Low-medium — basic ads + tools'},
+              {persona: 'Corporate Professional', path: 'Freelancing Your Skill', why: 'Turns years of expertise into paid client work — no new skills required.', time: '1–3 weeks to first client', budget: '$0 to start'},
+              {persona: 'Busy Parent', path: 'Tutoring & Coaching', why: 'Teach what you already know, on a schedule that fits around the kids.', time: '1–2 weeks to first session', budget: '$0 to start'},
+              {persona: 'Hands-On & Practical', path: 'Local Services', why: 'High-demand work in your own neighborhood, paid the same week.', time: 'Days to first job', budget: 'Rent gear, buy later'},
             ].map((item, i) => (
               <div key={i} className="p-6 rounded-2xl" style={{backgroundColor: '#FAF7F2'}}>
                 <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{color: '#C49A3C'}}>{item.persona}</p>
