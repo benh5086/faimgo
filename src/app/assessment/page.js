@@ -271,7 +271,7 @@ function track(sid, name, extra) {
 function Opt({ label, sub, selected, onClick }) {
   return (
     <button onClick={onClick}
-      className="block w-full text-left px-4 py-4 rounded-xl border-2 transition-all text-[17px] leading-snug"
+      className="block w-full text-left px-4 py-4 rounded-xl border-2 transition-all text-[17px] leading-snug hover:-translate-y-0.5"
       style={{ borderColor: selected ? C.green : C.beige, backgroundColor: selected ? C.greenSoft : "#FFFFFF", color: C.ink, fontWeight: selected ? 600 : 400 }}>
       {label}
       {sub && <span className="block text-[14px] mt-0.5" style={{ color: C.gray, fontWeight: 400 }}>{sub}</span>}
@@ -374,7 +374,7 @@ export default function Assessment() {
       <div className="flex justify-between items-center mt-6">
         <button onClick={onBack} className="px-4 py-2.5 text-[15px] font-medium" style={{ color: C.gray }}>Back</button>
         <button onClick={onNext} disabled={nextDisabled}
-          className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ backgroundColor: C.green, color: C.cream }}>{nextLabel}</button>
       </div>
     );
@@ -582,7 +582,7 @@ export default function Assessment() {
         <div className="p-7 rounded-2xl text-center" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
           <h3 className="font-display text-[22px]" style={{ color: C.green }}>This is the map. The walkthrough is the product.</h3>
           <p className="text-sm leading-relaxed my-3" style={{ color: C.ink }}>{tone}{" "}Faimgo walks you from these first moves to your first dollar — step by step, honestly.</p>
-          <a href="/#start" className="inline-block px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
+          <a href="/#start" className="inline-block px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
             Start my 30/60/90 →
           </a>
         </div>
@@ -616,6 +616,7 @@ export default function Assessment() {
           </>
         )}
 
+        <div key={step} className="reveal-in">
         {step === -1 && (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>Faimgo Assessment</Tag>
@@ -625,7 +626,7 @@ export default function Assessment() {
             <p className="text-[17px] leading-relaxed mb-6" style={{ color: C.gray }}>
               About 2 minutes, and every answer counts toward your plan. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b>{" "}and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b>{" "}on it. No fluff, no &quot;just believe in yourself.&quot;
             </p>
-            <button onClick={start} className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
+            <button onClick={start} className="px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
               Start
             </button>
           </div>
@@ -676,7 +677,7 @@ export default function Assessment() {
             <div className="flex justify-between items-center mt-6">
               <button onClick={back} className="px-4 py-2.5 text-[15px] font-medium" style={{ color: C.gray }}>Back</button>
               <button onClick={submitGate} disabled={submitting}
-                className="px-8 py-3 rounded-full font-semibold text-base transition-all hover:opacity-90 disabled:opacity-50"
+                className="px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: C.gold, color: C.green }}>
                 {submitting ? "One moment…" : "Show me my plan"}
               </button>
@@ -685,6 +686,7 @@ export default function Assessment() {
         )}
 
         {q?.type === "results" && <Results />}
+        </div>
       </div>
     </main>
   );
