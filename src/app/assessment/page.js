@@ -304,6 +304,7 @@ export default function Assessment() {
   const [protectFrom, setProtectFrom] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [emailed, setEmailed] = useState(null); // null | "sent" | "failed"
+  const [retrying, setRetrying] = useState(false);
 
   /* ---------- MEMORY ----------
      Both of these are read after mount, never during render: `saved` and the
@@ -401,32 +402,57 @@ export default function Assessment() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /* ---------- SENDING THE PLAN ----------
+     One function, used both by the gate on submit and by the retry button on
+     the results screen. It returns "sent" | "failed" and never throws: the
+     plan is already on screen and already saved locally, so a mail problem is
+     ours to carry, never something they see instead of their results. */
+  async function postLead(results) {
+    try {
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v6", ts: new Date().toISOString() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      // We say "sent" only when it was actually sent. If mail is down we say
+      // that instead — a false confirmation is worse than no confirmation.
+      return data?.emailed === true ? "sent" : "failed";
+    } catch (e) {
+      return "failed"; /* never block results on network issues */
+    }
+  }
+
   async function submitGate() {
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!ok) { setEmailErr("Please enter a valid email so we can send your plan."); return; }
     setEmailErr("");
     setSubmitting(true);
     const results = computeResults(A);
-    try {
-      const res = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v5", ts: new Date().toISOString() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      // We say "sent" only when it was actually sent. If mail is down we say
-      // that instead — a false confirmation is worse than no confirmation.
-      const state = data?.emailed === true ? "sent" : "failed";
-      setEmailed(state);
-      savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
-    } catch (e) {
-      setEmailed("failed"); /* never block results on network issues */
-      // Save it anyway. The network failing is exactly when local memory earns
-      // its keep — the plan is still theirs and it should survive a refresh.
-      savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: "failed" });
-    }
+    const state = await postLead(results);
+    setEmailed(state);
+    // Save it either way. The send failing is exactly when local memory earns
+    // its keep — the plan is still theirs and it should survive a refresh.
+    savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
     setSubmitting(false);
     next();
+  }
+
+  /* The retry the failure message promises.
+     Before this existed the failure card said "we'll fix the send and it'll
+     reach you when we do" — which nobody could keep, because there is no
+     server-side record to resend from. Until there is one, the only honest
+     retry is one they can trigger themselves, while the answers are still
+     in front of them. */
+  async function retrySend() {
+    if (retrying) return;
+    setRetrying(true);
+    const results = computeResults(A);
+    const state = await postLead(results);
+    setEmailed(state);
+    savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
+    setRetrying(false);
+    track(ids, state === "sent" ? "retry_sent" : "retry_failed");
   }
 
   const canContinue = q && !q.type && (q.multi ? (A[q.key] || []).length > 0 : A[q.key] !== undefined);
@@ -628,9 +654,16 @@ export default function Assessment() {
     return (
       <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
         <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
-        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
-          We couldn&apos;t get the email out just now — that&apos;s on us, not you. Your plan is all below, so screenshot it or copy it before you close this. We&apos;ll fix the send and it&apos;ll reach <b>{email}</b> when we do.
-        </p>
+        <div>
+          <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
+            We couldn&apos;t get the email out to <b>{email}</b> just now — that&apos;s on us, not you. Nothing is lost: your whole plan is right below, and this browser has it saved. Try the send again, or copy the plan before you close this.
+          </p>
+          <button onClick={retrySend} disabled={retrying}
+            className="mt-3 px-5 py-2.5 press rounded-full font-semibold text-[15px] hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: C.gold, color: C.green }}>
+            {retrying ? "Trying…" : "Try sending again"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -837,7 +870,7 @@ export default function Assessment() {
                 </button>
               ))}
             </div>
-            <p className="text-xs mt-4 leading-relaxed" style={{ color: C.gray }}>No spam — you can unsubscribe anytime. Your answers stay private.</p>
+            <p className="text-xs mt-4 leading-relaxed" style={{ color: C.gray }}>One email: your plan. Nothing else unless you ask. Your answers stay private.</p>
             <div className="flex justify-between items-center mt-6">
               <button onClick={back} className="px-4 py-2.5 text-[15px] font-medium" style={{ color: C.gray }}>Back</button>
               <button onClick={submitGate} disabled={submitting}
