@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 
   trigger controls the entry point:
     "inline" → an inviting card (results page)
+    "cta"    → a solid primary button on a light card (plan page)
     "nav"    → a nav-style link (light text, for the dark header)
     "link"   → a quiet muted link (footer)
 
@@ -96,6 +97,18 @@ export default function FeedbackWidget({ trigger = "link", kind = "feedback", co
           Share a quick thought
         </button>
       </div>
+    );
+  } else if (trigger === "cta") {
+    /* A real button on a light card. Used where the copy above it has already
+       made the offer ("get a person on it") and this is the thing you press.
+       Deliberately solid rather than muted: the channel behind it is real, so
+       it should not look like a footer afterthought. */
+    triggerEl = (
+      <button onClick={() => setOpen(true)}
+        className="press inline-block px-6 py-3 rounded-full font-semibold text-[15px] hover:opacity-90"
+        style={{ backgroundColor: C.green, color: C.white }}>
+        {navLabel}
+      </button>
     );
   } else if (trigger === "nav") {
     triggerEl = (

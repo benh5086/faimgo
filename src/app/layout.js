@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,23 +11,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const fraunces = Fraunces({
-  variable: "--font-display",
-  subsets: ["latin"],
-  axes: ["opsz"],
-});
-
+/* Until now every browser tab and every shared link said "Create Next App".
+   Cheap to fix, and it is the first thing anyone sees before the site loads. */
 export const metadata = {
-  title: "Faimgo — Find, Aim, and Grow Your Side Income",
+  metadataBase: new URL("https://faimgo.vercel.app"),
+  title: {
+    default: "Faimgo — find the side income that fits your life",
+    template: "%s · Faimgo",
+  },
   description:
-    "Faimgo finds your hidden side income opportunity and gives you a clear, honest path to act on it — based on who you actually are.",
+    "A short, honest assessment that points you at one way to earn on the side — then walks you through the first 90 days, step by step.",
+  openGraph: {
+    title: "Faimgo — find the side income that fits your life",
+    description:
+      "A short, honest assessment that points you at one way to earn on the side — then walks you through the first 90 days, step by step.",
+    url: "https://faimgo.vercel.app",
+    siteName: "Faimgo",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Faimgo — find the side income that fits your life",
+    description:
+      "A short, honest assessment that points you at one way to earn on the side — then walks you through the first 90 days.",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

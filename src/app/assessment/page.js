@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
 import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
 import { session, loadSaved, saveProgress, savePlan, clearWork } from "../../lib/store.js";
@@ -456,7 +457,7 @@ export default function Assessment() {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v7", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v8", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
       // We say "sent" only when it was actually sent. If mail is down we say
@@ -869,12 +870,17 @@ export default function Assessment() {
       <div>
         <MailStatus />
         {cards}
+        {/* This card used to point at /#start — an anchor on the homepage with
+            nothing behind it. The walkthrough is real now, so the button goes
+            to it, and the copy stops promising a future product. */}
         <div className="p-7 rounded-2xl text-center" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
-          <h3 className="font-display text-[22px]" style={{ color: C.green }}>This is the map. The walkthrough is the product.</h3>
-          <p className="text-sm leading-relaxed my-3" style={{ color: C.ink }}>{tone}{" "}Faimgo walks you from these first moves to your first dollar — step by step, honestly.</p>
-          <a href="/#start" className="inline-block px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
-            Start my 30/60/90 →
-          </a>
+          <h3 className="font-display text-[22px]" style={{ color: C.green }}>This is the map. Here are the directions.</h3>
+          <p className="text-sm leading-relaxed my-3" style={{ color: C.ink }}>{tone}{" "}Your walkthrough is ready — the same path, broken into numbered steps with what to do, what to say, and how to tell when a step is done.</p>
+          <Link href="/plan" onClick={() => track(ids, "plan_opened")}
+            className="inline-block px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90"
+            style={{ backgroundColor: C.green, color: C.cream }}>
+            Open my walkthrough →
+          </Link>
         </div>
         <div className="mt-4">
           <FeedbackWidget trigger="inline" kind="feedback" context={"results:" + computeResults(A).mode} />
