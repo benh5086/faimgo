@@ -51,7 +51,7 @@ const QUESTIONS = [
     { t: "10–20 — serious side commitment", v: "10to20" },
     { t: "20+ — this is a priority", v: "20plus" }] },
   { key: "break1", type: "insight1" },
-  { key: "qinv", section: "Your Starting Inventory", title: "What are you already holding that could help you start?", multi: true, sub: "Count what you own — select all that apply.", opts: [
+  { key: "qinv", section: "Your Starting Inventory", title: "What are you already holding that could help you start?", multi: true, sub: "Count everything you own. Most people have more than one.", opts: [
     { t: "A reliable car", v: "car" },
     { t: "A computer + solid internet", v: "computer" },
     { t: "Tools or equipment (lawn, cleaning, craft, camera…)", v: "tools" },
@@ -258,15 +258,41 @@ function stepsFor(ans) {
 }
 
 /* ---------- UI PIECES ---------- */
-function Opt({ label, sub, selected, onClick }) {
+/* `multi` draws a checkbox square instead of nothing. This is the only signal
+   on the screen that survives not reading the instructions: four single-choice
+   questions come first, so by the time someone reaches the inventory question
+   they have been trained that one click means "answered, move on." A square
+   box is the universal shape for "check as many as you want" — the copy above
+   the options says it too, but the box is what gets seen. */
+function Opt({ label, sub, selected, onClick, multi }) {
   return (
     <button onClick={onClick}
-      className="block w-full text-left px-4 py-4 rounded-xl border-2 transition-all text-[17px] leading-snug hover:-translate-y-0.5"
+      className="flex w-full text-left gap-3 items-start px-4 py-4 rounded-xl border-2 transition-all text-[17px] leading-snug hover:-translate-y-0.5"
       style={{ borderColor: selected ? C.green : C.beige, backgroundColor: selected ? C.greenSoft : "#FFFFFF", color: C.ink, fontWeight: selected ? 600 : 400 }}>
-      {label}
-      {sub && <span className="block text-[14px] mt-0.5" style={{ color: C.gray, fontWeight: 400 }}>{sub}</span>}
+      {multi && (
+        <span aria-hidden="true" className="flex-shrink-0 w-5 h-5 mt-[3px] rounded-[6px] border-2 flex items-center justify-center text-[12px] font-bold"
+          style={{ borderColor: selected ? C.green : "#C3CCC6", backgroundColor: selected ? C.green : "#FFFFFF", color: C.cream }}>
+          {selected ? "✓" : ""}
+        </span>
+      )}
+      <span className="block">
+        {label}
+        {sub && <span className="block text-[14px] mt-0.5" style={{ color: C.gray, fontWeight: 400 }}>{sub}</span>}
+      </span>
     </button>
   );
+}
+/* Live count under a multi-select. The pill above says more than one is
+   allowed; this says it again at the moment it's actionable — after the first
+   click, which is exactly when someone who missed the instruction is about to
+   hit Continue. */
+function MultiCount({ picked }) {
+  const n = picked.length;
+  let msg;
+  if (n === 0) msg = "Nothing selected yet — check every one that's true for you.";
+  else if (picked.includes("none")) msg = "Nothing on hand — that's fine, several paths need only time and follow-through.";
+  else msg = `${n} selected. Check any others that apply before you continue.`;
+  return <p className="text-[14px] mt-3.5" style={{ color: C.gray }}>{msg}</p>;
 }
 function Tag({ children }) {
   return <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.gold }}>{children}</p>;
@@ -294,6 +320,19 @@ function Kit({ items }) {
   );
 }
 
+/* Stable fingerprint of an answer set, so "did they actually change anything?"
+   can't be fooled by key insertion order or by a multi-select being rebuilt in
+   a different order. Used only to decide whether an already-sent email has
+   gone out of date. */
+function answersKey(a) {
+  const o = {};
+  Object.keys(a || {}).sort().forEach((k) => {
+    const v = a[k];
+    o[k] = Array.isArray(v) ? [...v].sort() : v;
+  });
+  return JSON.stringify(o);
+}
+
 /* ---------- MAIN COMPONENT ---------- */
 export default function Assessment() {
   const [A, setA] = useState({});
@@ -303,8 +342,10 @@ export default function Assessment() {
   const otherTxt = A.otherTxt || "";
   const [protectFrom, setProtectFrom] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [emailed, setEmailed] = useState(null); // null | "sent" | "failed"
+  const [emailed, setEmailed] = useState(null); // null | "sent" | "failed" | "stale"
   const [retrying, setRetrying] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [preEdit, setPreEdit] = useState(null); // answersKey snapshot taken when editing began
 
   /* ---------- MEMORY ----------
      Both of these are read after mount, never during render: `saved` and the
@@ -361,10 +402,13 @@ export default function Assessment() {
     if (nxt && nxt.type === "gate") track(ids, "gate_view");
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const back = () => setStep((s) => Math.max(-1, s - 1));
+  /* While editing, Back must not fall off the front of the assessment into the
+     intro screen — they have a finished plan waiting behind them, not nothing. */
+  const back = () => setStep((s) => Math.max(editing ? 0 : -1, s - 1));
   const restart = () => {
     clearWork();
     setA({}); setStep(-1); setEmail(""); setProtectFrom(null); setEmailed(null);
+    setEditing(false); setPreEdit(null);
     setSaved(false);
     track(ids, "restart");
   };
@@ -412,7 +456,7 @@ export default function Assessment() {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v6", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v7", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
       // We say "sent" only when it was actually sent. If mail is down we say
@@ -435,6 +479,9 @@ export default function Assessment() {
     // its keep — the plan is still theirs and it should survive a refresh.
     savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
     setSubmitting(false);
+    // Walking all the way through the gate is itself a valid way to finish an
+    // edit — the mail that just went out matches the answers, so nothing is stale.
+    setEditing(false); setPreEdit(null);
     next();
   }
 
@@ -453,6 +500,40 @@ export default function Assessment() {
     savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
     setRetrying(false);
     track(ids, state === "sent" ? "retry_sent" : "retry_failed");
+  }
+
+  /* ---------- CHANGING AN ANSWER ----------
+     Retaking was the only way back in, and it threw away all eight answers to
+     change one. Editing keeps them: drop back onto question one with everything
+     still filled in, and "Back to my plan" recomputes the result from whatever
+     the answers now say. Nothing else has to be kept in sync, because the plan
+     is a pure function of A — the same reason the email can never drift from
+     the screen.
+
+     The one thing that CAN drift is an email already sitting in their inbox. If
+     the answers moved after a successful send, the screen and the inbox now
+     disagree, so we say so and offer to send the new one. Letting them quietly
+     disagree would be the same class of mistake as the promises we just spent a
+     release removing. */
+  function editAnswers() {
+    setPreEdit(answersKey(A));
+    setEditing(true);
+    setStep(0);
+    track(ids, "edit_answers");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function backToPlan() {
+    const changed = preEdit !== null && preEdit !== answersKey(A);
+    const results = computeResults(A);
+    const mail = changed && emailed === "sent" ? "stale" : emailed;
+    setEmailed(mail);
+    savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: mail });
+    setEditing(false);
+    setPreEdit(null);
+    setStep(stepsFor(A).length - 1);
+    if (changed) track(ids, "answers_edited");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   const canContinue = q && !q.type && (q.multi ? (A[q.key] || []).length > 0 : A[q.key] !== undefined);
@@ -651,6 +732,23 @@ export default function Assessment() {
         </div>
       );
     }
+    if (emailed === "stale") {
+      return (
+        <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
+          <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
+          <div>
+            <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
+              You changed your answers, so this plan is newer than the one we emailed to <b>{email}</b>. What&apos;s on this screen is the current one. Send yourself the updated copy and the old email can be ignored.
+            </p>
+            <button onClick={retrySend} disabled={retrying}
+              className="mt-3 px-5 py-2.5 press rounded-full font-semibold text-[15px] hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: C.gold, color: C.green }}>
+              {retrying ? "Sending…" : "Email me the updated plan"}
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
         <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
@@ -781,8 +879,22 @@ export default function Assessment() {
         <div className="mt-4">
           <FeedbackWidget trigger="inline" kind="feedback" context={"results:" + computeResults(A).mode} />
         </div>
-        <div className="text-center mt-6">
-          <button onClick={restart} className="text-[15px] underline" style={{ color: C.gray }}>Retake the assessment</button>
+        {/* Two different intentions, and they were collapsed into one button
+            before. Changing your mind about a single answer is the common one;
+            wanting a clean slate is the rare one. The common one now keeps
+            the work. */}
+        <div className="flex flex-col items-center gap-3 mt-7">
+          <button onClick={editAnswers}
+            className="px-6 py-2.5 press rounded-full font-semibold text-[15px] border-2 hover:opacity-80"
+            style={{ borderColor: C.green, color: C.green, backgroundColor: "transparent" }}>
+            Change an answer
+          </button>
+          <p className="text-[13px] text-center max-w-sm leading-relaxed" style={{ color: C.gray }}>
+            Your answers stay filled in — change what you want and come straight back. The plan updates itself.
+          </p>
+          <button onClick={restart} className="text-[14px] underline mt-1" style={{ color: C.gray }}>
+            Or start the whole thing over
+          </button>
         </div>
       </div>
     );
@@ -811,6 +923,21 @@ export default function Assessment() {
           </>
         )}
 
+        {/* Sits outside the animated block on purpose — it should stay put while
+            the questions change behind it, so the way back is never a moving target. */}
+        {editing && q && q.type !== "results" && (
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5 p-3.5 rounded-2xl" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
+            <span className="text-[14px] leading-snug" style={{ color: C.ink }}>
+              Editing your answers. Change whatever you like — your plan updates when you go back.
+            </span>
+            <button onClick={backToPlan}
+              className="px-5 py-2.5 press rounded-full font-semibold text-[14px] whitespace-nowrap hover:opacity-90"
+              style={{ backgroundColor: C.green, color: C.cream }}>
+              Back to my plan →
+            </button>
+          </div>
+        )}
+
         <div key={step} className="reveal-in">
         {step === -1 && saved && <WelcomeBack />}
 
@@ -834,13 +961,20 @@ export default function Assessment() {
             <Tag>{q.section}</Tag>
             <h2 className="font-display text-[26px] mb-1 leading-snug" style={{ color: C.green }}>{q.title}</h2>
             {q.sub && <p className="text-[15px] mb-2" style={{ color: C.gray }}>{q.sub}</p>}
+            {q.multi && (
+              <p className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-full text-[13px] font-bold"
+                style={{ backgroundColor: C.yellowSoft, color: C.gold }}>
+                ✓ Select all that apply — you can pick more than one
+              </p>
+            )}
             <div className="flex flex-col gap-2.5 mt-5">
               {q.opts.map((o) => (
-                <Opt key={o.v} label={o.t} sub={o.s}
+                <Opt key={o.v} label={o.t} sub={o.s} multi={q.multi}
                   selected={q.multi ? (A[q.key] || []).includes(o.v) : A[q.key] === o.v}
                   onClick={() => pick(q.key, o.v, q.multi)} />
               ))}
             </div>
+            {q.multi && <MultiCount picked={A[q.key] || []} />}
             {q.other && A[q.key] === "other" && (
               <input type="text" value={otherTxt} onChange={(e) => { const v = e.target.value; setA((prev) => ({ ...prev, otherTxt: v })); }} placeholder="What is it? (a few words)"
                 className="w-full mt-3 px-4 py-3 rounded-xl border-2 text-[17px]" style={{ borderColor: C.beige, backgroundColor: "#FFFFFF" }} />

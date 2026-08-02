@@ -202,7 +202,7 @@ export function renderPlanEmail({ answers, results, otherIdea, protectFrom, plan
 
   const linkBlock = planUrl
     ? `<div style="margin:4px 0 0;font:14px/1.6 Helvetica,Arial,sans-serif;color:${C.gray};">
-         Want to change an answer? <a href="${esc(planUrl)}" style="color:${C.green};font-weight:700;">Open Faimgo again</a>. On the device you used, your answers are still there — pick up where you left off, or start over.
+         Want to change an answer? <a href="${esc(planUrl)}" style="color:${C.green};font-weight:700;">Open Faimgo again</a> on the device you used — your plan is still there, and there&rsquo;s a <b>Change an answer</b> button under it. Your other answers stay filled in, and the plan updates itself.
        </div>` : "";
 
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:${C.cream};">
@@ -234,7 +234,7 @@ export function renderPlanEmail({ answers, results, otherIdea, protectFrom, plan
     ...(tone ? [tone, ""] : []),
     ...textLines,
     "Do move 1 this week. Not the whole list — just move 1.", "",
-    ...(planUrl ? ["Want to change an answer? Open Faimgo again: " + planUrl, ""] : []),
+    ...(planUrl ? ["Want to change an answer? Open Faimgo again on the device you used: " + planUrl, "Your plan is still there, with a \"Change an answer\" button under it. Your other answers stay filled in.", ""] : []),
     "Reply to this email if a step doesn't fit your situation. A real person reads it.",
   ].join("\n");
 
