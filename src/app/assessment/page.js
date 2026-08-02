@@ -5,6 +5,7 @@ import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
 import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
 import { session, loadSaved, saveProgress, savePlan, clearWork } from "../../lib/store.js";
+import { track } from "../../lib/track.js";
 
 /* ============================================================
    FAIMGO ASSESSMENT v3
@@ -231,25 +232,8 @@ function computeResults(A) {
 }
 
 /* ---------- ANALYTICS (fire and forget) ----------
-   `ids` is { fid, sid }. fid is the person and survives across visits;
-   sid is this sitting. Both go out on every event so that the day we can
-   join them up, the history is already there waiting.
-   Events fired before the ids are read (first paint) simply carry nulls —
-   we never delay or block the flow to wait for storage. */
-function track(ids, name, extra) {
-  try {
-    fetch("/api/lead", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "event", name,
-        sid: ids?.sid || null, fid: ids?.fid || null, visits: ids?.visits || null,
-        ts: new Date().toISOString(), ...(extra || {}),
-      }),
-      keepalive: true,
-    }).catch(() => {});
-  } catch (e) { /* analytics must never break the flow */ }
-}
+   Moved to src/lib/track.js when /plan needed the same function.
+   Imported at the top of this file; every call below is unchanged. */
 
 /* The visible steps depend on the answers, so this has to be a function of
    them — a resumed session needs the same list the original sitting had. */
@@ -457,7 +441,7 @@ export default function Assessment() {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v8", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v9", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
       // We say "sent" only when it was actually sent. If mail is down we say
@@ -728,7 +712,7 @@ export default function Assessment() {
         <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.greenSoft, border: `1px solid #BFD8CB` }}>
           <span className="text-[17px] leading-none mt-[2px]" style={{ color: "#0F6B3F" }}>✓</span>
           <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
-            The whole plan is in your inbox at <b>{email}</b> — every move, not a summary. Nothing to log into. If it isn&apos;t there in a minute, check spam and mark it &quot;not spam&quot; so the next one lands.
+            The whole plan is in your inbox at <b>{email}</b>{" "}— every move, not a summary. Nothing to log into. If it isn&apos;t there in a minute, check spam and mark it &quot;not spam&quot; so the next one lands.
           </p>
         </div>
       );
@@ -755,7 +739,7 @@ export default function Assessment() {
         <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
         <div>
           <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
-            We couldn&apos;t get the email out to <b>{email}</b> just now — that&apos;s on us, not you. Nothing is lost: your whole plan is right below, and this browser has it saved. Try the send again, or copy the plan before you close this.
+            We couldn&apos;t get the email out to <b>{email}</b>{" "}just now — that&apos;s on us, not you. Nothing is lost: your whole plan is right below, and this browser has it saved. Try the send again, or copy the plan before you close this.
           </p>
           <button onClick={retrySend} disabled={retrying}
             className="mt-3 px-5 py-2.5 press rounded-full font-semibold text-[15px] hover:opacity-90 disabled:opacity-50"

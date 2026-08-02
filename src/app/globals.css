@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/* ============================================================
+   FAIMGO — GLOBAL STYLES
+
+   Three class names have been used across the site since the
+   first release and were never defined anywhere: font-display
+   (every heading), press (every button), reveal-in (the modal
+   and each assessment step). Undefined classes fail silently —
+   the markup looked right, the pages compiled, and the styling
+   simply never arrived. Headings fell back to Arial, buttons
+   had no press feedback, and things that were meant to arrive
+   softly just appeared. This file is where those three live.
+
+   The palette is fixed and light on purpose: cream, green,
+   gold. Every surface in the app sets its own colors inline
+   from that palette, so there is no dark variant to honor —
+   the old prefers-color-scheme block only ever produced a
+   black band behind a cream page, and is gone.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #15181b;
+  --background: #F1F4F2; /* cream — the brand's paper */
+  --foreground: #15181B; /* ink */
 }
 
 @theme inline {
@@ -15,37 +34,80 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  /* Was Arial. The Geist face is already loaded by layout.js and was
+     being paid for on every page load without ever being used. */
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ---------- headings ----------
+   Same family as the body, deliberately. What separates a heading
+   here is weight, tighter tracking, and a line length that breaks
+   evenly — not a second typeface. A display face is a real design
+   decision and belongs in its own change, not smuggled in with a
+   bug fix. */
 .font-display {
-  font-family: var(--font-display), Georgia, "Times New Roman", serif;
-  letter-spacing: -0.015em;
-  font-weight: 600;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.021em;
+  text-wrap: balance;
 }
 
-/* ---------- Motion: entrances + micro-interactions ---------- */
-@keyframes faimgo-fade-up {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ---------- buttons ----------
+   A button that does nothing when touched reads as broken, and
+   this product asks people to press things they are nervous
+   about. The response is small on purpose: it should feel like
+   the button took the press, not like the page moved. */
+.press {
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+  will-change: transform;
+}
+.press:hover {
+  transform: translateY(-1px);
+}
+.press:active {
+  transform: translateY(1px) scale(0.985);
+}
+.press:focus-visible {
+  outline: 2px solid #8A6A14; /* gold */
+  outline-offset: 3px;
+}
+.press:disabled,
+.press[disabled] {
+  transform: none;
 }
 
-/* Scroll-reveal (applied by the Reveal client component) */
-.reveal-in { animation: faimgo-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* ---------- arrivals ----------
+   Used on each assessment step and on the feedback modal. The
+   distance is short and the curve settles rather than bounces:
+   the point is that the next question feels handed to you, not
+   that anything is animated at you. */
+@keyframes faimgo-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.reveal-in {
+  animation: faimgo-reveal 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
 
-/* Hero entrance on load */
-.hero-rise { opacity: 0; animation: faimgo-fade-up 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-
-/* Card hover lift + soft shadow */
-.lift { transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease; }
-.lift:hover { transform: translateY(-4px); box-shadow: 0 20px 44px -22px rgba(20, 36, 27, 0.30); }
-
-/* Button hover lift */
-.press { transition: transform 0.16s ease, box-shadow 0.2s ease, opacity 0.2s ease; }
-.press:hover { transform: translateY(-2px); }
-
-/* Respect users who prefer no motion */
+/* Someone who has asked their system to stop moving things has
+   usually asked for a reason. Nothing here is load-bearing. */
 @media (prefers-reduced-motion: reduce) {
-  .reveal-in, .hero-rise { animation: none; opacity: 1; transform: none; }
-  .lift:hover, .press:hover { transform: none; }
+  .reveal-in {
+    animation: none;
+  }
+  .press,
+  .press:hover,
+  .press:active {
+    transition: none;
+    transform: none;
+  }
 }

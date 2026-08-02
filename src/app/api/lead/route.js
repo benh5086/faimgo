@@ -217,7 +217,8 @@ async function sendPlan({ email, answers, results, otherIdea, protectFrom }) {
   try {
     mail = renderPlanEmail({
       answers, results, otherIdea, protectFrom,
-      planUrl: site + "/assessment",
+      planUrl: site + "/plan",
+      editUrl: site + "/assessment",
     });
   } catch (e) {
     console.error("[FAIMGO MAIL RENDER ERROR]", e?.message);

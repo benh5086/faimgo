@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
-import { loadSaved } from "../../lib/store.js";
+import { loadSaved, session } from "../../lib/store.js";
+import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
 
 /* ============================================================
@@ -220,7 +221,22 @@ export default function PlanPage() {
   const [state, setState] = useState({ loading: true, saved: null });
 
   useEffect(() => {
-    setState({ loading: false, saved: loadSaved() });
+    const saved = loadSaved();
+    setState({ loading: false, saved });
+
+    /* Until now the only way we knew this page had been opened was the
+       click on the results screen. The plan email now links straight
+       here, and an arrival from an inbox never touches that button —
+       so without this, every email reader would be invisible.
+
+       Two names rather than one event with a field: the sheet behind
+       this has fixed columns, and an empty arrival is the number that
+       actually matters. It means someone opened the walkthrough on a
+       device that has never seen their answers — which is the exact
+       limit the email warns about, and the first hard evidence of how
+       often the warning is not enough. */
+    const ids = session();
+    track(ids, saved && saved.plan && saved.plan.results ? "plan_view" : "plan_view_empty");
   }, []);
 
   if (state.loading) {
@@ -367,7 +383,7 @@ export default function PlanPage() {
       {plan.notBuiltYet.length > 0 && (
         <div className="p-5 rounded-2xl mb-9" style={{ backgroundColor: "#FFFFFF", border: `1px dashed ${C.gray}` }}>
           <p className="text-[15px] leading-relaxed" style={{ color: C.gray }}>
-            <b style={{ color: C.ink }}>Not built yet, and we&apos;d rather say so:</b> an ask-anything box that already knows
+            <b style={{ color: C.ink }}>Not built yet, and we&apos;d rather say so:</b>{" "}an ask-anything box that already knows
             which step you&apos;re on, and AI coaching that picks up from your answers instead of starting cold. Both are
             designed and neither is live. Until they are, the box below reaches a person, not a bot.
           </p>

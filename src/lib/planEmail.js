@@ -110,7 +110,7 @@ const TONE = {
 
 /* ---------- the whole email ---------- */
 
-export function renderPlanEmail({ answers, results, otherIdea, protectFrom, planUrl }) {
+export function renderPlanEmail({ answers, results, otherIdea, protectFrom, planUrl, editUrl }) {
   const A = answers || {};
   const R = results || {};
   let blocks = "";
@@ -200,9 +200,31 @@ export function renderPlanEmail({ answers, results, otherIdea, protectFrom, plan
          font:15px/1.6 Helvetica,Arial,sans-serif;color:${C.ink};">${esc(tone)}</div>`
     : "";
 
-  const linkBlock = planUrl
-    ? `<div style="margin:4px 0 0;font:14px/1.6 Helvetica,Arial,sans-serif;color:${C.gray};">
-         Want to change an answer? <a href="${esc(planUrl)}" style="color:${C.green};font-weight:700;">Open Faimgo again</a> on the device you used — your plan is still there, and there&rsquo;s a <b>Change an answer</b> button under it. Your other answers stay filled in, and the plan updates itself.
+  /* The email carries the whole plan, and that stays true — but the plan
+     is the map, and the walkthrough is the directions. It exists on the
+     site as an ordered 30/60/90 sequence, and nothing above links to it.
+     The device sentence is not a disclaimer we can drop: the walkthrough
+     is rebuilt from answers saved in that browser, so on a different
+     device there is nothing to rebuild it from. Better to say which
+     device than to send someone to an empty page. */
+  const walkBlock = planUrl
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0 0;">
+         <tr><td style="background:${C.greenSoft};border-radius:14px;padding:18px 20px;">
+           <div style="font:700 16px/1.4 Helvetica,Arial,sans-serif;color:${C.ink};margin:0 0 6px;">There&rsquo;s a step-by-step version too</div>
+           <div style="font:15px/1.6 Helvetica,Arial,sans-serif;color:${C.gray};margin:0 0 12px;">
+             The moves above are the map. The walkthrough is the directions — the same plan broken into ordered steps across your first 30, 60 and 90 days, with what to do when one stalls.
+           </div>
+           <a href="${esc(planUrl)}" style="display:inline-block;background:${C.green};color:${C.cream};text-decoration:none;
+                padding:11px 22px;border-radius:999px;font:700 15px/1.2 Helvetica,Arial,sans-serif;">Open my walkthrough</a>
+           <div style="font:13px/1.5 Helvetica,Arial,sans-serif;color:${C.gray};margin:10px 0 0;">
+             Open it on the same device and browser you took the assessment on. Your answers are saved there, not in an account — we don&rsquo;t have one to give you yet, and we&rsquo;d rather tell you than let you hit an empty page.
+           </div>
+         </td></tr>
+       </table>` : "";
+
+  const linkBlock = editUrl
+    ? `<div style="margin:14px 0 0;font:14px/1.6 Helvetica,Arial,sans-serif;color:${C.gray};">
+         Want to change an answer? <a href="${esc(editUrl)}" style="color:${C.green};font-weight:700;">Open Faimgo again</a> on that same device — there&rsquo;s a <b>Change an answer</b> button waiting. Your other answers stay filled in, and the plan updates itself.
        </div>` : "";
 
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:${C.cream};">
@@ -219,6 +241,7 @@ export function renderPlanEmail({ answers, results, otherIdea, protectFrom, plan
           <div style="font:15px/1.6 Helvetica,Arial,sans-serif;color:${C.ink};margin:0 0 10px;">
             <b>Do move 1 this week.</b> Not the whole list — just move 1. That's the only thing that has to happen for this to have been worth your two minutes.
           </div>
+          ${walkBlock}
           ${linkBlock}
           <div style="margin:22px 0 0;padding:16px 0 0;border-top:1px solid ${C.beige};font:13px/1.6 Helvetica,Arial,sans-serif;color:#8A9490;">
             You got this because you asked us to send your plan. We're small and we're building this in the open — if a step doesn't fit your situation, reply to this email and tell us. A real person reads it.
@@ -234,7 +257,14 @@ export function renderPlanEmail({ answers, results, otherIdea, protectFrom, plan
     ...(tone ? [tone, ""] : []),
     ...textLines,
     "Do move 1 this week. Not the whole list — just move 1.", "",
-    ...(planUrl ? ["Want to change an answer? Open Faimgo again on the device you used: " + planUrl, "Your plan is still there, with a \"Change an answer\" button under it. Your other answers stay filled in.", ""] : []),
+    ...(planUrl ? [
+      "THERE'S A STEP-BY-STEP VERSION TOO",
+      "The moves above are the map. The walkthrough is the directions — the same plan broken into ordered steps across your first 30, 60 and 90 days.",
+      planUrl,
+      "Open it on the same device and browser you took the assessment on. Your answers are saved there, not in an account.",
+      "",
+    ] : []),
+    ...(editUrl ? ["Want to change an answer? Open Faimgo again on that same device: " + editUrl, "There's a \"Change an answer\" button waiting. Your other answers stay filled in.", ""] : []),
     "Reply to this email if a step doesn't fit your situation. A real person reads it.",
   ].join("\n");
 
