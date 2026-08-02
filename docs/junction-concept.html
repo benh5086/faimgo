@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Faimgo — One Junction</title>
+<style>
+  :root{
+    --cream:#F1F4F2; --green:#1B3A2D; --green2:#2C5A45; --gold:#8A6A14;
+    --goldBright:#C7971F; --beige:#E4E8E5; --gray:#5A616B; --ink:#15181B; --faint:#C9D2CD;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--cream); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;}
+  .wrap{max-width:920px; margin:0 auto; padding:40px 26px 60px;}
+  .eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:700; margin:0 0 10px;}
+  h1{font-size:32px; line-height:1.15; margin:0 0 12px; letter-spacing:-.01em;}
+  .lede{font-size:17.5px; color:var(--gray); max-width:640px; margin:0 0 26px;}
+  .lede b{color:var(--ink);}
+
+  .persona{display:flex; gap:14px; align-items:flex-start; background:#fff; border:1px solid var(--beige);
+    border-radius:16px; padding:16px 18px; margin:0 0 22px;}
+  .persona .who{flex:0 0 auto; font-size:12px; letter-spacing:.12em; font-weight:800; color:var(--gold);
+    background:#FBF6E8; border:1px solid #EAD9A8; padding:6px 10px; border-radius:8px;}
+  .persona p{margin:0; font-size:15.5px; color:var(--ink);}
+
+  .primary{background:var(--green); color:#fff; border-radius:18px; padding:22px 24px; margin:0 0 12px;
+    box-shadow:0 12px 34px rgba(21,40,32,.16); position:relative; overflow:hidden;}
+  .primary .tag{font-size:12px; letter-spacing:.12em; text-transform:uppercase; font-weight:800; color:var(--goldBright); margin:0 0 8px; display:flex; align-items:center; gap:8px;}
+  .primary .star{font-size:14px;}
+  .primary h2{font-size:24px; margin:0 0 8px; line-height:1.2;}
+  .primary p{margin:0; font-size:15.5px; color:#D6E2DB;}
+
+  .bridge{text-align:center; font-size:15px; color:var(--gray); margin:20px 0 16px;}
+  .bridge b{color:var(--ink);}
+
+  .roads{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:640px){ .roads{grid-template-columns:1fr;} }
+  .road{background:#fff; border:1px solid var(--beige); border-radius:16px; padding:18px 18px 14px;
+    box-shadow:0 6px 22px rgba(21,40,32,.05);}
+  .road h3{font-size:18px; margin:0 0 4px;}
+  .road .sub{font-size:14px; color:var(--gray); margin:0 0 14px;}
+  .ways{display:flex; flex-direction:column; gap:9px;}
+  .way{display:flex; gap:11px; align-items:flex-start; padding:10px 12px; border-radius:11px; background:var(--cream); border:1px solid #E7ECE9;}
+  .way .lab{flex:0 0 auto; font-size:11.5px; font-weight:800; letter-spacing:.03em; padding:4px 9px; border-radius:7px; white-space:nowrap; margin-top:1px;}
+  .lab.diy{background:#E4EFE9; color:var(--green); border:1px solid #BFD8CB;}
+  .lab.help{background:#FBF1DA; color:var(--gold); border:1px solid #EAD9A8;}
+  .lab.skip{background:#EEF0F1; color:var(--gray); border:1px solid #DDE1E3;}
+  .way p{margin:0; font-size:13.8px; color:var(--ink);}
+
+  .tradeoff{margin:22px 0 0; background:#fff; border:1px solid var(--beige); border-left:5px solid var(--goldBright);
+    border-radius:14px; padding:18px 20px; box-shadow:0 6px 22px rgba(21,40,32,.05);}
+  .tradeoff .t{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); font-weight:800; margin:0 0 6px;}
+  .tradeoff p{margin:0; font-size:15.5px; color:var(--ink);}
+  .tradeoff p b{color:var(--green);}
+
+  .foot{margin:26px 2px 0; font-size:13px; color:#9aa4a0; display:flex; gap:9px; align-items:flex-start;}
+  .foot svg{flex:0 0 auto; margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Concept sketch · one junction</p>
+  <h1>What the customer actually sees</h1>
+  <p class="lede">The whole map is connected underneath — but you only ever see <b>your next junction, one at a time.</b> Here's a real one, for someone who's great with their hands.</p>
+
+  <div class="persona">
+    <span class="who">YOU</span>
+    <p>Great with your hands — you already make and sell crafts. Websites and online marketing aren't your thing; at most you'd post on Facebook Marketplace. And you've never filmed how you make things.</p>
+  </div>
+
+  <div class="primary">
+    <p class="tag"><span class="star">★</span> Your next move · quick win</p>
+    <h2>List a product for sale — today.</h2>
+    <p>Ten minutes on Facebook Marketplace. Real money in motion. This is your first win — everything below is optional, and only worth it once this is done.</p>
+  </div>
+
+  <p class="bridge">Once you've sold one, <b>two roads open up</b> — only if you want to reach more people.</p>
+
+  <div class="roads">
+    <div class="road">
+      <h3>Add a simple website</h3>
+      <p class="sub">Look legit, turn browsers into buyers, sell beyond your local area.</p>
+      <div class="ways">
+        <div class="way"><span class="lab diy">You + AI</span><p>Build it yourself — Faimgo walks you through it step by step. No code.</p></div>
+        <div class="way"><span class="lab help">Community</span><p>Someone in the Faimgo community builds it, cheap. You just send photos.</p></div>
+        <div class="way"><span class="lab skip">Skip</span><p>Not now. Keep it simple — you can always come back to this.</p></div>
+      </div>
+    </div>
+
+    <div class="road">
+      <h3>Add a short product video</h3>
+      <p class="sub">People buy what they can see being made. Video sells crafts fast.</p>
+      <div class="ways">
+        <div class="way"><span class="lab diy">You + AI</span><p>Film on your phone next time you make one — AI helps you cut it together.</p></div>
+        <div class="way"><span class="lab help">Community</span><p>Send your raw clips; someone in the community edits them into a video.</p></div>
+        <div class="way"><span class="lab skip">Skip</span><p>Not now. Photos are enough to get started.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tradeoff">
+    <p class="t">The honest part</p>
+    <p>Selling just as you are is <b>completely fine</b> — we've got your back either way. We'll only say this once: more reach usually means more customers and more income. We'll never push you. We just won't hide the trade-off. <b>Your call, always.</b></p>
+  </div>
+
+  <p class="foot">
+    <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="#C9D2CD" stroke-width="1.5"/><path d="M8 4.2v4.6M8 11.2h.01" stroke="#9aa4a0" stroke-width="1.6" stroke-linecap="round"/></svg>
+    Everything else on the map still exists — reselling, tutoring, digital products, all of it. The customer just never has to look at the whole thing. They see this junction, choose, and the next one appears.
+  </p>
+</div>
+</body>
+</html>

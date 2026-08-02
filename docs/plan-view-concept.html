@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Faimgo — Your Plan (customer view v3)</title>
+<style>
+  :root{--cream:#F1F4F2;--green:#1B3A2D;--green2:#2C5A45;--gold:#8A6A14;--goldBright:#C7971F;--beige:#E4E8E5;--gray:#5A616B;--ink:#15181B;--faint:#C9D2CD;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;}
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 24px 60px;}
+  .eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 8px;}
+  h1{font-size:28px;line-height:1.15;margin:0 0 8px;}
+  .lede{font-size:16px;color:var(--gray);max-width:700px;margin:0 0 18px;}
+  .lede b{color:var(--ink);}
+  .changed{background:var(--green);color:#fff;border-radius:14px;padding:14px 18px;margin:0 0 22px;font-size:15px;max-width:940px;}
+  .changed b{color:var(--goldBright);}
+  .layout{display:grid;grid-template-columns:330px 1fr;gap:22px;align-items:start;}
+  @media(max-width:800px){.layout{grid-template-columns:1fr;}}
+
+  .col-left{position:sticky;top:20px;display:flex;flex-direction:column;gap:14px;}
+  .outline{background:#fff;border:1px solid var(--beige);border-radius:16px;padding:18px 16px;box-shadow:0 6px 20px rgba(21,40,32,.05);}
+  .outline .h{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 4px;padding:0 4px;}
+  .outline .h span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:800;}
+  .outline .prog{font-size:12px;color:var(--gray);letter-spacing:0;text-transform:none;font-weight:400;}
+  .bar{height:6px;background:var(--beige);border-radius:99px;margin:8px 4px 12px;overflow:hidden;}
+  .bar > i{display:block;height:100%;background:var(--goldBright);width:0;transition:width .3s ease;}
+  .oitem{display:flex;gap:11px;align-items:flex-start;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background .12s;}
+  .oitem:hover{background:var(--cream);}
+  .oitem.active{background:#EAF1EC;}
+  .dot{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--faint);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--gray);margin-top:1px;background:#fff;}
+  .oitem.done .dot{background:var(--green);border-color:var(--green);color:#fff;}
+  .oitem.current .dot{border-color:var(--goldBright);color:var(--gold);}
+  .otxt{font-size:14.5px;color:var(--ink);font-weight:600;line-height:1.35;}
+  .oitem.done .otxt{color:var(--gray);text-decoration:line-through;text-decoration-color:var(--faint);}
+  .osub{font-size:12px;color:var(--gray);font-weight:400;margin-top:1px;}
+  .ghost{display:flex;gap:11px;align-items:flex-start;padding:9px 10px;border-radius:10px;opacity:.55;}
+  .ghost .dot{border-style:dashed;}
+  .ghost .otxt{font-weight:600;color:var(--gray);}
+  .fin{font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--gold);background:#FBF1DA;border:1px solid #EAD9A8;border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:middle;}
+  .qw{color:var(--goldBright);}
+
+  .rail{background:#fff;border:1.5px solid var(--goldBright);border-radius:16px;padding:16px 16px 14px;box-shadow:0 6px 20px rgba(199,151,31,.13);}
+  .rail .rh{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:800;margin:0 0 3px;}
+  .rail .rs{font-size:12.5px;color:var(--gray);margin:0 0 11px;}
+  .tools{display:flex;flex-direction:column;gap:7px;}
+  .tool{display:flex;gap:9px;align-items:center;width:100%;text-align:left;background:var(--cream);border:1px solid #E7ECE9;border-radius:10px;padding:9px 11px;cursor:pointer;font:inherit;font-size:13.6px;color:var(--ink);transition:background .12s,border-color .12s;}
+  .tool:hover{background:#FBF6E8;border-color:#EAD9A8;}
+  .tool.active{background:#FBF1DA;border-color:var(--goldBright);}
+  .tool.opp{background:#EAF1EC;border-color:#BFD8CB;color:var(--green);font-weight:700;}
+  .tool .ic{flex:0 0 auto;font-size:15px;width:18px;text-align:center;}
+.askbox{background:#FBF6E8;border:1px solid #EAD9A8;border-radius:12px;padding:13px 13px 12px;margin:0 0 13px;}
+  .askbox .askh{font-size:14px;font-weight:800;color:var(--gold);margin:0 0 2px;}
+  .askbox .asks{font-size:12.3px;color:var(--gray);margin:0 0 10px;line-height:1.4;}
+  .askrow{display:flex;gap:7px;}
+  .askrow input{flex:1 1 auto;min-width:0;border:1px solid #E0D3AE;border-radius:9px;padding:9px 11px;font:inherit;font-size:13.4px;background:#fff;color:var(--ink);}
+  .askrow input:focus{outline:none;border-color:var(--goldBright);}
+  .askrow button{flex:0 0 auto;border:none;border-radius:9px;background:var(--green);color:#fff;font:inherit;font-weight:700;font-size:13.4px;padding:9px 14px;cursor:pointer;}
+  .exs{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 0;}
+  .ex{background:#fff;border:1px solid #E5DBC2;border-radius:99px;padding:5px 10px;font:inherit;font-size:12px;color:var(--gold);cursor:pointer;}
+  .ex:hover{border-color:var(--goldBright);}
+  .orgo{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:800;margin:0 0 8px;}
+
+  .fit{background:#EAF1EC;border:1px solid #BFD8CB;border-radius:11px;padding:11px 14px;margin:0 0 16px;font-size:13.5px;color:var(--green);}
+  .fit b{font-weight:800;}
+  .rescard{border:1px solid var(--beige);border-radius:13px;padding:14px 16px;margin:0 0 10px;background:#fff;}
+  .rescard .kind{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 8px;margin:0 0 7px;}
+  .k-answer{background:#E4EFE9;color:var(--green);border:1px solid #BFD8CB;}
+  .k-template{background:#FBF1DA;color:var(--gold);border:1px solid #EAD9A8;}
+  .k-tool{background:#EEF0F1;color:var(--gray);border:1px solid #DDE1E3;}
+  .k-person{background:#F3E9DC;color:#7A5A18;border:1px solid #E0CDA8;}
+  .k-play{background:var(--green);color:#fff;border:1px solid var(--green);}
+  .rescard h4{margin:0 0 4px;font-size:16px;}
+  .rescard .rfor{margin:0 0 4px;font-size:14px;color:var(--ink);}
+  .rescard .rwhy{margin:0;font-size:13.3px;color:var(--gray);}
+  .reslist{margin:0 0 18px;}
+  .reslist .rh2{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:800;margin:0 0 9px;}
+  .railfoot{font-size:11.5px;color:#9aa4a0;margin:11px 2px 0;line-height:1.45;}
+
+  .know{background:#fff;border:1px dashed #CBD5CE;border-radius:14px;padding:13px 14px;}
+  .know .kh{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:800;margin:0 0 7px;}
+  .know ul{margin:0;padding-left:16px;}
+  .know li{font-size:12.5px;color:var(--ink);margin:0 0 3px;}
+  .know .empty{font-size:12.5px;color:#9aa4a0;margin:0;}
+
+  .detail{background:#fff;border:1px solid var(--beige);border-radius:18px;padding:24px 26px;box-shadow:0 8px 26px rgba(21,40,32,.06);min-height:460px;}
+  .glue{display:flex;gap:12px;align-items:flex-start;background:#FBF6E8;border:1px solid #EAD9A8;border-radius:12px;padding:13px 15px;margin:0 0 18px;}
+  .glue .k{flex:0 0 auto;font-size:10.5px;letter-spacing:.1em;font-weight:800;color:var(--gold);text-transform:uppercase;margin-top:3px;}
+  .glue p{margin:0;font-size:14.5px;color:var(--ink);}
+  .dtag{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--gold);margin:0 0 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .time{font-size:11.5px;letter-spacing:0;text-transform:none;font-weight:700;color:var(--green);background:#EAF1EC;border:1px solid #BFD8CB;border-radius:99px;padding:3px 10px;}
+  .detail h2{font-size:24px;margin:0 0 6px;line-height:1.2;}
+  .move{font-size:16px;color:var(--ink);font-style:italic;margin:0 0 14px;}
+  .why{font-size:14.5px;color:var(--gray);margin:0 0 18px;border-left:3px solid var(--beige);padding-left:12px;}
+  .ways{display:flex;flex-direction:column;gap:9px;margin:0 0 18px;}
+  .way{display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border-radius:11px;background:var(--cream);border:1px solid #E7ECE9;}
+  .wlab{flex:0 0 auto;font-size:11px;font-weight:800;padding:4px 9px;border-radius:7px;white-space:nowrap;margin-top:1px;}
+  .w-diy{background:#E4EFE9;color:var(--green);border:1px solid #BFD8CB;}
+  .w-com{background:#FBF1DA;color:var(--gold);border:1px solid #EAD9A8;}
+  .w-skip{background:#EEF0F1;color:var(--gray);border:1px solid #DDE1E3;}
+  .way p{margin:0;font-size:14px;color:var(--ink);}
+  .donewhen{font-size:13.5px;color:var(--green);background:#EAF1EC;border-radius:10px;padding:11px 14px;margin:0 0 14px;}
+  .guard{font-size:13.5px;color:var(--ink);background:#FBF6E8;border:1px solid #EAD9A8;border-radius:11px;padding:12px 14px;margin:0 0 18px;}
+  .guard b{color:var(--gold);}
+  .note{font-size:13.5px;color:var(--ink);background:#fff;border:1.5px dashed var(--goldBright);border-radius:11px;padding:12px 14px;margin:0 0 18px;}
+
+  details.stall{margin:0 0 18px;border:1px solid var(--beige);border-radius:12px;background:#FAFBFA;padding:0;}
+  details.stall > summary{list-style:none;cursor:pointer;padding:12px 14px;font-size:13.5px;font-weight:700;color:var(--gold);}
+  details.stall > summary::-webkit-details-marker{display:none;}
+  details.stall > summary::before{content:"▸ ";}
+  details.stall[open] > summary::before{content:"▾ ";}
+  .sitem{padding:0 14px 12px;}
+  .sitem .sym{font-size:14px;font-weight:700;margin:0 0 3px;color:var(--ink);}
+  .sitem .cau{font-size:13.5px;color:var(--gray);margin:0 0 4px;}
+  .sitem .do{font-size:13.5px;color:var(--green);margin:0;}
+  .sitem .do b{color:var(--green);}
+
+  .needs{margin:0 0 18px;padding:13px 14px;border:1px dashed #CBD5CE;border-radius:12px;background:#FAFBFA;}
+  .needs .nh{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);font-weight:800;margin:0 0 9px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{background:#fff;border:1px solid var(--beige);border-radius:99px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--green);cursor:pointer;font-family:inherit;transition:border-color .12s,background .12s;}
+  .chip:hover{border-color:var(--goldBright);background:#FBF6E8;}
+
+  .checkin{border:1.5px solid var(--green);border-radius:14px;padding:16px 16px 14px;background:#F7FAF8;}
+  .checkin .cq{font-size:16px;font-weight:800;margin:0 0 3px;color:var(--green);}
+  .checkin .cs{font-size:12.5px;color:var(--gray);margin:0 0 12px;}
+  .opts{display:flex;flex-direction:column;gap:8px;}
+  .opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--beige);border-radius:11px;padding:12px 14px;font:inherit;font-size:14.5px;color:var(--ink);cursor:pointer;transition:border-color .12s,background .12s,transform .12s;}
+  .opt:hover{border-color:var(--goldBright);background:#FBF6E8;transform:translateY(-1px);}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .btn{border:none;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn.done{background:var(--green);color:#fff;}
+  .btn.skip{background:#fff;color:var(--gray);border:1.5px solid var(--beige);}
+  .back{background:none;border:none;font:inherit;font-size:13.5px;font-weight:700;color:var(--gold);cursor:pointer;padding:0;margin:0 0 12px;}
+  .back:hover{text-decoration:underline;}
+  .hint{font-size:12.5px;color:#9aa4a0;margin:16px 2px 0;max-width:940px;}
+</style></head><body><div class="wrap">
+  <p class="eyebrow">Customer view · this is the GPS</p>
+  <h1>Your plan</h1>
+  <p class="lede">The whole plan sits on the left so you always know where you are. You only ever work on <b>one step at a time</b> on the right. Help is never a step — it's the gold panel, reachable from anywhere.</p>
+
+  <div class="changed">New in v0.6: <b>Faimgo Help</b> sits at the top of the gold panel — <b>one box, ask anything, in your own words</b>. You never have to work out whether your problem is a website problem or a confidence problem; it reads which step you're on and what your check-ins said, then returns the <b>fastest thing that actually fits</b>: an answer, a template, a tool, a person — or the step you already have. And when we don't have it, it says so and hands you to a human rather than inventing something.</div>
+
+  <div class="layout">
+    <div class="col-left">
+      <div class="outline">
+        <div class="h"><span>Your plan</span><span class="prog" id="prog"></span></div>
+        <div class="bar"><i id="barfill"></i></div>
+        <div id="olist"></div>
+      </div>
+
+      <div class="rail">
+        <p class="rh">Need something? Any time.</p>
+        <div class="askbox">
+          <p class="askh">✳ Faimgo Help</p>
+          <p class="asks">Ask in your own words — anything. You get the fastest thing that actually fits you: an answer, a template, a tool, or a person.</p>
+          <div class="askrow"><input id="ask" placeholder="e.g. they went quiet on me" onkeydown="if(event.key==='Enter')askIt()"/><button onclick="askIt()">Ask</button></div>
+          <div class="exs" id="exs"></div>
+        </div>
+        <p class="orgo">Or go straight to</p>
+        <div class="tools" id="tools"></div>
+        <p class="railfoot">These aren't steps and they don't affect your progress. They're what you reach for the moment you hit the thing.</p>
+      </div>
+
+      <div class="know">
+        <p class="kh">What your plan knows about you</p>
+        <div id="knowlist"></div>
+      </div>
+    </div>
+
+    <div class="detail" id="detail"></div>
+  </div>
+  <p class="hint">Clickable mock — every word comes from the play library (plays.json v0.6). Try the Faimgo Help box, or answer a check-in to see the routing and the “because → therefore” line carry into the next screen.</p>
+</div>
+
+<script>
+const DATA = {"plays": {"offer.define": {"id": "offer.define", "name": "Define your one offer", "short_name": "Define your one offer", "sub": "Say who you help, in one sentence", "icon": "①", "type": "core", "move": "Say who you help and what outcome you get them — in one sentence.", "paths": ["freelance", "local", "va", "tutor"], "universal": false, "gap": ["has-skill", "can-market", "stuck", "scratch"], "phase": "find", "prerequisites": [], "unlocks": ["pricing.lower-risk", "setup.minimum-hireable"], "time_cost": "20 minutes", "payoff": {"speed": "days", "effort": "low", "ceiling": "foundational"}, "confidence": "high", "quick_win": true, "fear_it_calms": "Worrying your skill isn't good enough — this points you at what people already ask you for, not what you think you should offer.", "common_needs_here": ["help.ai-coach", "help.get-a-human"], "how_to": {"diy_ai": "AI drafts five versions from the thing you're already the go-to for; you keep the one that makes a real person nod.", "community": "A peer sanity-checks that your offer names a specific person and a specific outcome.", "skip": null}, "content": {"goal": "One sentence: 'I help [specific person] get [specific outcome] by [what you do].'", "steps": ["List the skill people already ask you for", "Pick one buyer who has the problem and the money", "Draft five versions; keep the sharpest"], "done_when": "You can say it in one breath and it names a specific person and a specific outcome."}, "if_it_stalls": [{"symptom": "I can't think of anything I'm good enough at.", "likely_cause": "Looking for a talent instead of a task. Almost nobody has a talent; everybody has a task other people avoid.", "do_this": "Answer a different question: what do people already text you about? What did your last job make you good at that you now find boring? Boring-to-you is the strongest signal there is."}, {"symptom": "I have five things and can't pick.", "likely_cause": "You're trying to pick the best one. There isn't one — there's only the one you can test fastest.", "do_this": "Pick the one where you already know a real human with that problem. You can change it in two weeks; you can't change it if you never start."}], "checkin": {"question": "How did that land?", "options": [{"label": "I've got one clear sentence.", "signal": "has:offer", "then": "You have the sentence — now it needs a number attached, or you'll freeze the first time someone asks the price.", "routes_to": null}, {"label": "I have one, but it feels generic.", "signal": "offer:vague", "then": "Generic is fixable and it's not worth stalling on. We'll sharpen it against a real buyer instead of in your head.", "routes_to": "help.get-a-human"}, {"label": "I'm still stuck on this.", "signal": "blocked:offer", "then": "This is the most common place to get stuck, and it's the one AI is actually good at — because the answer is already in your history, not in your imagination.", "routes_to": "help.ai-coach"}]}, "resources": [{"kind": "template", "name": "The one-sentence offer fill-in", "for": "Turning what you already do into a sentence a stranger understands.", "why": "Five blanks beats a blank page. Most people are stuck on format, not on content."}, {"kind": "answer", "name": "The boring-to-you question", "for": "When nothing feels like a skill.", "why": "What people already text you about is a better signal than anything you'd list on a CV."}]}, "pricing.lower-risk": {"id": "pricing.lower-risk", "name": "Price to lower the buyer's risk", "short_name": "Price it", "sub": "Price to feel safe, not cheap", "icon": "②", "type": "core", "move": "Price slightly below market, then win on guarantees — not on being cheapest.", "paths": ["freelance", "local", "va", "resell", "digital"], "universal": false, "gap": ["has-skill", "stuck"], "phase": "aim", "prerequisites": ["offer.define"], "unlocks": ["setup.minimum-hireable"], "time_cost": "30 minutes", "payoff": {"speed": "hours", "effort": "low", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Fear of charging wrong — either scaring people off or underselling yourself.", "common_needs_here": ["help.ai-coach", "help.get-a-human"], "how_to": {"diy_ai": "AI benchmarks the going market rate and suggests risk-killing value-adds for your kind of work.", "community": "A peer who's sold this before pressure-tests your number and tiers.", "skip": null}, "content": {"goal": "A price with at least one built-in guarantee.", "steps": ["Set it ~20-30% below market (a nudge, not your pitch)", "Add one risk-killer: free revisions, three options, or a guarantee", "Offer at most three simple tiers", "Take a 30-40% deposit, or 80% before the final step"], "done_when": "Your price includes a guarantee that removes the buyer's biggest fear."}, "if_it_stalls": [{"symptom": "I can't find out what the market rate even is.", "likely_cause": "You're looking for an official number. There isn't one.", "do_this": "Find three people selling something similar, take their public prices, use the middle one. Three data points beats no number forever."}, {"symptom": "It feels like too much money to ask for.", "likely_cause": "You're pricing your time. The buyer is paying for their problem to go away.", "do_this": "Write down what it costs them to NOT fix it. Price against that, not against your hourly guilt. Then add the guarantee — the guarantee is what makes the number safe to say out loud."}], "checkin": {"question": "Where did you land?", "options": [{"label": "I have a price and a guarantee.", "signal": "has:price", "then": "Price set. Next you need somewhere to point people — the smallest possible version, not a website.", "routes_to": null}, {"label": "I have a price but no guarantee yet.", "signal": "price:no-guarantee", "then": "The guarantee is the part that does the selling, so don't leave it out — but it's a 10-minute fix and you can do it while you set up.", "routes_to": null}, {"label": "I keep second-guessing the number.", "signal": "blocked:price-confidence", "then": "Second-guessing a price is almost never solved alone — one person who has sold this before ends it in five minutes.", "routes_to": "help.get-a-human"}]}, "resources": [{"kind": "template", "name": "Three-quotes benchmark sheet", "for": "Finding a market rate when there is no official number.", "why": "Three public prices and the middle one is a real answer in fifteen minutes."}, {"kind": "template", "name": "Guarantee lines that don't cost you money", "for": "Making the price safe to say out loud.", "why": "The guarantee does the selling. Most people skip it because they think it means free work — it doesn't."}]}, "setup.minimum-hireable": {"id": "setup.minimum-hireable", "name": "Set up the minimum to be hireable", "short_name": "Get hireable", "sub": "One page, a way to get paid", "icon": "③", "type": "core", "move": "Get three things — a one-page presence, a way to get paid, a way to be reached.", "paths": ["freelance", "local", "va", "tutor"], "universal": false, "gap": ["has-skill", "scratch", "stuck"], "phase": "aim", "prerequisites": ["offer.define"], "unlocks": ["outreach.find-buyer"], "time_cost": "1 hour", "payoff": {"speed": "hours", "effort": "low", "ceiling": "foundational"}, "confidence": "high", "quick_win": true, "fear_it_calms": "Believing you need a website, brand, or logo before you can start. You don't — but if you decide you want one, it's one tap away from here, not locked behind a milestone.", "common_needs_here": ["asset.website", "help.ai-coach", "help.get-a-human"], "how_to": {"diy_ai": "AI drafts your one-page offer + examples in minutes.", "community": "Someone sets up your simple page for you if you'd rather not.", "skip": "Bare minimum is a note with your offer and a way to pay — that alone is enough to start."}, "content": {"goal": "A link you could paste to a stranger, and a way to invoice them.", "steps": ["A clean Notion/Google Doc: offer, 2-3 examples, how to reach you", "A free invoicing tool (Wave) or a PayPal/Stripe link", "One clear way to be contacted"], "done_when": "A stranger could see what you do and pay you."}, "if_it_stalls": [{"symptom": "I have no examples to show.", "likely_cause": "You're waiting for past clients to give you permission to start.", "do_this": "Make one example for yourself, today, and label it honestly as a sample. A real sample beats an empty page, and nobody has ever asked whether the first one was paid."}, {"symptom": "I started building a proper website and now I'm four days in.", "likely_cause": "This is the most common way people quietly stop selling. Building feels like progress and doesn't risk rejection.", "do_this": "Stop. Ship the doc version today and go to the next step. The website stays available — but make it answer a question a real buyer asked you, not a question you imagined."}], "checkin": {"question": "Can a stranger see what you do and pay you?", "options": [{"label": "Yes — I have a link and a way to get paid.", "signal": "has:hireable-setup", "then": "You're hireable. Now the part that actually produces money: pointing this at the right person.", "routes_to": null}, {"label": "Sort of — it's rough and I'm embarrassed by it.", "signal": "setup:rough", "then": "Rough is correct at this stage. Every buyer question you get from here tells you exactly what to fix later — that's what the final pass is for.", "routes_to": null}, {"label": "I got pulled into building a website.", "signal": "blocked:building-not-selling", "then": "That happens to almost everyone, and it isn't laziness — building is the safe kind of work. Let's get the site to a good-enough state fast and get you back on the road.", "routes_to": "asset.website"}]}, "resources": [{"kind": "tool", "name": "A one-page site builder (Carrd or Notion)", "for": "A link that exists today.", "why": "Picked over a real website builder because you can finish it in an hour and it is not a project you can hide inside."}, {"kind": "tool", "name": "A payment link (Stripe or PayPal)", "for": "Being able to be paid before you have a business set up.", "why": "Getting paid is the part people postpone longest and it takes about ten minutes."}, {"kind": "template", "name": "The doc version of a website", "for": "When even a one-pager feels like too much.", "why": "A shared doc with your offer, examples and a way to reach you has closed plenty of first sales."}]}, "outreach.find-buyer": {"id": "outreach.find-buyer", "name": "Find the person who feels the pain", "short_name": "Find the right person", "sub": "Aim at who feels the pain", "icon": "④", "type": "core", "move": "Aim at the human who actually feels the problem — not just whoever signs the check.", "paths": ["*"], "universal": true, "gap": ["has-skill", "stuck"], "phase": "find", "prerequisites": ["offer.define"], "unlocks": ["outreach.reach-and-close"], "time_cost": "2 hours, or 20 minutes a day for a week", "payoff": {"speed": "days", "effort": "medium", "ceiling": "foundational"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Not knowing who to target — this gives a concrete way to build a real list.", "common_needs_here": ["help.get-a-human", "help.ai-coach"], "how_to": {"diy_ai": "AI researches prospects that fit and tells you who inside each feels the pain.", "community": "Swap leads and warm intros with others on the same path.", "skip": null}, "content": {"goal": "A list of ~20 real prospects, each tagged with who feels the pain.", "steps": ["Start with anyone you have a connection to", "Add cold ones from LinkedIn, Maps, directories", "For each, name the person whose day gets worse from the problem"], "done_when": "20 names, each with a 'who feels it' tag."}, "if_it_stalls": [{"symptom": "I got to eight names and ran dry.", "likely_cause": "Your definition of the buyer is too narrow, or you're only looking in one place.", "do_this": "Eight is enough to start. Send to those eight now, and widen while you wait — one adjacent industry, or one directory you haven't opened."}, {"symptom": "I don't know who inside a company actually feels this.", "likely_cause": "You're guessing from titles.", "do_this": "Ask instead of guess. One message: 'who handles X at your place?' is a low-risk opener that also finds the person."}], "checkin": {"question": "How's the list?", "options": [{"label": "I have 20 or more names.", "signal": "has:prospect-list", "then": "You have a list — which means the only thing between you and money now is sending. That's the scariest step, so we'll make it as scripted as possible.", "routes_to": null}, {"label": "I have a handful, not 20.", "signal": "list:thin", "then": "A handful is enough to start sending. We'd rather you learn from five real replies than perfect a list of twenty strangers.", "routes_to": null}, {"label": "I've run out of people entirely.", "signal": "blocked:empty-pipeline", "then": "Running out of names feels like the end of the road. It's usually just an empty list — and lists refill fastest through other people.", "routes_to": "help.get-a-human"}]}, "resources": [{"kind": "template", "name": "The 20-name list, with the who-feels-it column", "for": "Building a list you can actually send to.", "why": "The extra column is the whole point — it turns a list of companies into a list of humans."}, {"kind": "answer", "name": "The 'who handles X at your place?' opener", "for": "When you don't know who inside a company to aim at.", "why": "It's a low-risk question that also finds the person, so it does two jobs at once."}]}, "outreach.reach-and-close": {"id": "outreach.reach-and-close", "name": "Reach out, then close", "short_name": "Reach out & close", "sub": "Tailor, mirror, close", "icon": "⑤", "type": "core", "move": "Send tailored messages, mirror the buying signal back, then close — people buy when they feel understood.", "paths": ["*"], "universal": true, "gap": ["has-skill", "can-market", "stuck"], "phase": "find", "prerequisites": ["outreach.find-buyer", "setup.minimum-hireable"], "unlocks": ["proof.testimonial-referral"], "time_cost": "1-3 weeks — this is the one that takes real calendar time", "payoff": {"speed": "1-3 weeks", "effort": "medium", "ceiling": "high"}, "confidence": "low", "quick_win": false, "fear_it_calms": "Fear of rejection and cold outreach — the scariest step. Route confidence-banking wins BEFORE this one; here, warm contacts first and a script that removes the guesswork.", "common_needs_here": ["help.get-a-human", "asset.video", "asset.website"], "how_to": {"diy_ai": "AI drafts a personalized opener per prospect from what you found about them.", "community": "Practice your pitch or get it reviewed before you send.", "skip": null}, "content": {"goal": "Your first dollar — or live conversations with a clear reason why not.", "steps": ["Tailor every message to that one person's situation", "Send 10 this week; follow up once a few days later", "When they're interested, mirror it back before pitching", "Decode 'a more competitive option' = they want a lower price; answer with framed value"], "done_when": "You've earned your first dollar, or have real conversations in progress."}, "if_it_stalls": [{"symptom": "I sent messages and got total silence.", "likely_cause": "Almost always the opening line — it reads like it was sent to fifty people, because the first sentence is about you.", "do_this": "Rewrite so the first sentence is about them and could not have been sent to anyone else. Then send ten more. Silence at ten is normal; silence at forty is a message problem."}, {"symptom": "People reply, get interested, then go quiet.", "likely_cause": "You answered their question but never asked for the decision.", "do_this": "Send one short message proposing a specific next step with a date. Interested-then-quiet is usually unasked, not unwilling."}, {"symptom": "I haven't actually sent anything yet.", "likely_cause": "This is fear, and it is the single most common place people stop. It is not a character flaw — it's the first step with a real chance of rejection.", "do_this": "Don't send ten. Send one, to the warmest person on your list, today. The goal of the first message is not a sale — it's to prove the sky doesn't fall."}], "checkin": {"question": "What actually happened?", "options": [{"label": "Someone paid me.", "signal": "has:first-client", "then": "You have a paying customer — which changes what you're worth to the next one. Before you chase anyone new, take 15 minutes to bank the proof.", "routes_to": "proof.testimonial-referral"}, {"label": "Real conversations, no yes yet.", "signal": "pipeline:live", "then": "Live conversations mean the offer works and the closing doesn't yet. That's a much better problem, and it's fixable with one review of your last message.", "routes_to": "help.get-a-human"}, {"label": "I sent them and heard nothing.", "signal": "blocked:no-replies", "then": "Silence is almost never about you — it's about the first sentence, or the fact that they can't picture what you do. Both are fixable this week.", "routes_to": "asset.video"}, {"label": "I haven't been able to hit send.", "signal": "blocked:fear-of-sending", "then": "That's the most honest answer on this list, and it's the most common one. We're not going to talk you into it — we're going to shrink it until it's easy.", "routes_to": "help.ai-coach"}]}, "resources": [{"kind": "template", "name": "First-line rewrites that couldn't be sent to anyone else", "for": "Silence after sending.", "why": "Nearly all silence is the first sentence being about you."}, {"kind": "template", "name": "The one-line close with a date in it", "for": "People who go warm then quiet.", "why": "Interested-then-quiet is usually unasked, not unwilling."}, {"kind": "person", "name": "Someone who has sold this before reads your last message", "for": "When you've rewritten it four times.", "why": "Five minutes of another person's eyes ends a week of second-guessing."}]}, "proof.testimonial-referral": {"id": "proof.testimonial-referral", "name": "Turn one client into proof", "short_name": "Turn a client into proof", "sub": "Testimonial + one referral", "icon": "⑥", "type": "core", "move": "Ask every client for a testimonial and a referral — you're borrowing their credibility to lower the next buyer's risk.", "paths": ["*"], "universal": true, "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-client"], "unlocks": ["freelance.retainer"], "time_cost": "15 minutes", "payoff": {"speed": "days", "effort": "low", "ceiling": "medium"}, "confidence": "high", "quick_win": true, "fear_it_calms": "The awkwardness of asking — a simple script makes it easy, and the first testimonial is a huge morale boost.", "common_needs_here": ["asset.website", "asset.video", "community.sell-your-skill"], "how_to": {"diy_ai": "AI drafts the testimonial + referral ask in your voice.", "community": null, "skip": null}, "content": {"goal": "One testimonial and one referral or repeat.", "steps": ["Ask: 'Would you leave a short testimonial?'", "Ask: 'Who else do you know who needs this?'", "Take great care of anyone they send"], "done_when": "You have proof you can show the next buyer."}, "if_it_stalls": [{"symptom": "It feels rude to ask.", "likely_cause": "You're imagining it as a favour. For a happy customer it's a 60-second thank-you they're glad to give.", "do_this": "Ask while they're still pleased, not weeks later, and make it one sentence: 'Would you mind writing two lines about how it went?' Offer to draft it for them to edit — most people say yes to that."}, {"symptom": "They said yes and then never sent it.", "likely_cause": "Blank page. Not reluctance.", "do_this": "Send them two lines you wrote yourself and ask them to change anything that isn't true. Almost everyone returns it the same day."}], "checkin": {"question": "Did you get proof?", "options": [{"label": "Got a testimonial or a referral.", "signal": "has:one-testimonial", "then": "You have proof, so the next sale is genuinely easier than the last. Now the question is whether this client can pay you more than once.", "routes_to": null}, {"label": "Asked, waiting on them.", "signal": "proof:pending", "then": "Fine — don't wait on it to move. Keep going, and we'll remind you in a few days.", "routes_to": null}, {"label": "Haven't asked yet.", "signal": "blocked:asking", "then": "This one is worth going back for. It's fifteen minutes and it lowers the price of every sale after it.", "routes_to": "help.ai-coach"}]}, "resources": [{"kind": "template", "name": "The two-question ask", "for": "Asking for a testimonial and a referral without it being awkward.", "why": "Asking for both in one message is easier than asking twice, and clients expect it."}]}, "freelance.retainer": {"id": "freelance.retainer", "name": "Turn one-offs into repeat income", "short_name": "Make it repeat", "sub": "Turn one-offs into monthly", "icon": "⑦", "type": "core", "move": "Offer to handle it every month for a set price — predictable income, less selling.", "paths": ["freelance", "va", "local"], "universal": false, "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-client"], "unlocks": ["freelance.productize"], "time_cost": "one conversation", "payoff": {"speed": "weeks", "effort": "low", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Feeling pushy asking for an ongoing commitment — it's just offering to solve the problem permanently.", "common_needs_here": ["help.ai-coach"], "how_to": {"diy_ai": "AI helps you frame the retainer offer and price it.", "community": null, "skip": null}, "content": {"goal": "At least one client on a recurring arrangement.", "steps": ["Spot the thing they'll need again", "Offer 'I'll handle X every month for $Y'", "Raise the price for the next client — you have proof now"], "done_when": "You have predictable income, not just one-off projects."}, "if_it_stalls": [{"symptom": "My work is genuinely one-and-done.", "likely_cause": "The deliverable is one-off; the problem usually isn't.", "do_this": "Look one step past what you delivered — maintenance, updates, the next version, the reporting. Sell the continuing problem, not a repeat of the same job."}, {"symptom": "They said they'd think about it.", "likely_cause": "Monthly commitments feel bigger than they are.", "do_this": "Offer three months instead of open-ended, at a smaller scope. Short and small gets said yes to; renewals do the rest."}], "checkin": {"question": "How did the offer go?", "options": [{"label": "Someone's on a recurring arrangement.", "signal": "has:recurring-income", "then": "Predictable income changes everything — now it's worth making the thing you sell repeatable too.", "routes_to": null}, {"label": "Not yet — still one-off work.", "signal": "income:one-off", "then": "One-off is fine. There's another way to get the same leverage: package the work so you stop quoting from scratch.", "routes_to": null}]}}, "freelance.productize": {"id": "freelance.productize", "name": "Turn custom work into a named package", "short_name": "Productize", "sub": "Package it — sell it by name", "icon": "⑧", "type": "core", "move": "Package your repeated deliverable into one fixed-scope, fixed-price offer.", "paths": ["freelance", "va"], "universal": false, "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-client", "has:one-testimonial"], "unlocks": ["digital.package-into-product", "consolidate.tune-the-machine"], "cross_path_unlock": "digital.package-into-product", "reroute_signals": ["User reports the same deliverable keeps selling, or they built a reusable template/asset -> surface Digital Products: a bigger, more scalable road than trading time."], "time_cost": "a few hours", "payoff": {"speed": "weeks", "effort": "medium", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Nervousness about committing to a fixed scope — a package actually makes selling and delivering easier.", "common_needs_here": ["asset.website", "help.get-a-human", "community.sell-your-skill"], "how_to": {"diy_ai": "AI helps you name the package, fix its scope, and write the one-pager.", "community": "Someone builds your package one-pager from your notes.", "skip": null}, "content": {"goal": "One named package you can sell without a custom quote.", "steps": ["Pick the deliverable clients ask for most", "Fix its scope, price, and turnaround", "Add the risk-killer (revisions/guarantee)"], "done_when": "You can sell it by name."}, "if_it_stalls": [{"symptom": "Every client wants something different.", "likely_cause": "You're looking at the whole job. The repeated part is usually one piece inside it.", "do_this": "List your last three jobs and circle what appears in all three. Package that piece only, and quote the rest separately."}, {"symptom": "I'm scared of fixed scope going over.", "likely_cause": "Legitimate — this is the real risk.", "do_this": "Write the 'not included' list before the price. A named exclusion list is what makes fixed scope safe, and clients respect it."}], "checkin": {"question": "Do you have something you can sell by name?", "options": [{"label": "Yes — and I keep selling the same thing.", "signal": "has:repeatable-deliverable", "then": "If the same thing keeps selling, you're one step from selling it without doing the work each time. That's a bigger road than trading hours.", "routes_to": "digital.package-into-product"}, {"label": "Yes, but every job is still custom.", "signal": "has:named-package", "then": "Named and selling is enough. Now that money is coming in steadily, it's worth going back and fixing everything you built rough.", "routes_to": "consolidate.tune-the-machine"}, {"label": "Not yet.", "signal": "blocked:packaging", "then": "No rush — this one gets much easier after a few more jobs, because the pattern shows itself.", "routes_to": null}]}}, "asset.website": {"id": "asset.website", "name": "Get a simple website — when you need one", "short_name": "I need a website", "sub": "A link you can send today", "icon": "▢", "type": "on-demand", "move": "Build the roughest site that answers the question a buyer just asked you. Not a project. A tool.", "paths": ["*"], "universal": true, "phase": null, "prerequisites": [], "time_cost": "an afternoon — or two lines to someone who'll do it", "soft_guard": {"condition": "has:first-sale-or-client", "if_unmet": "You can absolutely build this now. One honest note: people who sell something first build a much better site, because they know what buyers actually ask. If you'd rather build first, go — we'll help either way."}, "need_signals": [{"source": "user_says", "match": ["they asked for my website", "I need somewhere to send people", "I look unprofessional", "I want to sell outside my area"]}, {"source": "blocked_on", "match": ["no-link-to-send", "buyer-wants-to-see-more", "building-not-selling"]}, {"source": "step_context", "match": ["setup.minimum-hireable", "outreach.reach-and-close", "proof.testimonial-referral", "freelance.productize"]}, {"source": "always_visible", "match": ["help-rail"]}], "unlocks": ["digital.storefront", "community.sell-your-skill"], "payoff": {"speed": "days", "effort": "medium", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "'I know nothing about websites.' That's exactly why this has three ways to get it done — including not doing it yourself.", "how_to": {"diy_ai": "AI builds it with you, step by step. No code.", "community": "Someone in the Faimgo community builds it cheap — you just send photos and text.", "skip": "Not now. It stays one tap away."}, "tradeoff": "Selling as-is is completely fine. Just know: more reach usually means more customers. Your call, always.", "content": {"goal": "One link you can send a real buyer today.", "steps": ["Write down the exact question the buyer asked you", "Answer only that, plus offer, examples, way to contact", "Ship the ugly version; you'll improve it in the final pass"], "done_when": "You've sent the link to one real person."}, "if_it_stalls": [{"symptom": "I've been at this for days and it's still not right.", "likely_cause": "You're building a website instead of answering a question.", "do_this": "Set a two-hour limit and publish whatever exists at the end of it. Or hand it over — this is exactly what the community option is for."}], "resources": [{"kind": "tool", "name": "A one-page builder with a free tier", "for": "Shipping the ugly version today.", "why": "Chosen for the two-hour ceiling, not for how good the result can get."}, {"kind": "person", "name": "Someone in the community builds it", "for": "When you don't want to learn this, ever.", "why": "Not wanting to learn web development is a reasonable position that shouldn't cost you the sale."}]}, "asset.video": {"id": "asset.video", "name": "Get a short video — when you need one", "short_name": "I need a video", "sub": "Show the work, on your phone", "icon": "▶", "type": "on-demand", "move": "Show the thing being made or used, on your phone. People buy what they can see.", "paths": ["*"], "universal": true, "phase": null, "prerequisites": [], "time_cost": "one recording + 30 minutes", "soft_guard": {"condition": "has:something-to-show", "if_unmet": "Film it anyway — raw clips of you working are worth more later than a perfect video you never shoot."}, "need_signals": [{"source": "user_says", "match": ["photos aren't converting", "people don't get what I do", "I want to post on social"]}, {"source": "blocked_on", "match": ["hard-to-explain-the-work", "no-replies"]}, {"source": "checkin_answer", "match": ["blocked:no-replies"]}, {"source": "step_context", "match": ["outreach.reach-and-close", "proof.testimonial-referral"]}, {"source": "always_visible", "match": ["help-rail"]}], "unlocks": ["community.sell-your-skill"], "payoff": {"speed": "days", "effort": "medium", "ceiling": "medium"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "'I've never filmed anything.' A phone and raw clips are enough — or hand it off entirely.", "how_to": {"diy_ai": "Film on your phone next time; AI helps you cut it together.", "community": "Send your raw clips; someone edits them into a video.", "skip": "Not now — but start recording raw clips today. They cost you nothing."}, "tradeoff": "Photos work fine to start. Video usually sells faster once you're ready. Your call.", "content": {"goal": "One clip that makes someone ask about the thing.", "steps": ["Capture the making or the result on your phone", "Keep it short and real", "Post it where your buyers already are"], "done_when": "You have a clip that gets people asking to buy."}, "if_it_stalls": [{"symptom": "I hate being on camera.", "likely_cause": "You think you have to be in it.", "do_this": "Film your hands and the work. Nobody needs your face — they need to see the thing exist."}], "resources": [{"kind": "answer", "name": "Film your hands, not your face", "for": "Hating being on camera.", "why": "Nobody needs your face. They need to see the thing exist."}, {"kind": "tool", "name": "A phone-first editor", "for": "Cutting raw clips into something postable.", "why": "Editing on the same device you filmed on removes the step where most people quit."}]}, "help.faimgo-help": {"id": "help.faimgo-help", "name": "Faimgo Help", "short_name": "Faimgo Help", "sub": "Ask in your own words — anything", "icon": "✳", "type": "on-demand", "move": "Say what you need in your own words. You get the fastest thing that actually fits — an answer, a tool, a template, or a person.", "paths": ["*"], "universal": true, "phase": null, "prerequisites": [], "time_cost": "one sentence from you", "role": "Front door. Not a fifth item in the help rail — the way into it. Everything else in the rail is a shortcut past this.", "surface_as": "Always first, always visible, and as a text box rather than a button — the whole point is that you do not have to know which category your problem belongs to.", "why_it_exists": "Every other door in this product asks the person to classify their own problem first: is this a website problem, a confidence problem, a people problem? A stuck person cannot do that — the classifying is the hard part. Faimgo Help removes it. You say the thing in the words you already have, and we do the sorting.", "what_makes_it_fitted": "It reads your step, your check-in signals, your path and what you've already said you don't want to do — then returns the cheapest, fastest kind of help that actually solves it. Speed comes from AI answering instantly; fit comes from it knowing where you are. Neither alone is enough: fast and generic is what people already get for free and can't apply.", "returns": [{"kind": "answer", "when": "The question has a real answer and you can act on it today.", "example": "'What do I even charge?' → three public prices, take the middle one, add a guarantee."}, {"kind": "template", "when": "You know what to do and the blank page is the problem.", "example": "'They went quiet on me' → the one-line close with a date in it."}, {"kind": "tool", "when": "Something already exists that does this in under an hour.", "example": "'I need somewhere to send people' → a one-page builder, plus the two-hour limit."}, {"kind": "play", "when": "This is already a step in your plan.", "example": "'How do I find people to contact?' → that's step 4, and it's written. We take you there instead of answering around it."}, {"kind": "person", "when": "It needs a human — to build it, check it, or introduce you.", "example": "'Is this good enough to send?' → someone who has sold this reads it."}], "dispatch_rules": ["Return the cheapest and fastest kind that actually solves it. Never return a person where a template would do.", "If it's already a step in their plan, say so and take them there. Answering around their own plan is how a product teaches people to ignore it.", "If two rounds of AI don't unstick it, stop and offer a person. An AI that keeps rephrasing itself is the exact experience Faimgo exists to fix.", "If we genuinely don't have it, say we don't have it and say what we'd do in their position. Never invent a resource to fill the silence.", "Always show why this fit them — the step and the signal it used. Help that explains its reasoning is help people trust the second time."], "need_signals": [{"source": "always_visible", "match": ["help-rail", "every-step"]}, {"source": "user_says", "match": ["anything"]}], "unlocks": [], "payoff": {"speed": "hours", "effort": "low", "ceiling": "medium"}, "confidence": "high", "quick_win": true, "fear_it_calms": "'I don't even know what to ask for.' Then say that. It's a valid input here — half of what this does is turn a vague feeling into a named problem.", "launch_note": "AI answers instantly and the resources are hand-picked. If it can't solve it, a real person picks it up — usually within a day. Small and hand-made beats big and generic, and we'd rather tell you that than pretend it's a machine.", "how_to": {"diy_ai": "Ask in one sentence. It already knows your step, your answers, and your path.", "community": "If AI can't do it, it hands you to a person instead of looping.", "skip": null}, "content": {"goal": "Turn whatever you're facing into one thing you can do today.", "steps": ["Say it in your own words — vague is fine", "Get the fastest thing that fits: an answer, a template, a tool, a person, or your own next step", "If it's not right, say so — it escalates to a human rather than rephrasing itself"], "done_when": "You have something to do, or someone doing it."}, "if_it_stalls": [{"symptom": "I asked and the answer was too generic to use.", "likely_cause": "It answered the question instead of your situation — usually because it doesn't have enough about where you are yet.", "do_this": "Say what you already tried and what happened. One sentence of context turns a generic answer into a specific one, and it goes straight into your plan."}, {"symptom": "I don't know how to phrase what's wrong.", "likely_cause": "Nothing. This is the normal state and it's what the box is for.", "do_this": "Type the feeling — 'I'm stuck', 'this isn't working', 'I don't want to do this part'. Naming the problem is the first thing it does for you."}]}, "help.ai-coach": {"id": "help.ai-coach", "name": "Get AI to walk you through it", "short_name": "I'm stuck — walk me through it", "sub": "AI that knows where you are", "icon": "◇", "type": "on-demand", "move": "Hand the exact thing you're stuck on to AI, with your situation already loaded.", "paths": ["*"], "universal": true, "phase": null, "prerequisites": [], "time_cost": "one sitting", "need_signals": [{"source": "user_says", "match": ["I don't know how", "I'm stuck", "can you just show me"]}, {"source": "checkin_answer", "match": ["blocked:offer", "blocked:fear-of-sending", "blocked:asking"]}, {"source": "always_visible", "match": ["help-rail"]}], "unlocks": [], "payoff": {"speed": "hours", "effort": "low", "ceiling": "medium"}, "confidence": "high", "quick_win": true, "fear_it_calms": "'AI gives me ideas but I can't apply them.' The difference here is it already knows your offer, your buyer, and which step you're on — so it gives you the next action, not a lecture.", "how_to": {"diy_ai": "Available on every step. It knows where you are.", "community": null, "skip": null}, "content": {"goal": "Get unstuck in one sitting.", "steps": ["Say what you're trying to do in plain words", "It answers with the next action, sized for today", "If it can't help, it hands you to a person"], "done_when": "You know your next action."}, "escalation": "If two rounds don't unstick it, stop offering AI and offer a human. An AI that keeps rephrasing itself is the exact experience Faimgo exists to fix."}, "help.get-a-human": {"id": "help.get-a-human", "name": "Get a person on it", "short_name": "I need a person on it", "sub": "Build it, check it, or introduce me", "icon": "⚒", "type": "on-demand", "move": "Say what you need in two lines. A person builds it, checks it, or introduces you.", "paths": ["*"], "universal": true, "phase": null, "prerequisites": [], "time_cost": "two lines from you", "merged_from": ["help.community-build", "help.community-review", "help.community-swap"], "why_merged": "At launch all three are the same mechanism: a human reads your request and matches you. Three separate doors is fake precision — it makes the user classify their own problem before they're allowed to ask for help, which is the opposite of what a stuck person can do.", "covers": ["Build it for me — site, video, code, design.", "Check this before I send it — offer, price, message.", "Introduce me — I've run out of people to contact."], "need_signals": [{"source": "user_says", "match": ["I don't want to learn this", "I need a coder", "can someone do it for me", "is this good enough", "I've run out of people"]}, {"source": "checkin_answer", "match": ["offer:vague", "blocked:price-confidence", "blocked:empty-pipeline", "pipeline:live"]}, {"source": "always_visible", "match": ["help-rail"]}], "unlocks": ["community.sell-your-skill"], "payoff": {"speed": "days", "effort": "low", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "'Hiring anyone is expensive and risky.' These are people on the same journey as you, priced for people starting out.", "launch_status": "MANUAL — at launch a real person reads every request and matches by hand. Slower than a marketplace, and more honest than pretending we have one. Say so in the copy.", "how_to": {"diy_ai": "AI takes a first pass instantly, while you wait for the person.", "community": "Post what you need in two lines; we match you with someone who's done it.", "skip": "Do it yourself with AI instead."}, "content": {"goal": "The thing gets done without you learning a new craft.", "steps": ["Describe what you need in two lines", "We match you", "You supply the raw material; they do the rest"], "done_when": "The thing exists and you didn't have to become a web developer."}, "launch_note": "Right now a real person reads every request and matches you by hand — usually within a day. It's slower than an instant marketplace, and we'd rather tell you that than pretend."}, "community.sell-your-skill": {"id": "community.sell-your-skill", "name": "Sell the skill you just built", "short_name": "I learned this — can I sell it?", "sub": "Get paid for what you just taught yourself", "icon": "✦", "type": "on-demand", "move": "The thing you just learned to do for yourself is something other members will pay you to do for them.", "paths": ["*"], "universal": true, "phase": null, "prerequisites": [], "time_cost": "20 minutes to list", "surface_as": "opportunity, not need — never in the help rail by default; appears when a signal says they just built something themselves.", "need_signals": [{"source": "checkin_answer", "match": ["built-my-own-site", "edited-my-own-video", "wrote-my-own-copy", "has:one-testimonial"]}, {"source": "user_says", "match": ["I figured it out myself", "that was easier than I thought"]}], "unlocks": [], "payoff": {"speed": "days", "effort": "low", "ceiling": "high"}, "confidence": "high", "quick_win": true, "fear_it_calms": "'I have nothing to sell.' You do now — you just did it once, which is more than the person who needs it.", "launch_status": "MANUAL at launch.", "why_it_matters": "This closes the loop: the person who needed help at step 3 becomes the person who supplies help at step 3 for someone else. It is a second income stream AND the supply side of the community — which means the marketplace grows out of the journey instead of being bolted onto the end of it.", "how_to": {"diy_ai": "AI writes your listing from what you actually did.", "community": "We surface you to members asking for exactly that.", "skip": null}, "content": {"goal": "One paid job doing the thing you just taught yourself.", "steps": ["List what you just built, honestly, at a starter price", "Show your own thing as the sample", "Take one job"], "done_when": "Someone paid you for a skill you didn't have last month."}, "launch_note": "Right now we match these by hand, so it isn't instant. What that buys you: we only send you requests you can actually do."}, "consolidate.tune-the-machine": {"id": "consolidate.tune-the-machine", "name": "Tighten what's already working", "short_name": "Tighten what's working", "sub": "Make the rough things good", "icon": "◆", "type": "consolidation", "move": "Now that money is coming in, go back and make the rough things good — the site, the video, the price.", "paths": ["*"], "universal": true, "phase": "grow", "prerequisites": ["has:repeat-or-recurring-income"], "hidden_until": "has:first-client", "unlocks": [], "time_cost": "a weekend", "payoff": {"speed": "weeks", "effort": "medium", "ceiling": "high"}, "confidence": "high", "quick_win": false, "fear_it_calms": "The nagging feeling that everything you built was held together with tape. It was — on purpose. Now you fix it, with real evidence about what buyers actually ask.", "why_it_matters": "The rough site and rough clip made mid-journey were tools to close a specific sale. This is the pass where they become assets. Same two things, completely different job — which is why they appear twice in the model, not once at the end.", "common_needs_here": ["asset.website", "asset.video", "help.get-a-human"], "how_to": {"diy_ai": "AI reviews your site and pitch against the questions buyers actually asked you.", "community": "Hand the rebuild to someone; you brief them from real customer questions.", "skip": "If it's selling, leave it alone. Seriously."}, "content": {"goal": "The rough versions become the good versions.", "steps": ["List the questions buyers asked most", "Rebuild the site to answer those first", "Cut the full video from the clips you've been collecting", "Raise the price — you have proof now"], "done_when": "Nothing in your setup embarrasses you, and your price reflects your proof."}, "if_it_stalls": [{"symptom": "I don't know what to fix first.", "likely_cause": "You're judging it by taste instead of by evidence.", "do_this": "Fix only what a buyer actually asked about or got confused by. If nobody asked, it isn't broken."}]}}, "core": ["offer.define", "pricing.lower-risk", "setup.minimum-hireable", "outreach.find-buyer", "outreach.reach-and-close", "proof.testimonial-referral", "freelance.retainer", "freelance.productize"], "consolidation": ["consolidate.tune-the-machine"], "rail": ["asset.website", "asset.video", "help.get-a-human", "help.ai-coach"], "sigmap": {"has:offer": "I've got one clear sentence", "offer:vague": "I have one, but it feels generic", "blocked:offer": "I'm still stuck on this", "has:price": "I have a price and a guarantee", "price:no-guarantee": "I have a price but no guarantee yet", "blocked:price-confidence": "I keep second-guessing the number", "has:hireable-setup": "Yes — I have a link and a way to get paid", "setup:rough": "Sort of — it's rough and I'm embarrassed by it", "blocked:building-not-selling": "I got pulled into building a website", "has:prospect-list": "I have 20 or more names", "list:thin": "I have a handful, not 20", "blocked:empty-pipeline": "I've run out of people entirely", "has:first-client": "Someone paid me", "pipeline:live": "Real conversations, no yes yet", "blocked:no-replies": "I sent them and heard nothing", "blocked:fear-of-sending": "I haven't been able to hit send", "has:one-testimonial": "Got a testimonial or a referral", "proof:pending": "Asked, waiting on them", "blocked:asking": "Haven't asked yet", "has:recurring-income": "Someone's on a recurring arrangement", "income:one-off": "Not yet — still one-off work", "has:repeatable-deliverable": "Yes — and I keep selling the same thing", "has:named-package": "Yes, but every job is still custom", "blocked:packaging": "Not yet"}, "version": "0.6"};
+const P = DATA.plays, CORE = DATA.core, RAIL = DATA.rail.slice();
+
+let status = CORE.map(function(id,i){ return i===0 ? "done" : i===1 ? "current" : "todo"; });
+let open = 1;
+let openTool = null;
+let asking = false;          // check-in question is showing
+let glue = null;             // "then" line to show at top of next screen
+let signals = [];            // accumulated state facts
+let oppUnlocked = false;     // community.sell-your-skill surfaced
+let pendingNext = null;      // step to continue to after a detour into help
+
+const olist=document.getElementById("olist");
+const toolsEl=document.getElementById("tools");
+const detail=document.getElementById("detail");
+const knowEl=document.getElementById("knowlist");
+
+function has(sig){ return signals.indexOf(sig)!==-1; }
+function nextIncomplete(from){ for(var k=(from===undefined?0:from);k<CORE.length;k++){ if(status[k]!=="done") return k; } return -1; }
+function contBtn(){ var n=pendingNext; if(n===null||n===undefined||n===-1) return "";
+  return '<button class="btn done" onclick="goNext()">Continue → step '+(n+1)+': '+esc(P[CORE[n]].short_name)+'</button>'; }
+function doneCount(){ return status.filter(function(s){return s==="done";}).length; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+const SIGNAL_TEXT = {
+  "has:offer":"You have a clear one-sentence offer.",
+  "offer:vague":"Your offer exists but is still generic.",
+  "blocked:offer":"You're stuck on naming your offer.",
+  "has:price":"You have a price with a guarantee.",
+  "price:no-guarantee":"You have a price, no guarantee yet.",
+  "blocked:price-confidence":"You're second-guessing your number.",
+  "has:hireable-setup":"A stranger could find you and pay you.",
+  "setup:rough":"Your setup is rough — deliberately.",
+  "blocked:building-not-selling":"You got pulled into building instead of selling.",
+  "has:prospect-list":"You have 20+ real prospects.",
+  "list:thin":"You have a handful of prospects.",
+  "blocked:empty-pipeline":"You've run out of people to contact.",
+  "has:first-client":"You have a paying client.",
+  "pipeline:live":"You have live conversations, no yes yet.",
+  "blocked:no-replies":"You sent messages and heard nothing.",
+  "blocked:fear-of-sending":"You haven't been able to hit send yet.",
+  "built-my-own-site":"You built your own site."
+};
+function signalText(s){ return SIGNAL_TEXT[s] || DATA.sigmap[s] || s; }
+
+function renderKnow(){
+  if(!signals.length){ knowEl.innerHTML='<p class="empty">Nothing yet. Your first check-in fills this in — and it is what makes the next step different for you than for anyone else.</p>'; return; }
+  knowEl.innerHTML = '<ul>'+signals.map(function(s){ return '<li>'+esc(signalText(s))+'</li>'; }).join("")+'</ul>';
+}
+
+function renderOutline(){
+  var html = CORE.map(function(id,i){
+    var p = P[id], st = status[i];
+    var cls = "oitem "+(st==="done"?"done":st==="current"?"current":"")+((i===open&&!openTool)?" active":"");
+    var mark = st==="done" ? "✓" : (i+1);
+    var qw = p.quick_win ? ' <span class="qw" title="quick win">★</span>' : '';
+    return '<div class="'+cls+'" onclick="openStep('+i+')">'
+      + '<div class="dot">'+mark+'</div>'
+      + '<div><div class="otxt">'+esc(p.short_name)+qw+'</div><div class="osub">'+esc(p.sub)+'</div></div></div>';
+  }).join("");
+  var c = P[DATA.consolidation[0]];
+  if(has("has:first-client")){
+    html += '<div class="oitem'+((openTool===null&&open===CORE.length)?' active':'')+'" onclick="openStep('+CORE.length+')">'
+      + '<div class="dot">◆</div><div><div class="otxt">'+esc(c.short_name)+'<span class="fin">FINAL</span></div>'
+      + '<div class="osub">'+esc(c.sub)+'</div></div></div>';
+  } else {
+    html += '<div class="ghost"><div class="dot">◇</div><div><div class="otxt">One final tune-up pass</div>'
+      + '<div class="osub">Appears once you have a paying client — there’s nothing to tighten before that.</div></div></div>';
+  }
+  olist.innerHTML = html;
+  document.getElementById("prog").textContent = doneCount()+" / "+CORE.length+" done";
+  document.getElementById("barfill").style.width = Math.round(100*doneCount()/CORE.length)+"%";
+}
+
+function renderTools(){
+  var ids = RAIL.slice();
+  if(oppUnlocked) ids.push("community.sell-your-skill");
+  toolsEl.innerHTML = ids.map(function(id){
+    var t=P[id];
+    var opp = (id==="community.sell-your-skill") ? ' opp' : '';
+    return '<button class="tool'+(openTool===id?' active':'')+opp+'" onclick="openTool_(&quot;'+id+'&quot;)">'
+      + '<span class="ic">'+t.icon+'</span><span>'+esc(t.short_name)+'</span></button>';
+  }).join("");
+}
+
+function waysHtml(w){
+  if(!w) return "";
+  var out=[];
+  if(w.diy_ai) out.push('<div class="way"><span class="wlab w-diy">You + AI</span><p>'+esc(w.diy_ai)+'</p></div>');
+  if(w.community) out.push('<div class="way"><span class="wlab w-com">A person</span><p>'+esc(w.community)+'</p></div>');
+  if(w.skip) out.push('<div class="way"><span class="wlab w-skip">Skip</span><p>'+esc(w.skip)+'</p></div>');
+  return '<div class="ways">'+out.join("")+'</div>';
+}
+
+function stallHtml(p){
+  if(!p.if_it_stalls || !p.if_it_stalls.length) return "";
+  var items = p.if_it_stalls.map(function(s){
+    return '<div class="sitem"><p class="sym">“'+esc(s.symptom)+'”</p>'
+      + '<p class="cau">'+esc(s.likely_cause)+'</p>'
+      + '<p class="do"><b>Do this:</b> '+esc(s.do_this)+'</p></div>';
+  }).join("");
+  return '<details class="stall"><summary>If this stalls — '+p.if_it_stalls.length+' common way'+(p.if_it_stalls.length>1?'s':'')+' it goes wrong</summary>'+items+'</details>';
+}
+
+function resourcesHtml(p){
+  if(!p.resources || !p.resources.length) return "";
+  return '<div class="reslist"><p class="rh2">Picked for this step — nothing generic</p>'
+    + p.resources.map(function(r){ return resCard({kind:r.kind,name:r.name,rfor:r["for"],why:r.why}); }).join("")
+    + '</div>';
+}
+function needsHtml(p){
+  var n = p.common_needs_here;
+  if(!n || !n.length) return "";
+  var chips = n.map(function(id){
+    return '<button class="chip" onclick="openTool_(&quot;'+id+'&quot;)">'+P[id].icon+'  '+esc(P[id].short_name)+'</button>';
+  }).join("");
+  return '<div class="needs"><p class="nh">People often need one of these right here</p><div class="chips">'+chips+'</div></div>';
+}
+
+function glueHtml(){
+  if(!glue) return "";
+  var g = '<div class="glue"><span class="k">Because</span><p>'+esc(glue)+'</p></div>';
+  return g;
+}
+
+function playAt(i){ return i<CORE.length ? P[CORE[i]] : P[DATA.consolidation[0]]; }
+
+function openStep(i){
+  open=i; openTool=null; asking=false;
+  if(i===pendingNext) pendingNext=null;
+  var p = playAt(i);
+  var isFinal = i>=CORE.length;
+  var st = isFinal ? "current" : status[i];
+  var tag = st==="done" ? "Done · revisit anytime" : isFinal ? "Final pass" : "Your current step";
+  var star = p.quick_win ? '<span title="quick win">★ QUICK WIN</span>' : '';
+  var body =
+      glueHtml()
+    + '<p class="dtag">'+tag+' '+star+'<span class="time">⏱ '+esc(p.time_cost)+'</span></p>'
+    + '<h2>'+esc(p.short_name)+'</h2>'
+    + '<p class="move">“'+esc(p.move)+'”</p>'
+    + (p.fear_it_calms?'<p class="why">'+esc(p.fear_it_calms)+'</p>':'')
+    + waysHtml(p.how_to)
+    + stallHtml(p)
+    + resourcesHtml(p)
+    + needsHtml(p)
+    + ((p.content&&p.content.done_when)?'<div class="donewhen"><b>Done when:</b> '+esc(p.content.done_when)+'</div>':'');
+
+  if(!isFinal && st!=="done"){
+    body += '<div class="actions">'
+      + '<button class="btn done" onclick="ask('+i+')">I’ve finished this move</button>'
+      + '<button class="btn skip" onclick="ask('+i+')">I already did this before</button>'
+      + '</div>';
+  } else if(!isFinal){
+    var nx = nextIncomplete(i+1);
+    body += '<div class="actions">'
+      + (nx!==-1
+          ? '<button class="btn done" onclick="jump('+nx+')">Continue → step '+(nx+1)+': '+esc(P[CORE[nx]].short_name)+'</button>'
+          : (has("has:first-client")?'<button class="btn done" onclick="openStep('+CORE.length+')">Continue → the final pass</button>':''))
+      + '<button class="btn skip" onclick="reopen('+i+')">Not done yet — reopen</button></div>';
+  }
+  detail.innerHTML = body;
+  glue = null;
+  renderOutline(); renderTools(); renderKnow();
+}
+
+function ask(i){
+  asking=true; open=i; openTool=null;
+  var p = P[CORE[i]];
+  var opts = p.checkin.options.map(function(o,j){
+    return '<button class="opt" onclick="answer('+i+','+j+')">'+esc(o.label)+'</button>';
+  }).join("");
+  detail.innerHTML =
+      '<button class="back" onclick="openStep('+i+')">← Back to the step</button>'
+    + '<p class="dtag">Check-in · one tap</p>'
+    + '<div class="checkin"><p class="cq">'+esc(p.checkin.question)+'</p>'
+    + '<p class="cs">There is no wrong answer here. Whichever one is true changes what comes next — including if the true answer is “it didn’t work.”</p>'
+    + '<div class="opts">'+opts+'</div></div>';
+}
+
+function answer(i,j){
+  var p = P[CORE[i]];
+  var o = p.checkin.options[j];
+  if(signals.indexOf(o.signal)===-1) signals.push(o.signal);
+  status[i]="done";
+  glue = o.then;
+  var nx = nextIncomplete(i+1);
+  if(o.routes_to){ pendingNext = nx; if(nx!==-1) status[nx]="current"; openTool_(o.routes_to); return; }
+  var next = nx;
+  if(next!==-1){ status[next]="current"; openStep(next); }
+  else if(has("has:first-client")){ openStep(CORE.length); }
+  else { openStep(i); }
+}
+
+function openTool_(id){
+  openTool=id; asking=false;
+  var t=P[id];
+  if(!t){   // routed to a play on a different path — this is a reroute, not an error
+    var bt = Math.min(open, CORE.length-1);
+    detail.innerHTML =
+        '<button class="back" onclick="openStep('+bt+')">← Back to step '+(bt+1)+'</button>'
+      + glueHtml()
+      + '<p class="dtag">A bigger road just opened</p>'
+      + '<h2>You’ve outgrown this path</h2>'
+      + '<p class="move">“What you just built can be sold over and over — that’s a different, larger road than freelancing.”</p>'
+      + '<p class="why">We don’t reroute you silently. You just did the thing that changes the maths, so we’re showing you the new road and the reason. Staying where you are is a completely fine answer.</p>'
+      + '<div class="note"><b>Not built yet:</b> the Digital Products path exists in the model but not in this mock. In the real product this is where the plan on the left would visibly change.</div>'
+      + '<div class="actions"><button class="btn done" onclick="openStep('+bt+')">Stay on this path for now</button></div>';
+    glue=null; renderOutline(); renderTools(); renderKnow(); return;
+  }
+  var guard = t.soft_guard && !has("has:first-client");
+  var backTo = Math.min(open, CORE.length-1);
+  var body =
+      '<button class="back" onclick="openStep('+backTo+')">← Back to step '+(backTo+1)+': '+esc(P[CORE[backTo]].short_name)+'</button>'
+    + glueHtml()
+    + '<p class="dtag">Available any time · not a step · doesn’t change your progress<span class="time">⏱ '+esc(t.time_cost)+'</span></p>'
+    + '<h2>'+esc(t.name)+'</h2>'
+    + '<p class="move">“'+esc(t.move)+'”</p>'
+    + (t.fear_it_calms?'<p class="why">'+esc(t.fear_it_calms)+'</p>':'')
+    + (guard?'<div class="guard"><b>One honest note.</b> '+esc(t.soft_guard.if_unmet)+'</div>':'')
+    + (t.covers?'<div class="needs"><p class="nh">Whatever you need, this is the same door</p><div class="chips">'+t.covers.map(function(c){return '<span class="chip">'+esc(c)+'</span>';}).join("")+'</div></div>':'')
+    + waysHtml(t.how_to)
+    + resourcesHtml(t)
+    + stallHtml(t)
+    + (t.launch_note?'<div class="note"><b>Honest about where we are:</b> '+esc(t.launch_note)+'</div>':'')
+    + ((t.content&&t.content.done_when)?'<div class="donewhen"><b>Done when:</b> '+esc(t.content.done_when)+'</div>':'')
+    + '<div class="actions">'
+    + (pendingNext!==null&&pendingNext!==-1
+        ? contBtn()+'<button class="btn skip" onclick="openStep('+backTo+')">Not yet — back to that step</button>'
+        : '<button class="btn done" onclick="openStep('+backTo+')">Got it — back to my step</button>')
+    + (id==="asset.website"&&!oppUnlocked?'<button class="btn skip" onclick="unlockOpp()">I ended up building it myself</button>':'')
+    + '</div>';
+  detail.innerHTML = body;
+  glue = null;
+  renderOutline(); renderTools(); renderKnow();
+}
+
+function unlockOpp(){
+  oppUnlocked=true;
+  if(signals.indexOf("built-my-own-site")===-1) signals.push("built-my-own-site");
+  glue = "You just built a website yourself — which means you can now do for someone else the thing you needed help with an hour ago. That is a second income stream, and it is where the people who help you come from.";
+  openTool_("community.sell-your-skill");
+}
+
+function goNext(){ var n=pendingNext; pendingNext=null; if(n!==null&&n!==-1){ status[n]="current"; openStep(n); } }
+function jump(i){ pendingNext=null; status[i]="current"; openStep(i); }
+/* ---- Faimgo Help: mock triage. Real version routes on step + signals + path. ---- */
+const EXAMPLES = ["they went quiet on me","I don't know what to charge","I need somewhere to send people","I'm stuck and I don't know why"];
+const MATCH = [
+  {k:["quiet","ghost","no reply","heard nothing","ignored","silence"],
+   fit:"Silence at this stage is almost always a first-line problem or a never-asked problem — not an offer problem. So the two-minute fixes come first.",
+   res:[{kind:"template",name:"The one-line close with a date in it",rfor:"People who go warm then quiet.",why:"Interested-then-quiet is almost always unasked, not unwilling. This is a two-minute fix, not a rewrite."},
+        {kind:"person",name:"Someone who has sold this reads your last message",rfor:"When you've rewritten it four times.",why:"Five minutes of another person's eyes ends a week of second-guessing."}]},
+  {k:["charge","price","pricing","how much","worth","expensive"],
+   fit:"Pricing is already a step in your own plan, so we hand you that rather than answering around it.",
+   play:"pricing.lower-risk",
+   res:[{kind:"play",name:"This is already your step 2 — Price it",rfor:"Setting a number you can say out loud.",why:"We'd rather hand you the step you already have than give you a separate answer that competes with your plan."},
+        {kind:"template",name:"Three-quotes benchmark sheet",rfor:"Finding a market rate when there's no official number.",why:"Three public prices, take the middle one. Fifteen minutes, real answer."}]},
+  {k:["website","site","somewhere to send","link","page"],
+   fit:"This is a tool you need, not a step you missed — you can do it right now without losing your place.",
+   tool:"asset.website",
+   res:[{kind:"tool",name:"A one-page builder with a free tier",rfor:"Shipping the ugly version today.",why:"Picked for the two-hour ceiling, not for how good it can get. You want a tool, not a project."},
+        {kind:"person",name:"Someone in the community builds it",rfor:"If you don't want to learn this, ever.",why:"That's a reasonable position and it shouldn't cost you the sale."}]},
+  {k:["stuck","don't know","dont know","lost","overwhelmed","help","confused"],
+   fit:"You did not have to name the problem to ask. Naming it is the first thing this does for you.",
+   res:[{kind:"answer",name:"Name it first, then we size it",rfor:"When the feeling is real but the problem isn't named yet.",why:"Half of being stuck is not having words for it. We'll ask two questions and turn it into one thing you can do today."},
+        {kind:"play",name:"Or pick up where you left off — step "+"3: Get hireable",rfor:"If nothing is actually broken and it just feels heavy.",why:"Sometimes the honest answer is that your next step is fine and it's just the next step."}]}
+];
+function renderExamples(){
+  document.getElementById("exs").innerHTML = EXAMPLES.map(function(e,i){
+    return '<button class="ex" onclick="askIt('+i+')">'+esc(e)+'</button>';
+  }).join("");
+}
+function matchAsk(q){
+  q = (q||"").toLowerCase();
+  for(var i=0;i<MATCH.length;i++){
+    for(var j=0;j<MATCH[i].k.length;j++){ if(q.indexOf(MATCH[i].k[j])!==-1) return MATCH[i]; }
+  }
+  return null;
+}
+function resCard(r){
+  return '<div class="rescard"><span class="kind k-'+r.kind+'">'+r.kind+'</span>'
+    + '<h4>'+esc(r.name)+'</h4><p class="rfor">'+esc(r.rfor||r["for"]||"")+'</p>'
+    + '<p class="rwhy"><b>Why this one:</b> '+esc(r.why)+'</p></div>';
+}
+function askIt(exIdx){
+  var q = (typeof exIdx==="number") ? EXAMPLES[exIdx] : (document.getElementById("ask").value||"");
+  if(!q.trim()) return;
+  document.getElementById("ask").value = q;
+  openTool=null; asking=false;
+  var m = matchAsk(q);
+  var bt = Math.min(open, CORE.length-1);
+  var stepName = P[CORE[bt]].short_name;
+  var body = '<button class="back" onclick="openStep('+bt+')">← Back to step '+(bt+1)+': '+esc(stepName)+'</button>'
+    + '<p class="dtag">Faimgo Help · answered in seconds<span class="time">⏱ one sentence from you</span></p>'
+    + '<h2>“'+esc(q)+'”</h2>';
+  if(m){
+    var known = signals.length ? ', and you told us: “'+esc(signalText(signals[signals.length-1]))+'”' : ', and we know very little about you yet — the more check-ins you answer, the sharper this gets';
+    body += '<div class="fit"><b>Why this answer and not a generic one:</b> you\'re on step '+(bt+1)+' ('+esc(stepName)+')'+known+'. '+esc(m.fit)+'</div>'
+      + '<div class="reslist"><p class="rh2">The fastest things that actually solve this</p>'
+      + m.res.map(resCard).join("") + '</div>'
+      + '<div class="note"><b>Not it?</b> Say so and a real person picks it up — usually within a day. It will not keep rephrasing itself at you.</div>'
+      + '<div class="actions">'
+      + (m.play?'<button class="btn done" onclick="jumpToPlay(&quot;'+m.play+'&quot;)">Take me to that step</button>':'')
+      + (m.tool?'<button class="btn done" onclick="openTool_(&quot;'+m.tool+'&quot;)">Open it</button>':'')
+      + '<button class="btn skip" onclick="openTool_(&quot;help.get-a-human&quot;)">Get a person on it instead</button>'
+      + '</div>';
+  } else {
+    body += '<div class="fit"><b>Being honest:</b> we don\'t have a good fitted answer for that one yet.</div>'
+      + '<div class="rescard"><span class="kind k-person">person</span><h4>A human takes this one</h4>'
+      + '<p class="rfor">We\'d rather say we don\'t have it than invent a resource to fill the silence.</p>'
+      + '<p class="rwhy"><b>Why this one:</b> an answer that sounds right and isn\'t is worse than a day\'s wait.</p></div>'
+      + '<div class="actions"><button class="btn done" onclick="openTool_(&quot;help.get-a-human&quot;)">Send it to a person</button>'
+      + '<button class="btn skip" onclick="openStep('+bt+')">Back to my step</button></div>';
+  }
+  detail.innerHTML = body;
+  glue=null; renderOutline(); renderTools(); renderKnow();
+}
+function jumpToPlay(id){ var i=CORE.indexOf(id); if(i!==-1) openStep(i); }
+
+function reopen(i){ status[i]="current"; openStep(i); }
+
+window.openStep=openStep; window.openTool_=openTool_; window.ask=ask; window.answer=answer;
+window.reopen=reopen; window.unlockOpp=unlockOpp; window.goNext=goNext; window.jump=jump;
+window.askIt=askIt; window.jumpToPlay=jumpToPlay;
+renderTools(); renderExamples(); renderKnow(); openStep(1);
+</script></body></html>

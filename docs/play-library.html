@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Faimgo — Play Library v0.3</title>
+<style>
+  :root{--cream:#F1F4F2;--green:#1B3A2D;--green2:#2C5A45;--gold:#8A6A14;--goldBright:#C7971F;--beige:#E4E8E5;--gray:#5A616B;--ink:#15181B;--faint:#C9D2CD;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 26px 60px;}
+  .eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 10px;}
+  h1{font-size:31px;line-height:1.15;margin:0 0 10px;letter-spacing:-.01em;}
+  .lede{font-size:16.5px;color:var(--gray);max-width:680px;margin:0 0 22px;}
+  .lede b{color:var(--ink);}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 30px;}
+  .stat{background:#fff;border:1px solid var(--beige);border-radius:12px;padding:10px 16px;font-size:14px;color:var(--gray);}
+  .stat b{color:var(--green);font-size:20px;display:block;}
+  .phase-h{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:800;margin:30px 0 12px;border-top:1px solid var(--beige);padding-top:18px;}
+  .card{background:#fff;border:1px solid var(--beige);border-radius:16px;padding:20px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(21,40,32,.05);}
+  .card.amp{border-left:4px solid var(--goldBright);}
+  .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .card h3{margin:0 0 3px;font-size:19px;}
+  .id{font-size:12px;color:#9aa4a0;font-family:ui-monospace,Menlo,monospace;}
+  .move{font-size:15px;color:var(--ink);margin:8px 0 12px;font-style:italic;}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;}
+  .tag{font-size:11px;font-weight:700;letter-spacing:.02em;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+  .t-uni{background:#FBF1DA;color:var(--gold);border:1px solid #EAD9A8;}
+  .t-path{background:#E4EFE9;color:var(--green);border:1px solid #BFD8CB;}
+  .t-phase{background:#EEF0F1;color:var(--gray);border:1px solid #DDE1E3;}
+  .t-qw{background:var(--goldBright);color:#fff;}
+  .t-conf{background:#fff;color:var(--gray);border:1px solid var(--beige);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 0;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+  .box{background:var(--cream);border:1px solid #E7ECE9;border-radius:11px;padding:12px 14px;}
+  .box .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:800;margin:0 0 6px;}
+  .box p{margin:0;font-size:13.6px;color:var(--ink);}
+  .box ul{margin:4px 0 0;padding-left:18px;font-size:13.4px;color:var(--ink);}
+  .box li{margin:2px 0;}
+  .flow{font-size:13px;color:var(--gray);margin:12px 0 0;}
+  .flow code{background:#EEF0F1;padding:1px 6px;border-radius:5px;font-size:12px;color:var(--green);}
+  .flow .xp{background:#FBF1DA;color:var(--gold);border:1px solid #EAD9A8;}
+  .payoff{display:flex;gap:16px;margin:10px 0 0;font-size:13px;color:var(--gray);}
+  .payoff b{color:var(--ink);}
+  .fear{font-size:13.6px;color:var(--ink);margin:12px 0 0;background:#FBF6E8;border:1px solid #EAD9A8;border-radius:10px;padding:11px 14px;}
+  .fear .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:800;margin:0 0 4px;}
+  .ways{display:flex;flex-direction:column;gap:7px;margin:10px 0 0;}
+  .way{display:flex;gap:10px;align-items:flex-start;font-size:13.4px;}
+  .wlab{flex:0 0 auto;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:6px;white-space:nowrap;margin-top:1px;}
+  .w-diy{background:#E4EFE9;color:var(--green);border:1px solid #BFD8CB;}
+  .w-com{background:#FBF1DA;color:var(--gold);border:1px solid #EAD9A8;}
+  .w-skip{background:#EEF0F1;color:var(--gray);border:1px solid #DDE1E3;}
+  .tradeoff{font-size:13px;color:var(--gray);margin:10px 0 0;border-left:3px solid var(--goldBright);padding-left:10px;}
+  .foot{margin:26px 2px 0;font-size:13px;color:#9aa4a0;}
+</style></head><body><div class="wrap">
+<p class="eyebrow">Play library · v0.3 · for review</p>
+<h1>The play library — first slice</h1>
+<p class="lede">The freelancing journey plus the two universal amplifiers (website, video), written as real <b>play objects</b>. This is the fuel the router will use. Notice how many are <b>universal</b> — that's why the library is far smaller than nine paths times seven steps. <b>Review the content and the shape;</b> if it holds, the other paths are just more of the same.</p>
+<div class="stats" id="stats"></div>
+<div id="lib"></div>
+<p class="foot">Canonical data lives in <code style="font-size:12px">faimgo-plays.json</code>. This page is generated from it, so they never drift. Cross-path unlocks (e.g. Productize -> Digital Products) point to plays we haven't authored yet — that's the graph reaching into paths still to come.</p>
+</div>
+<script>
+const DATA = {"version": "0.3", "note": "Faimgo play library — first slice (freelancing journey + universal amplifier plays). This is the fuel the router will consume. Many plays are marked universal/multi-path, which is why the full library is far smaller than 9 paths x 7 steps. Content is drawn from playbook-freelancing v3, compressed. Ben reviews content + structure before we replicate across the other paths.", "enums": {"gap": ["has-skill", "can-market", "stuck", "scratch"], "phase": ["find", "aim", "grow"], "payoff.speed": ["hours", "days", "1-3 weeks", "weeks"], "payoff.effort": ["low", "medium", "high"], "payoff.ceiling": ["foundational", "medium", "high"], "confidence": ["low", "medium", "high"], "how_to.keys": ["diy_ai", "community", "skip"]}, "plays": [{"id": "offer.define", "name": "Define your one offer", "move": "Say who you help and what outcome you get them — in one sentence.", "paths": ["freelance", "local", "va", "tutor"], "universal": false, "gap": ["has-skill", "can-market", "stuck", "scratch"], "phase": "find", "prerequisites": [], "unlocks": ["pricing.lower-risk", "setup.minimum-hireable"], "payoff": {"speed": "days", "effort": "low", "ceiling": "foundational"}, "confidence": "high", "quick_win": true, "fear_it_calms": "Worrying your skill isn't good enough — this points you at what people already ask you for, not what you think you should offer.", "how_to": {"diy_ai": "AI drafts five versions from the thing you're already the go-to for; you keep the one that makes a real person nod.", "community": "A peer sanity-checks that your offer names a specific person and a specific outcome.", "skip": null}, "content": {"goal": "One sentence: 'I help [specific person] get [specific outcome] by [what you do].'", "steps": ["List the skill people already ask you for", "Pick one buyer who has the problem and the money", "Draft five versions; keep the sharpest"], "done_when": "You can say it in one breath and it names a specific person and a specific outcome."}}, {"id": "pricing.lower-risk", "name": "Price to lower the buyer's risk", "move": "Price slightly below market, then win on guarantees — not on being cheapest.", "paths": ["freelance", "local", "va", "resell", "digital"], "universal": false, "gap": ["has-skill", "stuck"], "phase": "aim", "prerequisites": ["offer.define"], "unlocks": ["setup.minimum-hireable"], "payoff": {"speed": "hours", "effort": "low", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Fear of charging wrong — either scaring people off or underselling yourself.", "how_to": {"diy_ai": "AI benchmarks the going market rate and suggests risk-killing value-adds for your kind of work.", "community": "A peer who's sold this before pressure-tests your number and tiers.", "skip": null}, "content": {"goal": "A price with at least one built-in guarantee.", "steps": ["Set it ~20-30% below market (a nudge, not your pitch)", "Add one risk-killer: free revisions, three options, or a guarantee", "Offer at most three simple tiers", "Take a 30-40% deposit, or 80% before the final step"], "done_when": "Your price includes a guarantee that removes the buyer's biggest fear."}}, {"id": "setup.minimum-hireable", "name": "Set up the minimum to be hireable", "move": "Get three things — a one-page presence, a way to get paid, a way to be reached. No website.", "paths": ["freelance", "local", "va", "tutor"], "universal": false, "gap": ["has-skill", "scratch", "stuck"], "phase": "aim", "prerequisites": ["offer.define"], "unlocks": ["outreach.find-buyer"], "payoff": {"speed": "hours", "effort": "low", "ceiling": "foundational"}, "confidence": "high", "quick_win": true, "fear_it_calms": "Believing you need a website, brand, or logo before you can start. You don't.", "how_to": {"diy_ai": "AI drafts your one-page offer + examples in minutes.", "community": "Someone sets up your simple page for you if you'd rather not.", "skip": "Bare minimum is a note with your offer and a way to pay — that alone is enough to start."}, "content": {"goal": "A link you could paste to a stranger, and a way to invoice them.", "steps": ["A clean Notion/Google Doc: offer, 2-3 examples, how to reach you", "A free invoicing tool (Wave) or a PayPal/Stripe link", "One clear way to be contacted"], "done_when": "A stranger could see what you do and pay you."}}, {"id": "outreach.find-buyer", "name": "Find the person who feels the pain", "move": "Aim at the human who actually feels the problem — not just whoever signs the check.", "paths": ["*"], "universal": true, "gap": ["has-skill", "stuck"], "phase": "find", "prerequisites": ["offer.define"], "unlocks": ["outreach.reach-and-close"], "payoff": {"speed": "days", "effort": "medium", "ceiling": "foundational"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Not knowing who to target — this gives a concrete way to build a real list.", "how_to": {"diy_ai": "AI researches prospects that fit and tells you who inside each feels the pain.", "community": "Swap leads and warm intros with others on the same path.", "skip": null}, "content": {"goal": "A list of ~20 real prospects, each tagged with who feels the pain.", "steps": ["Start with anyone you have a connection to", "Add cold ones from LinkedIn, Maps, directories", "For each, name the person whose day gets worse from the problem"], "done_when": "20 names, each with a 'who feels it' tag."}}, {"id": "outreach.reach-and-close", "name": "Reach out, then close", "move": "Send tailored messages, mirror the buying signal back, then close — people buy when they feel understood.", "paths": ["*"], "universal": true, "gap": ["has-skill", "can-market", "stuck"], "phase": "find", "prerequisites": ["outreach.find-buyer", "setup.minimum-hireable"], "unlocks": ["proof.testimonial-referral"], "payoff": {"speed": "1-3 weeks", "effort": "medium", "ceiling": "high"}, "confidence": "low", "quick_win": false, "fear_it_calms": "Fear of rejection and cold outreach — the scariest step. Route confidence-banking wins BEFORE this one; here, warm contacts first and a script that removes the guesswork.", "how_to": {"diy_ai": "AI drafts a personalized opener per prospect from what you found about them.", "community": "Practice your pitch or get it reviewed before you send.", "skip": null}, "content": {"goal": "Your first dollar — or live conversations with a clear reason why not.", "steps": ["Tailor every message to that one person's situation", "Send 10 this week; follow up once a few days later", "When they're interested, mirror it back before pitching", "Decode 'a more competitive option' = they want a lower price; answer with framed value"], "done_when": "You've earned your first dollar, or have real conversations in progress."}}, {"id": "proof.testimonial-referral", "name": "Turn one client into proof", "move": "Ask every client for a testimonial and a referral — you're borrowing their credibility to lower the next buyer's risk.", "paths": ["*"], "universal": true, "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-client"], "unlocks": ["freelance.retainer", "asset.website", "asset.video"], "payoff": {"speed": "days", "effort": "low", "ceiling": "medium"}, "confidence": "high", "quick_win": true, "fear_it_calms": "The awkwardness of asking — a simple script makes it easy, and the first testimonial is a huge morale boost.", "how_to": {"diy_ai": "AI drafts the testimonial + referral ask in your voice.", "community": null, "skip": null}, "content": {"goal": "One testimonial and one referral or repeat.", "steps": ["Ask: 'Would you leave a short testimonial?'", "Ask: 'Who else do you know who needs this?'", "Take great care of anyone they send"], "done_when": "You have proof you can show the next buyer."}}, {"id": "freelance.retainer", "name": "Turn one-offs into repeat income", "move": "Offer to handle it every month for a set price — predictable income, less selling.", "paths": ["freelance", "va", "local"], "universal": false, "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-client"], "unlocks": ["freelance.productize"], "payoff": {"speed": "weeks", "effort": "low", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Feeling pushy asking for an ongoing commitment — it's just offering to solve the problem permanently.", "how_to": {"diy_ai": "AI helps you frame the retainer offer and price it.", "community": null, "skip": null}, "content": {"goal": "At least one client on a recurring arrangement.", "steps": ["Spot the thing they'll need again", "Offer 'I'll handle X every month for $Y'", "Raise the price for the next client — you have proof now"], "done_when": "You have predictable income, not just one-off projects."}}, {"id": "freelance.productize", "name": "Turn custom work into a named package", "move": "Package your repeated deliverable into one fixed-scope, fixed-price offer.", "paths": ["freelance", "va"], "universal": false, "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-client", "has:one-testimonial"], "unlocks": ["digital.package-into-product"], "cross_path_unlock": "digital.package-into-product", "reroute_signals": ["User reports the same deliverable keeps selling, or they built a reusable template/asset -> surface Digital Products: a bigger, more scalable road than trading time."], "payoff": {"speed": "weeks", "effort": "medium", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "Nervousness about committing to a fixed scope — a package actually makes selling and delivering easier.", "how_to": {"diy_ai": "AI helps you name the package, fix its scope, and write the one-pager.", "community": "Someone builds your package one-pager from your notes.", "skip": null}, "content": {"goal": "One named package you can sell without a custom quote.", "steps": ["Pick the deliverable clients ask for most", "Fix its scope, price, and turnaround", "Add the risk-killer (revisions/guarantee)"], "done_when": "You can sell it by name."}}, {"id": "asset.website", "name": "Add a simple website", "move": "Give yourself a place that looks legit and turns browsers into buyers — beyond your local area.", "paths": ["*"], "universal": true, "type": "amplifier", "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-sale-or-client"], "unlocks": ["digital.storefront"], "payoff": {"speed": "days", "effort": "medium", "ceiling": "high"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "'I know nothing about websites.' That's exactly why this play offers three ways to get it done — including not doing it yourself.", "how_to": {"diy_ai": "AI builds it with you, step by step. No code.", "community": "Someone in the Faimgo community builds it cheap — you just send photos.", "skip": "Not now. Keep it simple; you can always come back."}, "tradeoff": "Selling as-is is completely fine. Just know: more reach usually means more customers. Your call, always.", "content": {"goal": "A simple site that makes you look real and sells beyond your local area.", "steps": ["Pick the three things a buyer needs to see", "Use your offer, examples, and a way to buy/contact", "Ship the simplest version; improve later"], "done_when": "You can send one link that closes a sale on its own."}}, {"id": "asset.video", "name": "Add a short product video", "move": "Show the thing being made or used — people buy what they can see.", "paths": ["*"], "universal": true, "type": "amplifier", "gap": ["has-skill"], "phase": "grow", "prerequisites": ["has:first-sale-or-client"], "unlocks": [], "payoff": {"speed": "days", "effort": "medium", "ceiling": "medium"}, "confidence": "medium", "quick_win": false, "fear_it_calms": "'I've never filmed anything.' A phone and raw clips are enough — or hand it off entirely.", "how_to": {"diy_ai": "Film on your phone next time; AI helps you cut it together.", "community": "Send your raw clips; someone edits them into a video.", "skip": "Not now. Photos are enough to get started."}, "tradeoff": "Photos work fine to start. Video usually sells faster once you're ready. Your call.", "content": {"goal": "One short video that makes people want the thing.", "steps": ["Capture the making or the result on your phone", "Keep it short and real", "Post it where your buyers already are"], "done_when": "You have a clip that gets people asking to buy."}}]};
+const P = DATA.plays;
+const phases=[["find","Find — get to a first client"],["aim","Aim — get ready to be hired"],["grow","Grow — repeat, scale, amplify"]];
+const conf={low:"low confidence",medium:"med confidence",high:"high confidence"};
+const idset=new Set(P.map(p=>p.id));
+const stats=document.getElementById("stats");
+stats.innerHTML =
+  '<div class="stat"><b>'+P.length+'</b>plays</div>'+
+  '<div class="stat"><b>'+P.filter(p=>p.universal).length+'</b>universal (shared)</div>'+
+  '<div class="stat"><b>'+P.filter(p=>p.quick_win).length+'</b>quick wins</div>'+
+  '<div class="stat"><b>'+P.filter(p=>p.type==="amplifier").length+'</b>amplifiers</div>';
+const lib=document.getElementById("lib");
+let hh="";
+phases.forEach(([ph,label])=>{
+  const rows=P.filter(p=>p.phase===ph);
+  if(!rows.length) return;
+  hh+='<div class="phase-h">'+label+'</div>';
+  rows.forEach(p=>{
+    const pathTag = p.universal ? '<span class="tag t-uni">UNIVERSAL</span>' :
+      p.paths.map(x=>'<span class="tag t-path">'+x+'</span>').join('');
+    const qw = p.quick_win ? '<span class="tag t-qw">★ QUICK WIN</span>' : '';
+    const unlocks = (p.unlocks||[]).map(u=>{
+      const cross = !idset.has(u);
+      return '<code class="'+(cross?'xp':'')+'">'+u+(cross?' ↗':'')+'</code>';
+    }).join(' ');
+    const prereq = (p.prerequisites||[]).length ? (p.prerequisites).map(x=>'<code>'+x+'</code>').join(' ') : '<code>—</code>';
+    const ways=[];
+    if(p.how_to.diy_ai) ways.push('<div class="way"><span class="wlab w-diy">You + AI</span><p>'+p.how_to.diy_ai+'</p></div>');
+    if(p.how_to.community) ways.push('<div class="way"><span class="wlab w-com">Community</span><p>'+p.how_to.community+'</p></div>');
+    if(p.how_to.skip) ways.push('<div class="way"><span class="wlab w-skip">Skip</span><p>'+p.how_to.skip+'</p></div>');
+    hh+='<div class="card'+(p.type==="amplifier"?' amp':'')+'">'+
+      '<div class="chead"><div><h3>'+p.name+'</h3><span class="id">'+p.id+'</span></div></div>'+
+      '<p class="move">"'+p.move+'"</p>'+
+      '<div class="tags">'+pathTag+'<span class="tag t-phase">'+p.phase+'</span>'+qw+'<span class="tag t-conf">'+conf[p.confidence]+'</span></div>'+
+      '<div class="payoff"><span>speed <b>'+p.payoff.speed+'</b></span><span>effort <b>'+p.payoff.effort+'</b></span><span>ceiling <b>'+p.payoff.ceiling+'</b></span></div>'+
+      '<div class="flow">needs '+prereq+' &nbsp;→&nbsp; unlocks '+(unlocks||'<code>—</code>')+'</div>'+
+      '<div class="fear"><p class="lbl">Fear it calms</p><p>'+p.fear_it_calms+'</p></div>'+
+      '<div class="grid" style="margin-top:12px">'+
+        '<div class="box"><p class="lbl">Goal</p><p>'+p.content.goal+'</p><p class="lbl" style="margin-top:8px">Done when</p><p>'+p.content.done_when+'</p></div>'+
+        '<div class="box"><p class="lbl">Steps</p><ul>'+p.content.steps.map(s=>'<li>'+s+'</li>').join('')+'</ul></div>'+
+      '</div>'+
+      '<div class="ways">'+ways.join('')+'</div>'+
+      (p.tradeoff?'<p class="tradeoff">'+p.tradeoff+'</p>':'')+
+      '</div>';
+  });
+});
+lib.innerHTML=hh;
+</script></body></html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Faimgo — The Journey</title>
+<style>
+  :root{
+    --cream:#F1F4F2; --green:#1B3A2D; --green2:#2C5A45; --gold:#8A6A14;
+    --goldBright:#C7971F; --beige:#E4E8E5; --gray:#5A616B; --ink:#15181B; --faint:#C9D2CD;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--cream); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;}
+  .wrap{max-width:860px; margin:0 auto; padding:40px 26px 60px;}
+  .eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:700; margin:0 0 10px;}
+  h1{font-size:31px; line-height:1.15; margin:0 0 12px; letter-spacing:-.01em;}
+  .lede{font-size:17px; color:var(--gray); max-width:620px; margin:0 0 22px;}
+  .lede b{color:var(--ink);}
+
+  .rule{background:var(--green); color:#fff; border-radius:14px; padding:16px 20px; margin:0 0 30px; font-size:16px;}
+  .rule b{color:var(--goldBright);}
+
+  .step{display:flex; gap:16px; align-items:flex-start; background:#fff; border:1px solid var(--beige);
+    border-radius:16px; padding:18px 20px; box-shadow:0 6px 20px rgba(21,40,32,.05);}
+  .num{flex:0 0 auto; width:34px; height:34px; border-radius:50%; background:var(--green); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;}
+  .step h3{margin:0 0 4px; font-size:18px;}
+  .step p{margin:0; font-size:15px; color:var(--gray);}
+  .step p b{color:var(--ink);}
+
+  .glue{display:flex; gap:12px; align-items:flex-start; margin:10px 0 10px 26px; padding:12px 16px;
+    background:#FBF6E8; border:1px solid #EAD9A8; border-radius:12px;}
+  .glue.reroute{background:#fff; border:1.5px dashed var(--goldBright);}
+  .glue .k{flex:0 0 auto; font-size:11px; letter-spacing:.1em; font-weight:800; color:var(--gold); text-transform:uppercase; margin-top:2px;}
+  .glue p{margin:0; font-size:14.5px; color:var(--ink);}
+  .glue p b{color:var(--green);}
+  .glue .arrow{color:var(--goldBright); font-weight:800; margin-right:2px;}
+
+  .anchor{display:flex; gap:14px; align-items:center; margin:30px 0 0; background:var(--green); color:#fff;
+    border-radius:16px; padding:18px 22px;}
+  .anchor .pin{flex:0 0 auto;}
+  .anchor p{margin:0; font-size:15.5px;}
+  .anchor p b{color:var(--goldBright);}
+
+  .foot{margin:22px 2px 0; font-size:13px; color:#9aa4a0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Concept sketch · the journey</p>
+  <h1>The journey — and the glue between every step</h1>
+  <p class="lede">Every customer gets <b>their own</b> version of this. What matters here isn't the steps — it's the <b>glue between them</b>, so no one ever finishes one thing and wonders "wait, where am I now?"</p>
+
+  <div class="rule">The rule that kills "where am I?": <b>every step ends by pointing at the next one and saying why.</b> No screen ever just stops — you finish a move and get handed the next, with the reason.</div>
+
+  <div class="step"><div class="num">1</div><div><h3>Take the assessment</h3><p>A few branching questions, about two minutes. Your answers pick your <b>path</b>, your <b>priority</b> (fast / big / easy), and <b>where you're stuck</b>.</p></div></div>
+
+  <div class="glue"><span class="k">Glue</span><p><span class="arrow">→</span> Before anything else, we <b>reflect you back</b>: "Here's what we heard — you're great at X, you want Y, you're stuck on Z." The first moment of <b>"they get me."</b></p></div>
+
+  <div class="step"><div class="num">2</div><div><h3>Meet your map</h3><p>Your personal route lights up. The other roads are there but quiet. You see the whole shape — <b>once</b>.</p></div></div>
+
+  <div class="glue"><span class="k">Glue</span><p><span class="arrow">→</span> Then it <b>zooms in</b>. The map narrows to the ONE thing to do first — so you're never left staring at the whole graph.</p></div>
+
+  <div class="step"><div class="num">3</div><div><h3>Your first move — a quick win</h3><p>One small, near-guaranteed win (the junction you just saw). You do it.</p></div></div>
+
+  <div class="glue"><span class="k">Glue</span><p><span class="arrow">→</span> The moment you finish, we <b>celebrate it</b>, then ask one light question: <b>how did that go?</b></p></div>
+
+  <div class="step"><div class="num">4</div><div><h3>The check-in — the hinge</h3><p>One tap, plus an optional note. This is where the system both <b>tracks your progress</b> and <b>learns more about you</b> — so your map gets <b>sharper every loop</b>. It's not fixed at the assessment; it's alive.</p></div></div>
+
+  <div class="glue"><span class="k">Glue</span><p><span class="arrow">→</span> Because of your answer, your <b>next move appears</b> — and your <b>pin moves forward</b> on the map. You <b>see</b> the progress.</p></div>
+
+  <div class="step"><div class="num">5</div><div><h3>The next move — and the loop</h3><p>Move → check-in → next move. Every step hands you the next, with the reason. Sometimes a check-in reveals a <b>better road</b>…</p></div></div>
+
+  <div class="glue reroute"><span class="k">Glue · reroute</span><p><span class="arrow">↘</span> …and we reroute you — <b>"because you built a reusable template, a bigger road just opened."</b> Even the plot-twists come with a <b>why</b>, so they feel earned, not random.</p></div>
+
+  <div class="step"><div class="num">6</div><div><h3>Milestones</h3><p>First dollar. First repeat customer. We <b>zoom out</b>: "Three weeks ago you were here — look now." Invisible progress, made visible.</p></div></div>
+
+  <div class="anchor">
+    <svg class="pin" width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.2 7-12A7 7 0 0 0 5 10c0 5.8 7 12 7 12Z" stroke="#C7971F" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" fill="#C7971F"/></svg>
+    <p>Underneath all of it, <b>the map is always there</b>, and the pin always says <b>"you are here."</b> That persistent anchor is why the whole thing feels like one continuous journey — not a pile of disconnected tasks.</p>
+  </div>
+
+  <p class="foot">Concept only — to show the shape of the flow and where the connective tissue lives. You'll test the real thing and tell us where a transition still feels abrupt.</p>
+</div>
+</body>
+</html>

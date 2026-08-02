@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FeedbackWidget from "../FeedbackWidget";
+import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
+import { session, loadSaved, saveProgress, savePlan, clearWork } from "../../lib/store.js";
 
 /* ============================================================
    FAIMGO ASSESSMENT v3
@@ -26,38 +28,9 @@ const C = {
   red: "#9C3B2E",
 };
 
-/* ---------- CONFIG: PATH LIBRARY ---------- */
-const PATHS = [
-  { id: "freelance", name: "Freelancing Your Skill", plain: "Freelance my skill (writing, design, tech, admin)", dollar: "1–3 weeks", speed: 4, ceiling: 4,
-    moves: ["List the one skill people already ask you for help with", "Create one profile (Upwork or direct outreach) with a specific offer, not a generic title", "Pitch 10 real prospects with a personalized first line — volume beats polish"],
-    kit: ["Free portfolio: Notion or Google Docs — no website needed for client #1", "Use free tiers (Canva, AI assistants) before paying for any tool"] },
-  { id: "resell", name: "Reselling & Flipping", plain: "Resell / flip items (thrift, clearance, marketplaces)", dollar: "days", speed: 5, ceiling: 3,
-    moves: ["Pick one category you can judge value in — start with what you know", "Source 5 items this weekend: thrift stores, clearance aisles, garage sales", "List the same day on FB Marketplace + eBay; price to sell, not to hope"],
-    kit: ["Start with $50 and one shelf — no storage unit until profits pay for it", "Free listing photos: natural light + a plain wall beats any equipment"] },
-  { id: "local", name: "Local Services", plain: "Local services (cleaning, lawn care, pressure washing, moving help)", dollar: "days", speed: 5, ceiling: 3,
-    moves: ["Pick one service, one neighborhood — be the person for that thing", "Post in local FB groups + Nextdoor with a simple before/after and a price", "Do the first 3 jobs cheap in exchange for reviews and photos"],
-    kit: ["Rent equipment for the first jobs (Home Depot rents by the day) — buy after job #5 pays for it", "Used tools on FB Marketplace go for 30–50% of retail"] },
-  { id: "gig", name: "Gig Apps", plain: "Gig apps (delivery, rideshare, task apps)", dollar: "this week", speed: 5, ceiling: 2,
-    moves: ["Sign up for two apps today — approval takes days, so start the clock now", "Work the peak windows only (meal times, weekends) — the hourly rate doubles", "Track your real earnings minus gas for 2 weeks before scaling up"],
-    kit: [] },
-  { id: "tutor", name: "Tutoring & Coaching", plain: "Tutoring or coaching (academics, language, fitness, a skill)", dollar: "1–2 weeks", speed: 4, ceiling: 4,
-    moves: ["Define exactly who you teach and what outcome they get", "Post one clear offer on Wyzant/Preply or in local parent/community groups", "Offer the first session discounted in exchange for a testimonial"],
-    kit: ["Free scheduling: Calendly free tier", "No certification needed to start most subjects — results are the credential"] },
-  { id: "va", name: "Virtual Assistant / Online Services", plain: "Virtual assistant or online services", dollar: "2–4 weeks", speed: 3, ceiling: 3,
-    moves: ["List 5 concrete tasks you'd handle (inbox, scheduling, data, listings)", "Message 15 small business owners who are visibly drowning — offer 5 trial hours", "Turn the first happy client into a weekly retainer"],
-    kit: ["Everything you need is free: Gmail, Sheets, Calendly, Trello"] },
-  { id: "digital", name: "Digital Products", plain: "Digital products (templates, printables, mini-courses)", dollar: "1–3 months", speed: 2, ceiling: 4,
-    moves: ["Find one specific problem people already search for (check Etsy/Gumroad bestsellers)", "Build one small product in a weekend — a template, not a masterpiece", "List it, then spend 80% of your time on distribution, not more products"],
-    kit: ["Free build stack: Canva free + Gumroad (no upfront fees, they take a cut)"] },
-  { id: "content", name: "Content Creation", plain: "Content creation (YouTube, TikTok, newsletter)", dollar: "2–6 months", speed: 1, ceiling: 5,
-    moves: ["Pick one platform and one narrow topic you can talk about for a year", "Publish on a fixed schedule for 8 weeks before judging anything", "Study your 2 best performers and make more of exactly that"],
-    kit: ["Your phone camera is enough for the first 100 videos — creators upgrade after traction, not before"] },
-  { id: "care", name: "Care Services", plain: "Care services (pet sitting, babysitting, senior help)", dollar: "1–2 weeks", speed: 4, ceiling: 3,
-    moves: ["Create profiles on Rover/Care.com and tell your own network you're available", "Get 3 references lined up — trust is the entire product", "Nail the first bookings, ask every happy client for a review and a referral"],
-    kit: ["Certifications (CPR, first aid) cost ~$30–50 online and double your credibility — worth it after first jobs, not before"] },
-];
-const CEILING_LABEL = { 2: "Modest", 3: "Solid", 4: "High", 5: "Very high" };
-const pathById = (id) => PATHS.find((p) => p.id === id);
+/* ---------- PATH LIBRARY ----------
+   Lives in src/lib/paths.js so the server that emails the plan reads
+   the exact same data — the email can never drift from this screen. */
 
 /* ---------- CONFIG: QUESTIONS (v3) ---------- */
 const QUESTIONS = [
@@ -256,16 +229,32 @@ function computeResults(A) {
   return { mode: named ? (otherKind || "other") : "match", fastestWin: fw ? fw.id : null, longTerm: lt ? lt.id : null };
 }
 
-/* ---------- ANALYTICS (fire and forget) ---------- */
-function track(sid, name, extra) {
+/* ---------- ANALYTICS (fire and forget) ----------
+   `ids` is { fid, sid }. fid is the person and survives across visits;
+   sid is this sitting. Both go out on every event so that the day we can
+   join them up, the history is already there waiting.
+   Events fired before the ids are read (first paint) simply carry nulls —
+   we never delay or block the flow to wait for storage. */
+function track(ids, name, extra) {
   try {
     fetch("/api/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "event", name, sid, ts: new Date().toISOString(), ...(extra || {}) }),
+      body: JSON.stringify({
+        type: "event", name,
+        sid: ids?.sid || null, fid: ids?.fid || null, visits: ids?.visits || null,
+        ts: new Date().toISOString(), ...(extra || {}),
+      }),
       keepalive: true,
     }).catch(() => {});
   } catch (e) { /* analytics must never break the flow */ }
+}
+
+/* The visible steps depend on the answers, so this has to be a function of
+   them — a resumed session needs the same list the original sitting had. */
+function stepsFor(ans) {
+  const nm = ans?.q1 === "yes" || ans?.q1 === "sortof";
+  return QUESTIONS.filter((q) => !q.condKey || (q.condKey === "named" && nm));
 }
 
 /* ---------- UI PIECES ---------- */
@@ -314,10 +303,34 @@ export default function Assessment() {
   const otherTxt = A.otherTxt || "";
   const [protectFrom, setProtectFrom] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [sid] = useState(() => (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)));
+  const [emailed, setEmailed] = useState(null); // null | "sent" | "failed"
+
+  /* ---------- MEMORY ----------
+     Both of these are read after mount, never during render: `saved` and the
+     ids differ between server and client, and reading them during render
+     would produce a hydration mismatch. `saved` has three states:
+       null  — we haven't looked yet (render nothing about it)
+       false — we looked, there's nothing
+       {…}   — there's a plan and/or unfinished progress on this device     */
+  const [ids, setIds] = useState({ fid: null, sid: null, visits: 0, stored: false });
+  const [saved, setSaved] = useState(null);
+
+  useEffect(() => {
+    setIds(session());
+    setSaved(loadSaved() || false);
+  }, []);
+
+  /* Autosave every answer. Only once they've actually started, and never
+     over the top of a finished plan — savePlan clears progress on purpose. */
+  useEffect(() => {
+    if (step < 0) return;
+    const s = stepsFor(A);
+    if (s[step]?.type === "results") return;
+    saveProgress({ answers: A, step, protectFrom, email });
+  }, [A, step, protectFrom, email]);
 
   const named = A.q1 === "yes" || A.q1 === "sortof";
-  const steps = QUESTIONS.filter((q) => !q.condKey || (q.condKey === "named" && named));
+  const steps = stepsFor(A);
   const q = step >= 0 ? steps[Math.min(step, steps.length - 1)] : null;
   const answerable = steps.filter((s) => !s.type).length;
   const answeredIdx = step >= 0 ? steps.slice(0, step).filter((s) => !s.type).length : 0;
@@ -340,16 +353,53 @@ export default function Assessment() {
   }
   const next = () => {
     const cur = steps[step];
-    if (cur && cur.type === "insight1") track(sid, "s1_done");
-    if (cur && cur.type === "insight2") track(sid, "s2_done");
+    if (cur && cur.type === "insight1") track(ids, "s1_done");
+    if (cur && cur.type === "insight2") track(ids, "s2_done");
     setStep((s) => s + 1);
     const nxt = steps[Math.min(step + 1, steps.length - 1)];
-    if (nxt && nxt.type === "gate") track(sid, "gate_view");
+    if (nxt && nxt.type === "gate") track(ids, "gate_view");
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const back = () => setStep((s) => Math.max(-1, s - 1));
-  const restart = () => { setA({}); setStep(-1); setEmail(""); setProtectFrom(null); };
-  const start = () => { track(sid, "start"); setStep(0); };
+  const restart = () => {
+    clearWork();
+    setA({}); setStep(-1); setEmail(""); setProtectFrom(null); setEmailed(null);
+    setSaved(false);
+    track(ids, "restart");
+  };
+  const start = () => { track(ids, "start"); setStep(0); };
+
+  /* ---------- COMING BACK ----------
+     Two ways back in. Reopening a finished plan jumps straight to the
+     results step for the answers that produced it; resuming an unfinished
+     assessment drops them back on the exact question they left on. Both
+     clear `saved` so the welcome-back card doesn't linger behind them. */
+  function reopenPlan() {
+    const p = saved && saved.plan;
+    if (!p) return;
+    const ans = p.answers || {};
+    setA(ans);
+    setEmail(p.email || "");
+    setProtectFrom(p.protectFrom ?? null);
+    setEmailed(p.emailed || null);
+    setStep(stepsFor(ans).length - 1);
+    setSaved(false);
+    track(ids, "plan_reopened");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resumeProgress() {
+    const pr = saved && saved.progress;
+    if (!pr) return;
+    const ans = pr.answers || {};
+    setA(ans);
+    setEmail(pr.email || "");
+    setProtectFrom(pr.protectFrom ?? null);
+    setStep(Math.min(pr.step || 0, stepsFor(ans).length - 1));
+    setSaved(false);
+    track(ids, "resumed");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   async function submitGate() {
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -358,17 +408,102 @@ export default function Assessment() {
     setSubmitting(true);
     const results = computeResults(A);
     try {
-      await fetch("/api/lead", {
+      const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v3", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v5", ts: new Date().toISOString() }),
       });
-    } catch (e) { /* never block results on network issues */ }
+      const data = await res.json().catch(() => ({}));
+      // We say "sent" only when it was actually sent. If mail is down we say
+      // that instead — a false confirmation is worse than no confirmation.
+      const state = data?.emailed === true ? "sent" : "failed";
+      setEmailed(state);
+      savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
+    } catch (e) {
+      setEmailed("failed"); /* never block results on network issues */
+      // Save it anyway. The network failing is exactly when local memory earns
+      // its keep — the plan is still theirs and it should survive a refresh.
+      savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: "failed" });
+    }
     setSubmitting(false);
     next();
   }
 
   const canContinue = q && !q.type && (q.multi ? (A[q.key] || []).length > 0 : A[q.key] !== undefined);
+
+  /* ---------- WELCOME BACK ----------
+     Shown instead of the intro when this device already knows them.
+     Deliberately says "on this device" out loud. We just spent a release
+     fixing a promise we couldn't keep; promising them their plan follows
+     them everywhere, when it only lives in one browser, would be the same
+     mistake in a new place. */
+  function WelcomeBack() {
+    if (!saved) return null;
+    const plan = saved.plan;
+    const prog = saved.progress;
+    if (!plan && !prog) return null;
+
+    const when = (ts) => {
+      if (!ts) return "";
+      const days = Math.floor((Date.now() - ts) / 86400000);
+      if (days <= 0) return "earlier today";
+      if (days === 1) return "yesterday";
+      if (days < 7) return days + " days ago";
+      if (days < 14) return "last week";
+      return "a while back";
+    };
+
+    if (plan) {
+      return (
+        <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
+          <Tag>Welcome back</Tag>
+          <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
+            Your plan is <span style={{ color: C.gold }}>still here</span>.
+          </h1>
+          <p className="text-[17px] leading-relaxed mb-2" style={{ color: C.gray }}>
+            You finished this {when(plan.ts)}. Nothing was lost — pick it back up where you left it.
+          </p>
+          <p className="text-[14px] leading-relaxed mb-6" style={{ color: C.gray }}>
+            Saved on this device only.{" "}
+            {plan.emailed === "sent" && plan.email
+              ? <>The full plan is also in your inbox at <b style={{ color: C.ink }}>{plan.email}</b>, which is the copy that follows you anywhere.</>
+              : <>On another device, use the copy in your email.</>}
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <button onClick={reopenPlan} className="px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
+              Open my plan
+            </button>
+            <button onClick={restart} className="text-[15px] underline" style={{ color: C.gray }}>
+              Things changed — start over
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    const answered = stepsFor(prog.answers || {}).slice(0, prog.step || 0).filter((s) => !s.type).length;
+    return (
+      <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
+        <Tag>Welcome back</Tag>
+        <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
+          You were <span style={{ color: C.gold }}>partway through</span>.
+        </h1>
+        <p className="text-[17px] leading-relaxed mb-6" style={{ color: C.gray }}>
+          {answered > 0
+            ? <>We kept the {answered} {answered === 1 ? "answer" : "answers"} you gave {when(prog.ts)}. You don&apos;t have to do them twice.</>
+            : <>We kept where you got to {when(prog.ts)}. Carry on from there.</>}
+        </p>
+        <div className="flex flex-wrap items-center gap-4">
+          <button onClick={resumeProgress} className="px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
+            Pick up where I left off
+          </button>
+          <button onClick={restart} className="text-[15px] underline" style={{ color: C.gray }}>
+            Start fresh
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   function NavRow({ onBack, onNext, nextLabel, nextDisabled }) {
     return (
@@ -478,6 +613,28 @@ export default function Assessment() {
     );
   }
 
+  function MailStatus() {
+    if (!emailed) return null;
+    if (emailed === "sent") {
+      return (
+        <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.greenSoft, border: `1px solid #BFD8CB` }}>
+          <span className="text-[17px] leading-none mt-[2px]" style={{ color: "#0F6B3F" }}>✓</span>
+          <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
+            The whole plan is in your inbox at <b>{email}</b> — every move, not a summary. Nothing to log into. If it isn&apos;t there in a minute, check spam and mark it &quot;not spam&quot; so the next one lands.
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
+        <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
+        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
+          We couldn&apos;t get the email out just now — that&apos;s on us, not you. Your plan is all below, so screenshot it or copy it before you close this. We&apos;ll fix the send and it&apos;ll reach <b>{email}</b> when we do.
+        </p>
+      </div>
+    );
+  }
+
   function Results() {
     const rf = realityFlag(A);
     const cards = [];
@@ -579,6 +736,7 @@ export default function Assessment() {
     }
     return (
       <div>
+        <MailStatus />
         {cards}
         <div className="p-7 rounded-2xl text-center" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
           <h3 className="font-display text-[22px]" style={{ color: C.green }}>This is the map. The walkthrough is the product.</h3>
@@ -621,7 +779,9 @@ export default function Assessment() {
         )}
 
         <div key={step} className="reveal-in">
-        {step === -1 && (
+        {step === -1 && saved && <WelcomeBack />}
+
+        {step === -1 && !saved && (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>Faimgo Assessment</Tag>
             <h1 className="font-display text-4xl md:text-5xl leading-[1.1] mb-3" style={{ color: C.green }}>

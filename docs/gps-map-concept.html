@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Faimgo — Your Side-Income GPS</title>
+<style>
+  :root{
+    --cream:#F1F4F2; --green:#1B3A2D; --green2:#2C5A45; --gold:#8A6A14;
+    --goldBright:#C7971F; --beige:#E4E8E5; --gray:#5A616B; --ink:#15181B;
+    --faint:#C9D2CD;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--cream); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  .wrap{max-width:1000px; margin:0 auto; padding:40px 28px 60px;}
+  .eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:700; margin:0 0 10px;}
+  h1{font-size:34px; line-height:1.15; margin:0 0 12px; letter-spacing:-.01em;}
+  .lede{font-size:18px; color:var(--gray); max-width:640px; margin:0 0 8px;}
+  .read{font-size:15px; color:var(--gray); max-width:680px; margin:14px 0 26px;}
+  .read b{color:var(--ink);}
+
+  .controls{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 20px;}
+  .pill{
+    border:1.5px solid var(--beige); background:#fff; color:var(--ink);
+    padding:11px 18px; border-radius:999px; font-size:15px; font-weight:600;
+    cursor:pointer; transition:all .16s ease; display:flex; align-items:center; gap:9px;
+  }
+  .pill:hover{border-color:var(--green2); transform:translateY(-1px);}
+  .pill.on{background:var(--green); border-color:var(--green); color:#fff;}
+  .pill .dot{width:9px; height:9px; border-radius:50%; background:var(--gold);}
+  .pill.on .dot{background:var(--goldBright);}
+
+  .card{background:#fff; border:1px solid var(--beige); border-radius:20px; padding:18px 14px 8px; box-shadow:0 8px 30px rgba(21,40,32,.06);}
+  svg{display:block; width:100%; height:auto;}
+
+  .lane-road{stroke:var(--faint); stroke-width:5; stroke-linecap:round;}
+  .lane-name{font-size:15px; font-weight:700; fill:var(--gray);}
+  .node{fill:#fff; stroke:var(--faint); stroke-width:2.5;}
+  .node-label{font-size:12px; fill:#9aa4a0; text-anchor:middle; font-weight:500;}
+
+  /* active route styling */
+  .r-line{fill:none; stroke-width:5; stroke-linecap:round; stroke-linejoin:round;}
+  .r-node{stroke-width:3;}
+  .r-label{fill:var(--ink); font-weight:600;}
+  .reroute{fill:none; stroke:var(--goldBright); stroke-width:3.5; stroke-dasharray:2 9; stroke-linecap:round;}
+  .here-ring{fill:none; stroke:var(--goldBright); stroke-width:3;}
+  .pulse{transform-box:fill-box; transform-origin:center; animation:pulse 1.8s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.25; r:22px;} 50%{opacity:.7; r:16px;}}
+  .here-txt{font-size:12px; font-weight:700; fill:var(--gold); text-anchor:middle;}
+  .qw-star{fill:var(--goldBright); font-size:15px; text-anchor:middle;}
+  .qw-txt{font-size:10.5px; fill:var(--gold); text-anchor:middle; font-weight:700; letter-spacing:.02em;}
+  @media (prefers-reduced-motion: reduce){ .pulse{animation:none; opacity:.4;} }
+
+  .callout{
+    margin:22px 0 0; background:#fff; border:1px solid var(--beige); border-left:5px solid var(--goldBright);
+    border-radius:14px; padding:18px 20px; box-shadow:0 6px 22px rgba(21,40,32,.05);
+  }
+  .callout .tag{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); font-weight:700; margin:0 0 6px;}
+  .callout p{margin:0; font-size:16.5px; color:var(--ink);}
+  .callout p b{color:var(--green);}
+
+  .legend{display:flex; gap:22px; flex-wrap:wrap; margin:22px 2px 0; font-size:13.5px; color:var(--gray);}
+  .legend span{display:flex; align-items:center; gap:8px;}
+  .sw{width:26px; height:12px; display:inline-block;}
+  .foot{margin:26px 2px 0; font-size:13px; color:#9aa4a0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Concept sketch</p>
+  <h1>Your side-income GPS</h1>
+  <p class="lede">Not nine books to read — one map of moves, and a system that picks your next step and reroutes you when a better road opens.</p>
+  <p class="read">How to read it: each <b>lane is a path</b>, each <b>dot is one small move</b> (a "play"). Your route lights up in color, the ring is <b>your next move</b>, and a <b>gold dashed line is a reroute</b> — the GPS sending you to a faster or bigger road. Pick a goal below and watch the route change.</p>
+
+  <div class="controls">
+    <button class="pill on" id="btnA" onclick="setScenario('A')"><span class="dot"></span>Goal: the biggest outcome</button>
+    <button class="pill" id="btnB" onclick="setScenario('B')"><span class="dot"></span>Goal: money the fastest</button>
+  </div>
+
+  <div class="card">
+    <svg id="map" viewBox="0 0 1000 520" role="img" aria-label="Side-income map"></svg>
+  </div>
+
+  <div class="callout">
+    <p class="tag" id="coTag">Why this route</p>
+    <p id="coText"></p>
+  </div>
+
+  <div class="legend">
+    <span><svg class="sw" viewBox="0 0 26 12"><line x1="2" y1="6" x2="24" y2="6" stroke="#1B3A2D" stroke-width="5" stroke-linecap="round"/></svg> Your route</span>
+    <span><svg class="sw" viewBox="0 0 26 12"><line x1="2" y1="6" x2="24" y2="6" stroke="#C7971F" stroke-width="3.5" stroke-dasharray="2 6" stroke-linecap="round"/></svg> Reroute (a better road opened)</span>
+    <span><svg class="sw" viewBox="0 0 26 12"><circle cx="13" cy="6" r="5" fill="none" stroke="#C7971F" stroke-width="3"/></svg> Your next move</span>
+    <span><svg class="sw" viewBox="0 0 26 12"><circle cx="13" cy="6" r="4.5" fill="#fff" stroke="#C9D2CD" stroke-width="2.5"/></svg> A move on another road</span>
+  </div>
+
+  <p class="foot">This is a hand-drawn sketch to test the idea — real plays and real routing come from the play library. The point is only: does the map make sense?</p>
+</div>
+
+<script>
+const C = { green:'#1B3A2D', gold:'#C7971F', faint:'#C9D2CD' };
+const SVG='http://www.w3.org/2000/svg';
+
+// --- the map data (illustrative) ---
+const LANES = [
+  { id:'freelance', name:'Freelancing', y:120, nodes:[
+    {k:'offer', label:'Offer', qw:true},
+    {k:'price', label:'Price it'},
+    {k:'ready', label:'Get hireable'},
+    {k:'find',  label:'Find buyer'},
+    {k:'reach', label:'Reach out'},
+    {k:'prod',  label:'Productize'},
+  ]},
+  { id:'digital', name:'Digital Products', y:290, nodes:[
+    {k:'toprod', label:'→ Product'},
+    {k:'store',  label:'Storefront'},
+    {k:'sales',  label:'First 10 sales'},
+    {k:'scale',  label:'Scale'},
+  ]},
+  { id:'local', name:'Local Services', y:440, nodes:[
+    {k:'define', label:'Define service', qw:true},
+    {k:'near',   label:'Tell 20 nearby'},
+    {k:'job',    label:'First paid job'},
+    {k:'ref',    label:'Referrals'},
+  ]},
+];
+
+const X0=250, X1=880;
+const POS = {}; // "lane.k" -> {x,y}
+
+const svg = document.getElementById('map');
+function el(tag, attrs){ const e=document.createElementNS(SVG,tag); for(const a in attrs) e.setAttribute(a,attrs[a]); return e; }
+
+// base layer: lanes, roads, neutral nodes
+LANES.forEach(lane=>{
+  const n = lane.nodes.length;
+  // lane name
+  const nm = el('text',{x:30,y:lane.y+5,class:'lane-name'}); nm.textContent=lane.name; svg.appendChild(nm);
+  // road
+  const x_last = X0 + (n-1)*(X1-X0)/(n-1);
+  svg.appendChild(el('line',{x1:X0-14,y1:lane.y,x2:X1+14,y2:lane.y,class:'lane-road'}));
+  lane.nodes.forEach((nd,i)=>{
+    const x = n===1 ? (X0+X1)/2 : X0 + i*(X1-X0)/(n-1);
+    POS[lane.id+'.'+nd.k] = {x, y:lane.y, qw:nd.qw, label:nd.label};
+    svg.appendChild(el('circle',{cx:x,cy:lane.y,r:9,class:'node','data-id':lane.id+'.'+nd.k}));
+    const t = el('text',{x:x,y:lane.y+30,class:'node-label','data-lbl':lane.id+'.'+nd.k}); t.textContent=nd.label; svg.appendChild(t);
+  });
+});
+
+// overlay group (redrawn per scenario)
+const overlay = el('g',{}); svg.appendChild(overlay);
+
+const SCEN = {
+  A: {
+    color:C.green,
+    route:['freelance.offer','freelance.price','freelance.ready','freelance.find','freelance.reach','freelance.prod'],
+    reroute:['freelance.prod','digital.toprod'],
+    route2:['digital.toprod','digital.store','digital.sales','digital.scale'],
+    here:'digital.toprod',
+    tag:'Why this route',
+    text:'You started freelancing and, while doing client work, you built a <b>reusable template</b>. That’s an asset. Instead of trading time forever, Faimgo <b>reroutes you onto Digital Products</b> — a bigger, more scalable road — right when it opens.'
+  },
+  B: {
+    color:C.green,
+    route:['local.define','local.near','local.job','local.ref'],
+    reroute:null, route2:null,
+    here:'local.define',
+    tag:'Why this route',
+    text:'You need cash this week, not in a month. Faimgo skips the long build and starts you on <b>Local Services</b> — a first paid job in <b>days, not weeks</b>. The bigger roads stay on the map for later.'
+  }
+};
+
+function ptsFrom(keys){ return keys.map(k=>POS[k].x+','+POS[k].y).join(' '); }
+
+function setScenario(which){
+  const s = SCEN[which];
+  document.getElementById('btnA').classList.toggle('on', which==='A');
+  document.getElementById('btnB').classList.toggle('on', which==='B');
+  document.getElementById('coTag').textContent = s.tag;
+  document.getElementById('coText').innerHTML = s.text;
+
+  while(overlay.firstChild) overlay.removeChild(overlay.firstChild);
+  // reset all nodes/labels to neutral
+  svg.querySelectorAll('.node').forEach(c=>{c.classList.remove('r-node'); c.setAttribute('stroke',C.faint); c.setAttribute('fill','#fff');});
+  svg.querySelectorAll('.node-label').forEach(t=>t.classList.remove('r-label'));
+
+  const active = new Set([...(s.route||[]), ...(s.route2||[])]);
+
+  // main route line
+  if(s.route && s.route.length>1){
+    overlay.appendChild(el('polyline',{points:ptsFrom(s.route),class:'r-line',stroke:s.color}));
+  }
+  // second-road line
+  if(s.route2 && s.route2.length>1){
+    overlay.appendChild(el('polyline',{points:ptsFrom(s.route2),class:'r-line',stroke:s.color}));
+  }
+  // reroute dashed connector with arrow
+  if(s.reroute){
+    const a=POS[s.reroute[0]], b=POS[s.reroute[1]];
+    const midY=(a.y+b.y)/2;
+    const d=`M ${a.x} ${a.y+11} C ${a.x} ${midY}, ${b.x} ${midY}, ${b.x} ${b.y-16}`;
+    overlay.appendChild(el('path',{d,class:'reroute'}));
+    // arrowhead
+    overlay.appendChild(el('polygon',{points:`${b.x-6},${b.y-16} ${b.x+6},${b.y-16} ${b.x},${b.y-7}`,fill:C.gold}));
+  }
+  // highlight active nodes
+  active.forEach(k=>{
+    const c=svg.querySelector(`.node[data-id="${k}"]`);
+    if(c){ c.classList.add('r-node'); c.setAttribute('stroke',s.color); c.setAttribute('fill', k===s.here ? '#fff' : s.color); }
+    const t=svg.querySelector(`.node-label[data-lbl="${k}"]`);
+    if(t) t.classList.add('r-label');
+  });
+  // quick-win marker on first active quick-win node
+  const firstQW = (s.route||[]).find(k=>POS[k].qw);
+  if(firstQW){
+    const p=POS[firstQW];
+    overlay.appendChild(Object.assign(el('text',{x:p.x,y:p.y-24,class:'qw-star'}),{textContent:'★'}));
+    const q=el('text',{x:p.x,y:p.y-40,class:'qw-txt'}); q.textContent='QUICK WIN'; overlay.appendChild(q);
+  }
+  // "you are here" ring + pulse + label
+  if(s.here && POS[s.here]){
+    const p=POS[s.here];
+    overlay.appendChild(el('circle',{cx:p.x,cy:p.y,r:18,class:'here-ring'}));
+    overlay.appendChild(el('circle',{cx:p.x,cy:p.y,r:18,fill:C.gold,class:'pulse'}));
+    const lbl=el('text',{x:p.x,y:p.y+52,class:'here-txt'}); lbl.textContent='YOUR NEXT MOVE'; overlay.appendChild(lbl);
+  }
+}
+
+setScenario('A');
+</script>
+</body>
+</html>
