@@ -3,14 +3,23 @@
 /* ============================================================
    FAIMGO — GLOBAL STYLES
 
-   Three class names have been used across the site since the
+   Five class names have been used across the site since the
    first release and were never defined anywhere: font-display
    (every heading), press (every button), reveal-in (the modal
-   and each assessment step). Undefined classes fail silently —
-   the markup looked right, the pages compiled, and the styling
-   simply never arrived. Headings fell back to Arial, buttons
-   had no press feedback, and things that were meant to arrive
-   softly just appeared. This file is where those three live.
+   and each assessment step), hero-rise and lift (the home page).
+   Undefined classes fail silently — the markup looked right, the
+   pages compiled, and the styling simply never arrived. Headings
+   fell back to Arial, buttons had no press feedback, and things
+   that were meant to arrive softly just appeared. This file is
+   where all five live.
+
+   The first three were found by reading the source. The last two
+   were not, because the home page was not in the working copy at
+   the time — they turned up in an audit that diffed the classes
+   present in the live DOM against the selectors in the shipped
+   stylesheet. That audit is the check worth keeping: source can
+   only be missing what you thought to look at, the running page
+   cannot.
 
    The palette is fixed and light on purpose: cream, green,
    gold. Every surface in the app sets its own colors inline
@@ -98,11 +107,64 @@ body {
   animation: faimgo-reveal 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
+/* ---------- the hero ----------
+   Four elements on the home page carry an inline animationDelay
+   of 80, 160, 240 and 320ms. Until now there was no animation
+   for those delays to delay, so the whole hero simply appeared
+   at once and four numbers in the markup meant nothing.
+
+   `both` is not optional here. Without backwards fill, an
+   element with a 320ms delay is drawn fully visible for those
+   320ms, then blinks out to start its own fade-in. The delays
+   are what make the fill mode load-bearing.
+
+   Longer and further than .reveal-in on purpose: this runs once,
+   above the fold, with nothing else moving to compete with. */
+@keyframes faimgo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-rise {
+  animation: faimgo-rise 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ---------- cards ----------
+   On the path cards and the example cards. A card that is going
+   to be read but not clicked should still acknowledge the
+   cursor, or the page reads as a picture of a product.
+
+   Only transform moves. Each of these cards sets its own
+   box-shadow inline from the palette, and an inline style beats
+   a class selector, so a hover shadow written here would lose
+   silently — the same failure that left this class undefined for
+   weeks. Deepening the shadow means moving it out of the inline
+   style in page.js first; that is a markup change, not a CSS
+   one, and it is not worth doing for a hover state. */
+.lift {
+  transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+.lift:hover {
+  transform: translateY(-3px);
+}
+
 /* Someone who has asked their system to stop moving things has
    usually asked for a reason. Nothing here is load-bearing. */
 @media (prefers-reduced-motion: reduce) {
-  .reveal-in {
+  .reveal-in,
+  .hero-rise {
     animation: none;
+  }
+  .lift,
+  .lift:hover {
+    transition: none;
+    transform: none;
   }
   .press,
   .press:hover,
