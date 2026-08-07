@@ -30,9 +30,13 @@ async function forward(payload) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { kind, rating, category, message, email, context, page, ts } = body || {};
-    console.log("[FAIMGO FEEDBACK]", JSON.stringify({ kind, rating, category, message, email, context, page, ts }));
-    await forward({ kind, rating, category, message, email, context, page, ts });
+    /* This destructure is a fixed allow-list, which is why `fid` used to
+       vanish here even after the widget started sending it: anything not
+       named is silently dropped. The Sheet has had an empty `fid` column
+       waiting since Apps Script v11. */
+    const { kind, rating, category, message, email, fid, context, page, ts } = body || {};
+    console.log("[FAIMGO FEEDBACK]", JSON.stringify({ kind, rating, category, message, email, fid, context, page, ts }));
+    await forward({ kind, rating, category, message, email, fid, context, page, ts });
     return Response.json({ ok: true });
   } catch (e) {
     console.error("[FAIMGO FEEDBACK ERROR]", e?.message);

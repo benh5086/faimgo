@@ -133,6 +133,19 @@ export function session() {
 }
 
 /* What we already know about this person on this device. */
+/*
+  Read the ids WITHOUT touching them. session() is the one that mints a new
+  sitting and increments the visit count, so anything that merely wants to
+  label a payload must not call it — a feedback form that started a new
+  session just by being submitted would corrupt the funnel it reports on.
+  Returns nulls when storage is unavailable; callers must tolerate that.
+*/
+export function whoAmI() {
+  const s = read();
+  if (!s) return { fid: null, sid: null, visits: 0 };
+  return { fid: s.fid || null, sid: s.sid || null, visits: s.visits || 0 };
+}
+
 export function loadSaved() {
   const s = read();
   if (!s) return null;

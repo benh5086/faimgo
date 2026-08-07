@@ -134,13 +134,37 @@ export function buildPlan(A, results) {
   const second = secondId ? pathById(secondId) : null;
 
   const spineOff = (LIB.spine_does_not_apply && LIB.spine_does_not_apply.paths) || [];
-  const spineApplies = Boolean(pathId) && !spineOff.includes(pathId);
-  const spineOffWhy = spineApplies ? null : (LIB.spine_does_not_apply || {}).why || null;
+  const hasSpine = (id) => Boolean(id) && !spineOff.includes(id);
 
-  const coverage = coverageOf(pathId);
+  /* ---------- which path do we actually walk? ----------
+     Until now this was `pathId` and nothing else, which produced the worst
+     page in the product. Someone who chooses content creation gets a
+     walkthrough with ZERO steps — content is in spine_does_not_apply — and
+     three "get help" cards. Meanwhile their fastest first win is very often
+     freelancing, whose spine is complete, and the results page has ALREADY
+     told them to do it first: "Freelancing money funds your first months of
+     content creation — you're earning by day 30." The product knew the
+     answer and the walkthrough threw it away.
+
+     So: walk the first path that has a spine. Their choice comes first and
+     is normally the answer. If it has no spine, borrow the fast win — which
+     is not a substitution of their goal, it is the funder we already named.
+     The page must SAY it borrowed, every time; a plan quietly retitled is
+     worse than an honest empty one. */
+  const walkId = hasSpine(pathId)
+    ? pathId
+    : [r.fastestWin, r.longTerm].find((id) => id && id !== pathId && hasSpine(id)) || null;
+  const walkPath = walkId ? pathById(walkId) : null;
+  const borrowed = Boolean(walkId) && walkId !== pathId;
+
+  const spineApplies = Boolean(walkId);
+  const spineOffWhy = hasSpine(pathId) ? null : (LIB.spine_does_not_apply || {}).why || null;
+
+  const coverage = coverageOf(walkId);
+  const chosenCoverage = coverageOf(pathId);
   const warnings = [];
 
-  const fits = (p) => p.paths.includes("*") || (pathId && p.paths.includes(pathId));
+  const fits = (p) => p.paths.includes("*") || (walkId && p.paths.includes(walkId));
 
   /* Order comes from the library file itself — the array IS the spine.
      validateLibrary() below is what keeps that claim true. */
@@ -165,7 +189,7 @@ export function buildPlan(A, results) {
        We record it so a real gap can be told apart from a deliberate one. */
     const missingSteps = (p.prerequisites || []).filter((q) => !isStateFact(q) && !inSequence.has(q));
     if (missingSteps.length) {
-      warnings.push(`${p.id} lists ${missingSteps.join(", ")} as a prerequisite, but that play does not apply to "${pathId}".`);
+      warnings.push(`${p.id} lists ${missingSteps.join(", ")} as a prerequisite, but that play does not apply to "${walkId}".`);
     }
     n += 1;
     buckets[horizonIndex(p)].plays.push({
@@ -199,7 +223,11 @@ export function buildPlan(A, results) {
     pathId,
     path,
     second,
+    /* The path whose steps are below. Equal to `path` unless we borrowed. */
+    walkPath,
+    borrowed,
     coverage,
+    chosenCoverage,
     spineApplies,
     spineOffWhy,
     /* Derived, not asked. The assessment has no gap question yet (it is a

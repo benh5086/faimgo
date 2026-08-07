@@ -67,6 +67,89 @@ function Shell({ children }) {
 
 /* ---------- one play ---------- */
 
+/* Text written to be pasted, not admired. A copy button because the
+   alternative is a person hand-retyping a message on a phone, which is
+   where good wording goes to die. Falls back silently to select-and-copy
+   if the clipboard API is unavailable — never shows an error for this. */
+function CopyBox({ text }) {
+  const [done, setDone] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setDone(true);
+      setTimeout(() => setDone(false), 2000);
+    } catch { /* select-and-copy still works; saying nothing is the right failure */ }
+  };
+  return (
+    <div className="mt-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${C.beige}`, backgroundColor: "#FFFFFF" }}>
+      <p className="px-4 py-3 text-[15px] leading-relaxed" style={{ color: C.ink, whiteSpace: "pre-wrap" }}>{text}</p>
+      <div className="px-4 py-2 flex justify-end" style={{ borderTop: `1px dashed ${C.beige}`, backgroundColor: C.cream }}>
+        <button onClick={copy} className="press text-[13px] font-bold rounded-full px-4 py-1.5"
+          style={{ backgroundColor: done ? C.greenSoft : C.green, color: done ? C.green : C.cream }}>
+          {done ? "Copied" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- the concrete layer ----------
+   Everything above this in a play card is direction: what to do, and how
+   to know it worked. Direction is the part any model can produce on
+   demand, and a walkthrough made only of direction is a walkthrough with
+   no reason to exist. This block is the part that was missing — the named
+   tool, the actual number, the sentence you can paste. */
+function Concrete({ x }) {
+  if (!x) return null;
+  const tools = Array.isArray(x.tools) ? x.tools : [];
+  const numbers = Array.isArray(x.numbers) ? x.numbers : [];
+  return (
+    <div className="mt-5 p-5 rounded-2xl" style={{ backgroundColor: C.cream, border: `1px solid ${C.beige}` }}>
+      {x.right_now && (
+        <div className="mb-4">
+          <p className="text-[12px] font-extrabold uppercase tracking-widest mb-1.5" style={{ color: C.gold }}>In the next 15 minutes</p>
+          <p className="text-[16px] leading-relaxed font-semibold" style={{ color: C.ink }}>{x.right_now}</p>
+        </div>
+      )}
+
+      {tools.length > 0 && (
+        <div className="mb-4">
+          <p className="text-[12px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.gold }}>What you&apos;ll use</p>
+          {tools.map((t, i) => (
+            <div key={i} className="py-2" style={{ borderTop: i ? `1px dashed ${C.beige}` : "none" }}>
+              <p className="text-[15px]" style={{ color: C.ink }}>
+                <b>{t.name}</b>
+                {t.cost ? <span style={{ color: C.green }}> · {t.cost}</span> : null}
+                {t.at && t.at !== "—" ? <span style={{ color: C.gray }}> · {t.at}</span> : null}
+              </p>
+              {t.for && <p className="text-[14px] leading-relaxed mt-0.5" style={{ color: C.gray }}>{t.for}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {numbers.length > 0 && (
+        <div className="mb-4">
+          <p className="text-[12px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.gold }}>The numbers</p>
+          <ul className="list-disc pl-5">
+            {numbers.map((s, i) => (
+              <li key={i} className="text-[15px] leading-relaxed mb-1" style={{ color: C.ink }}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {x.say_this && x.say_this.text && (
+        <div>
+          <p className="text-[12px] font-extrabold uppercase tracking-widest mb-1.5" style={{ color: C.gold }}>Say this</p>
+          {x.say_this.when && <p className="text-[14px] leading-relaxed" style={{ color: C.gray }}>{x.say_this.when}</p>}
+          <CopyBox text={x.say_this.text} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlayCard({ play, openByDefault }) {
   const [open, setOpen] = useState(Boolean(openByDefault));
   const [stalls, setStalls] = useState(false);
@@ -114,6 +197,8 @@ function PlayCard({ play, openByDefault }) {
               ))}
             </ol>
           )}
+
+          <Concrete x={play.concrete} />
 
           {c.done_when && (
             <div className="p-4 rounded-xl mt-4" style={{ backgroundColor: C.greenSoft }}>
@@ -275,6 +360,9 @@ export default function PlanPage() {
 
   const plan = buildPlan(stored.answers, stored.results);
   const p = plan.path;
+  /* The path the steps below belong to. Same as `p` unless the chosen path
+     has no written spine and we borrowed the fast win — see router.js. */
+  const w = plan.walkPath || plan.path;
 
   return (
     <Shell>
@@ -282,15 +370,34 @@ export default function PlanPage() {
       <div className="mb-8">
         <Tag>Your walkthrough</Tag>
         <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
-          {p ? `${p.name}, step by step.` : "Your next 90 days."}
+          {w ? `${w.name}, step by step.` : "Your next 90 days."}
         </h1>
         <p className="text-[17px] leading-relaxed" style={{ color: C.gray }}>
           {plan.stepCount > 0
             ? `${plan.stepCount} steps, in the order they actually work. Each one says what done looks like, roughly how long it takes, and what to do when it doesn't go to plan.`
             : "Here's what we have for this path — and, just as importantly, what we don't."}
-          {plan.second ? ` ${plan.second.name} was your other strong fit; you can switch to it any time from your results.` : ""}
+          {!plan.borrowed && plan.second ? ` ${plan.second.name} was your other strong fit; you can switch to it any time from your results.` : ""}
         </p>
       </div>
+
+      {/* ---- we borrowed a spine, and we say so ----
+          This page used to be empty for anyone whose path has no written
+          walkthrough. It now walks their fastest win instead. That is a
+          defensible thing to do and an indefensible thing to do quietly:
+          the person chose a goal, and the heading above now names a
+          different one. This block is what keeps that honest. */}
+      {plan.borrowed && p && (
+        <div className="p-5 rounded-2xl mb-8" style={{ backgroundColor: C.yellowSoft, border: "1px solid #EAD9A8" }}>
+          <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
+            <b>Why this says {w.name} when you chose {p.name}:</b>{" "}
+            {p.name} is still the goal — but the steps for it aren&apos;t written yet, and we&apos;re not going to
+            hand you the wrong plan to look complete. {w.name} is your fastest first win, and it&apos;s the one
+            that pays for the months {p.name.toLowerCase()} takes to ramp. So this is the funding half of your
+            plan, in full. Your own {p.name.toLowerCase()} moves are still on your results page, and they
+            haven&apos;t changed.
+          </p>
+        </div>
+      )}
 
       {/* ---- coverage honesty ----
           A short plan served silently reads as a complete one. This is the

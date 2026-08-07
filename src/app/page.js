@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Reveal from "./Reveal";
 import FeedbackWidget from "./FeedbackWidget";
 
@@ -241,8 +242,11 @@ export default function Home() {
         </span>
         <p className="text-[14px]" style={{color: '#9DB0A6'}}>© 2026 Faimgo. All rights reserved.</p>
         <div className="flex gap-6 items-center">
-          <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Privacy</a>
-          <a href="#" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Terms</a>
+          {/* Privacy is a real page now. Terms was removed rather than left
+              pointing at "#": a dead link on a site that collects email reads
+              as a document you are not being shown, which is worse than an
+              absent one. It comes back when it exists. */}
+          <Link href="/privacy" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Privacy</Link>
           <FeedbackWidget trigger="link" kind="contact" navLabel="Contact" context="footer-contact" />
         </div>
       </footer>

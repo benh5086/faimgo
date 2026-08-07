@@ -125,6 +125,26 @@
         ],
         "done_when": "You can say it in one breath and it names a specific person and a specific outcome."
       },
+      "concrete": {
+        "right_now": "Open a blank note. Finish this sentence five times: \"I help ___ get ___ by ___.\" Bad versions count — you need five to find the one.",
+        "tools": [
+          {
+            "name": "Google Docs",
+            "cost": "Free",
+            "at": "docs.google.com",
+            "for": "Somewhere to draft. Anything you already have is fine — do not shop for an app."
+          }
+        ],
+        "numbers": [
+          "Five drafts, not one — the first is never the keeper.",
+          "One buyer type. Not \"small businesses and startups and coaches.\"",
+          "Under 20 words. If you need a comma-heavy second clause, it isn't sharp yet."
+        ],
+        "say_this": {
+          "when": "Send your best version to two people who have seen you work.",
+          "text": "Quick one — does this sound like the thing you'd come to me for?\n\n\"I help [who] get [outcome] by [what you do].\"\n\nBe blunt, I'd rather fix it now than say it wrong for a month."
+        }
+      },
       "if_it_stalls": [
         {
           "symptom": "I can't think of anything I'm good enough at.",
@@ -231,6 +251,33 @@
           "Take a 30-40% deposit, or 80% before the final step"
         ],
         "done_when": "Your price includes a guarantee that removes the buyer's biggest fear."
+      },
+      "concrete": {
+        "right_now": "Find three people publicly selling something close to what you do. Write their three prices down. Take the middle one and cut it by 25%. That is your starting number — you can raise it after your third client.",
+        "tools": [
+          {
+            "name": "Upwork / Fiverr",
+            "cost": "Free to browse",
+            "at": "upwork.com · fiverr.com",
+            "for": "Public prices for online work. You are reading, not signing up."
+          },
+          {
+            "name": "Google Sheets",
+            "cost": "Free",
+            "at": "sheets.google.com",
+            "for": "Three rows, two columns: who, price. That is the whole benchmark."
+          }
+        ],
+        "numbers": [
+          "Three comparison prices. Three beats no number forever.",
+          "20–30% under the middle price — a nudge, never your pitch.",
+          "At most three tiers. Four is a menu, and menus stall people.",
+          "Deposit 30–40% before you start, or 80% before the final handover."
+        ],
+        "say_this": {
+          "when": "The guarantee line. This is the part that does the selling — say it out loud with the price, not after it.",
+          "text": "If the first version isn't what you pictured, I'll redo it once, free. If it's still not right after that, you don't pay."
+        }
       },
       "if_it_stalls": [
         {
@@ -339,6 +386,44 @@
         ],
         "done_when": "A stranger could see what you do and pay you."
       },
+      "concrete": {
+        "right_now": "Make one Google Doc. Title it with your offer sentence. Three headings: What I do / Examples / How to reach me. Set sharing to \"anyone with the link.\" You now have a website. Do not spend today choosing a website builder.",
+        "tools": [
+          {
+            "name": "Google Docs",
+            "cost": "Free",
+            "at": "docs.google.com",
+            "for": "The one page, today. A link you can paste to a stranger in the next ten minutes."
+          },
+          {
+            "name": "Carrd",
+            "cost": "Free plan",
+            "at": "carrd.co",
+            "for": "The prettier version, later — after someone has already paid you."
+          },
+          {
+            "name": "Stripe Payment Links",
+            "cost": "Free to create; a fee per payment",
+            "at": "stripe.com",
+            "for": "A link that takes a card. No website required."
+          },
+          {
+            "name": "PayPal.Me",
+            "cost": "Free to create; a fee per payment",
+            "at": "paypal.me",
+            "for": "The fastest way to be payable if Stripe is a hurdle today."
+          }
+        ],
+        "numbers": [
+          "One page. Not a site.",
+          "Two or three examples. Zero is fine if you say what you'd do instead.",
+          "One contact method. Two makes people choose, and choosing is friction."
+        ],
+        "say_this": {
+          "when": "The \"how to reach me\" line at the bottom of the page. Say the response time — it is the cheapest trust you will ever buy.",
+          "text": "Email me at [your email] and I'll reply within one working day. If it's easier, send a voice note — I don't need a formal brief to tell you whether I can help."
+        }
+      },
       "if_it_stalls": [
         {
           "symptom": "I have no examples to show.",
@@ -445,6 +530,38 @@
         ],
         "done_when": "20 names, each with a 'who feels it' tag."
       },
+      "concrete": {
+        "right_now": "Open a spreadsheet. Four columns: Name / Where they work / Who feels the problem / How I know them. Fill five rows from people you already know. Five, then stop for today.",
+        "tools": [
+          {
+            "name": "Google Sheets",
+            "cost": "Free",
+            "at": "sheets.google.com",
+            "for": "The list. One tab, four columns, no formatting."
+          },
+          {
+            "name": "LinkedIn search",
+            "cost": "Free",
+            "at": "linkedin.com",
+            "for": "Cold names with a job title attached — the title is what tells you who feels the problem."
+          },
+          {
+            "name": "Google Maps",
+            "cost": "Free",
+            "at": "maps.google.com",
+            "for": "Local businesses. Search the category, work one street at a time."
+          }
+        ],
+        "numbers": [
+          "20 names total. Not 200 — you cannot personalise 200.",
+          "Aim for 5 warm and 15 cold. Warm ones go first because they answer.",
+          "20 minutes a day for a week. One long session produces a list you never use."
+        ],
+        "say_this": {
+          "when": "When you can't tell who the right person is. Send this to the general address — it is a question, not a pitch, so it gets answered.",
+          "text": "Hi — quick question rather than a pitch. Who handles [the thing you do] at [company]? Happy to send it to the right person instead of clogging up the wrong inbox."
+        }
+      },
       "if_it_stalls": [
         {
           "symptom": "I got to eight names and ran dry.",
@@ -548,6 +665,32 @@
           "Decode 'a more competitive option' = they want a lower price; answer with framed value"
         ],
         "done_when": "You've earned your first dollar, or have real conversations in progress."
+      },
+      "concrete": {
+        "right_now": "Pick one name off your list. Find one specific true thing about them — something you could not have written about anyone else. Write two sentences: that detail, then what you would do about it. Send it. One, today.",
+        "tools": [
+          {
+            "name": "Your normal email",
+            "cost": "Free",
+            "at": "—",
+            "for": "Email beats every outreach tool at this volume. You are sending ten, not ten thousand."
+          },
+          {
+            "name": "The same spreadsheet",
+            "cost": "Free",
+            "at": "sheets.google.com",
+            "for": "Three more columns: sent / followed up / replied. Without it you will double-message someone in week two."
+          }
+        ],
+        "numbers": [
+          "10 messages this week. Not 10 today.",
+          "One follow-up, three days later. Then stop — a second follow-up costs you the relationship.",
+          "Expect 1–2 replies out of 10. That is a working rate, not a failure. Ten silences is normal and means keep going, not stop."
+        ],
+        "say_this": {
+          "when": "The first message. The first line has to be unusable on anyone else — that is the entire trick.",
+          "text": "Hi [name] — I noticed [the specific true thing: a page, a post, a queue, a gap].\n\nI [what you do]. For you that'd probably mean [the outcome, in their words, not yours].\n\nWorth a 10-minute call this week? If it's not a fit, no hard feelings — just say so and I'll leave you be.\n\n— [you]\n\nFOLLOW-UP, three days later, reply on the same thread:\nJust floating this back up in case it got buried. If the timing's wrong, tell me and I'll stop.\n\nWHEN THEY SAY \"we found a more competitive option\":\nThat's fair. Can I ask — competitive on price, or on what's included? If it's price, I won't try to out-cheap them. What I'd do is [the thing that makes the risk lower], which is usually what the cheaper version leaves out."
+        }
       },
       "if_it_stalls": [
         {
@@ -666,6 +809,19 @@
         ],
         "done_when": "You have proof you can show the next buyer."
       },
+      "concrete": {
+        "right_now": "Send the message below to your most recent client. Now — not after the next job. The window closes fast once the work stops being fresh.",
+        "tools": [],
+        "numbers": [
+          "Ask within 48 hours of finishing. After a week the answer gets vague.",
+          "Two questions in one message. Not two messages — the second one never gets sent.",
+          "One line of testimonial is enough. You are not collecting an essay."
+        ],
+        "say_this": {
+          "when": "The two-question ask. Both questions, one message, and give them the easy out.",
+          "text": "Really glad that worked out. Two quick things, and no pressure on either:\n\n1. Would you write me a line or two I can show other people? Even one sentence about what changed helps a lot. If it's easier, I can draft something and you just tell me if it's true.\n\n2. Is there anyone else you know with the same problem? Happy for you to pass my details on, or I can send you something short to forward."
+        }
+      },
       "if_it_stalls": [
         {
           "symptom": "It feels rude to ask.",
@@ -762,6 +918,19 @@
         ],
         "done_when": "You have predictable income, not just one-off projects."
       },
+      "concrete": {
+        "right_now": "Look at your last three jobs. Write down the one thing that will need doing again within 30 days. That thing is the retainer — you are not inventing a new service.",
+        "tools": [],
+        "numbers": [
+          "Price the month at 3–4× one job, not 1×. You are selling availability, not hours.",
+          "Three-month minimum. Under that, you are just doing jobs with extra paperwork.",
+          "Review the price at month three, out loud, in the first conversation — so raising it later isn't a surprise."
+        ],
+        "say_this": {
+          "when": "The offer. Make it concrete about what they get and when — vagueness is what makes retainers feel expensive.",
+          "text": "Something I noticed: [the thing] is going to keep coming up every month.\n\nInstead of quoting each time, I could just handle it — [what you'd do] every month for $[X], and you can reach me for the small stuff in between without a new invoice.\n\nThree months to start, then we look at whether it's still worth it for you. Want me to write it up?"
+        }
+      },
       "if_it_stalls": [
         {
           "symptom": "My work is genuinely one-and-done.",
@@ -849,6 +1018,19 @@
           "Add the risk-killer (revisions/guarantee)"
         ],
         "done_when": "You can sell it by name."
+      },
+      "concrete": {
+        "right_now": "List your last five jobs and circle the deliverable that appears most. That one is the package. Give it a name today, even a boring one — a named thing sells without a meeting.",
+        "tools": [],
+        "numbers": [
+          "One package, one price, one turnaround.",
+          "Write what is NOT included. That single line prevents most scope arguments.",
+          "A turnaround you hit nine times out of ten — not your best-ever time."
+        ],
+        "say_this": {
+          "when": "The package description. This is what replaces the custom quote, so it has to answer price, time and risk without you in the room.",
+          "text": "[Name of the package] — $[X], delivered in [N] working days.\n\nYou get: [the deliverable, specifically]\nNot included: [the obvious adjacent thing people will assume]\nIf it's not right: one full revision, free.\n\nTo start, reply with [the one thing you need from them] and I'll send the invoice."
+        }
       },
       "if_it_stalls": [
         {
@@ -1450,6 +1632,32 @@
         ],
         "done_when": "Nothing in your setup embarrasses you, and your price reflects your proof."
       },
+      "concrete": {
+        "right_now": "Open your sent messages and write down the three questions buyers asked most. Those three answers become the top of your page — above everything you currently have there.",
+        "tools": [
+          {
+            "name": "Canva",
+            "cost": "Free plan",
+            "at": "canva.com",
+            "for": "Tidying the one page into something that looks deliberate."
+          },
+          {
+            "name": "CapCut",
+            "cost": "Free",
+            "at": "capcut.com",
+            "for": "Cutting the clips you've been collecting into one short video. Desktop or phone."
+          }
+        ],
+        "numbers": [
+          "Answer the top three questions above the fold. Everything else moves down.",
+          "Video under 90 seconds. Nobody watches the long one.",
+          "Raise your price 20–30% — for the NEXT new client. Existing clients keep the old price until their next renewal."
+        ],
+        "say_this": {
+          "when": "Telling an existing client the price is going up at renewal. Say it early and once; a raise sprung at renewal reads as opportunism.",
+          "text": "Heads up well ahead of time: from [date] my rate for new work goes to $[X]. Your current arrangement stays as it is until [their renewal date] — I'd rather tell you now than surprise you then."
+        }
+      },
       "if_it_stalls": [
         {
           "symptom": "I don't know what to fix first.",
@@ -1499,6 +1707,23 @@
       "resell — offer.define and setup.minimum-hireable were NOT added. Reselling has no offer to define and no portfolio to show; its equivalents are sourcing and listing, which are not written yet.",
       "digital — freelance.retainer and freelance.productize were NOT added. The real spine for digital is digital.package-into-product and digital.storefront, both referenced by unlocks and neither written.",
       "content — nothing added. Every core play here assumes an outreach model content does not use."
+    ]
+  },
+  "concrete_layer": {
+    "why": "Every play told people WHAT to do and never HOW. There was no field in this file that could hold a tool name, a number, a length or a sentence you can paste — so the walkthrough read as advice, which is the one thing a stronger base model gives away free. `concrete` is that field. It is deliberately specific: named tools with a free option, real quantities, and text a person can copy without editing.",
+    "shape": "right_now = the single 15-minute action. tools = named, with cost and what it is for. numbers = the quantities that stop someone guessing. say_this = wording to paste, with a note on when to use it.",
+    "honest_limit": "Tool names and prices age, and this is exactly the content a stronger model regenerates on demand. This layer is not the long-term asset — it is the floor that stops the page being useless today, and the grounding the AI coach will answer FROM so it cites the same tools instead of inventing new ones each time.",
+    "tools_checked": "2026-08",
+    "covers": [
+      "offer.define",
+      "pricing.lower-risk",
+      "setup.minimum-hireable",
+      "outreach.find-buyer",
+      "outreach.reach-and-close",
+      "proof.testimonial-referral",
+      "freelance.retainer",
+      "freelance.productize",
+      "consolidate.tune-the-machine"
     ]
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { whoAmI } from "../lib/store.js";
 
 /*
   FeedbackWidget — two jobs, one component.
@@ -70,6 +71,12 @@ export default function FeedbackWidget({ trigger = "link", kind = "feedback", co
           message: message.trim() || undefined,
           email: email.trim() || undefined,
           context,
+          /* Who said it. Every other payload in the product has carried `fid`
+             since Aug 1; feedback was the one that didn't, so the most
+             valuable signal we collect was the only anonymous one — we could
+             not tell one angry person from three. Read passively: calling
+             session() here would mint a new sitting on submit. */
+          fid: whoAmI().fid || undefined,
           page: typeof window !== "undefined" ? window.location.pathname : undefined,
           ts: new Date().toISOString(),
         }),
