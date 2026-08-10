@@ -56,6 +56,10 @@ const FACT_DEPTH = {
   "has:published-12": 1,
   "has:content-pattern": 2,
   "has:owned-audience": 2,
+  /* Gig work earns in week one, so its facts are about what you have
+     learned rather than what you have built. */
+  "has:first-gig-payout": 1,
+  "has:real-hourly": 2,
 };
 const factDepth = (f) => (FACT_DEPTH[f] === undefined ? 2 : FACT_DEPTH[f]);
 
@@ -66,6 +70,8 @@ const FACT_LABEL = {
   "has:published-12": "twelve pieces published",
   "has:content-pattern": "a pattern you can repeat",
   "has:owned-audience": "an audience list of your own",
+  "has:first-gig-payout": "your first payout",
+  "has:real-hourly": "your real hourly rate",
 };
 export const factLabel = (f) => FACT_LABEL[f] || f;
 
@@ -118,6 +124,29 @@ const HORIZONS_BY_PATH = {
       label: "Days 61–90",
       aim: "Turn the people already listening into the first dollar.",
       opensWhen: "has:content-pattern",
+    },
+  ],
+  /* Gig is the only path that pays in week one, so its first window is
+     about getting approved rather than getting ready — and its last window
+     is honest about a ceiling the other paths do not have. */
+  gig: [
+    {
+      key: "d30",
+      label: "Days 1–30",
+      aim: "Get approved, then work only the hours that actually pay.",
+      opensWhen: null,
+    },
+    {
+      key: "d60",
+      label: "Days 31–60",
+      aim: "Find out what an hour of this is really worth after fuel, wear and tax.",
+      opensWhen: "has:first-gig-payout",
+    },
+    {
+      key: "d90",
+      label: "Days 61–90",
+      aim: "Cut the dead time — and start something that keeps earning when you stop.",
+      opensWhen: "has:real-hourly",
     },
   ],
 };

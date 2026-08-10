@@ -1846,6 +1846,623 @@
       ]
     },
     {
+      "id": "gig.get-approved",
+      "name": "Start the approval clock today",
+      "short_name": "Get approved",
+      "sub": "Two apps, today, not tomorrow",
+      "icon": "①",
+      "type": "core",
+      "move": "Apply to two apps today — the background check takes days, and it runs whether you're waiting on it or not.",
+      "paths": [
+        "gig"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck",
+        "scratch"
+      ],
+      "phase": "find",
+      "prerequisites": [],
+      "unlocks": [
+        "gig.first-ten"
+      ],
+      "time_cost": "40 minutes to apply, then 3–10 days of waiting",
+      "payoff": {
+        "speed": "days",
+        "effort": "low",
+        "ceiling": "foundational"
+      },
+      "confidence": "high",
+      "quick_win": true,
+      "fear_it_calms": "Worrying you'll be turned down. Most people are not — and applying to two means one slow approval doesn't cost you the week.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can tell you which apps operate in your city and what each one requires, which saves an hour of comparing sign-up pages.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "Two applications submitted and the background checks running.",
+        "steps": [
+          "Pick two apps that match what you have — a car, a bike, or neither",
+          "Get the documents together before you start; the form stalls without them",
+          "Submit both the same day so the checks run in parallel",
+          "While you wait, do the boring prep: bags, phone mount, charger"
+        ],
+        "done_when": "Two applications are in and at least one background check is running."
+      },
+      "concrete": {
+        "right_now": "Photograph your driving licence, your insurance certificate and your vehicle registration and put them in one folder on your phone. Missing documents is the single most common reason an application is abandoned halfway through.",
+        "tools": [
+          {
+            "name": "Delivery apps (DoorDash, Uber Eats, Grubhub)",
+            "cost": "Free to join",
+            "at": "—",
+            "for": "Car, scooter or bike depending on the city. Lowest bar to entry — no passengers, so the vehicle requirements are looser."
+          },
+          {
+            "name": "Rideshare (Uber, Lyft)",
+            "cost": "Free to join",
+            "at": "—",
+            "for": "Higher earnings per hour than delivery in most cities, but a newer car, a proper inspection and more insurance are required."
+          },
+          {
+            "name": "Task apps (TaskRabbit, Instacart)",
+            "cost": "Free to join",
+            "at": "—",
+            "for": "Best if you'd rather not drive all day. Shopping and household tasks pay by the job, not the mile."
+          },
+          {
+            "name": "Your phone",
+            "cost": "You own it",
+            "at": "—",
+            "for": "That's the whole kit. Buy a $15 phone mount and a car charger and stop there."
+          }
+        ],
+        "numbers": [
+          "Apply to 2 apps, same day. One approval always comes slower than the other.",
+          "Background checks take 3–10 days. That wait is why today matters more than tomorrow.",
+          "Documents needed: licence, insurance, vehicle registration, bank details for payouts.",
+          "Spend under $30 on kit before your first payout. Insulated bags and mounts, nothing else."
+        ],
+        "say_this": {
+          "when": "If an application stalls or the check sits in limbo for more than ten days, support won't chase it for you — you have to.",
+          "text": "Hi — my application has been in \"pending background check\" since [date], which is past the usual window. Application/reference number: [X].\n\nCan you tell me whether anything is missing on my side, or whether this needs re-running? Happy to resubmit anything."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "I got rejected by one of them.",
+          "likely_cause": "Each app has its own thresholds — a rejection from one says very little about the others.",
+          "do_this": "Apply to a third. Delivery apps generally have looser requirements than rideshare, so drop down a tier rather than giving up on the path."
+        },
+        {
+          "symptom": "I don't have a car.",
+          "likely_cause": "You're assuming this path requires one.",
+          "do_this": "In dense cities, bike and scooter delivery is real work and skips the vehicle inspection entirely. Task and shopping apps also have no-car options."
+        }
+      ],
+      "checkin": {
+        "question": "Where are the applications?",
+        "options": [
+          {
+            "label": "Approved on at least one.",
+            "signal": "has:gig-approved",
+            "then": "Then you can earn this week — which no other path in this whole library can say. Next is working the hours that actually pay.",
+            "routes_to": null
+          },
+          {
+            "label": "Applied, still waiting.",
+            "signal": "gig:pending",
+            "then": "Normal. Use the wait to sort the kit and read the peak windows for your city so day one isn't spent learning.",
+            "routes_to": null
+          },
+          {
+            "label": "Haven't applied.",
+            "signal": "blocked:apply",
+            "then": "Forty minutes, and the clock only starts when you submit. This is the cheapest first step in the library.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The document checklist",
+          "for": "Getting through the sign-up form in one sitting.",
+          "why": "Most abandoned applications die at the document upload, not at the background check."
+        }
+      ]
+    },
+    {
+      "id": "gig.first-ten",
+      "name": "Work the peaks, do ten runs",
+      "short_name": "First ten runs",
+      "sub": "Peak hours only, on purpose",
+      "icon": "②",
+      "type": "core",
+      "move": "Do your first ten jobs inside the busy windows only — the same hour of work pays roughly double at peak.",
+      "paths": [
+        "gig"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck",
+        "scratch"
+      ],
+      "phase": "aim",
+      "prerequisites": [
+        "gig.get-approved"
+      ],
+      "unlocks": [
+        "gig.know-your-real-hourly"
+      ],
+      "time_cost": "1–2 weeks of chosen hours",
+      "payoff": {
+        "speed": "days",
+        "effort": "medium",
+        "ceiling": "medium"
+      },
+      "confidence": "high",
+      "quick_win": true,
+      "fear_it_calms": "Thinking you have to be available all the time to make this work. You don't — the opposite is true. Working only the busy windows is what makes the hourly rate liveable.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can help you read your own first week's numbers and spot which window and which zone actually paid.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "Ten jobs done, and a first read on when and where the work is.",
+        "steps": [
+          "Only go online during meal times and weekend evenings at first",
+          "Stay in one area until you know it — chasing the map costs more than it pays",
+          "Write down start time, end time and total earned for every session",
+          "Notice which offers you should decline; a bad offer costs you the good one behind it"
+        ],
+        "done_when": "Ten jobs are done and you can name your best window and your best area."
+      },
+      "concrete": {
+        "right_now": "Open your calendar and block two peak windows this week — a weekday dinner rush and one weekend evening. Two blocks, not \"whenever I'm free.\" Vague availability is what turns this into badly-paid full-time work.",
+        "tools": [
+          {
+            "name": "A notes app or a spreadsheet",
+            "cost": "Free",
+            "at": "—",
+            "for": "Start time, end time, total earned, miles driven. Four numbers per session. This is the whole system."
+          },
+          {
+            "name": "The app's own earnings screen",
+            "cost": "Free",
+            "at": "—",
+            "for": "Per-hour and per-trip figures. Read it after every session, not at the end of the month."
+          }
+        ],
+        "numbers": [
+          "Peak windows: roughly 11am–1pm and 5pm–9pm for food, plus weekend evenings. Off-peak can pay half.",
+          "10 jobs before you change anything. Fewer than that and you're reading noise.",
+          "One zone until you know it. Driving to a \"better\" area usually eats the difference in fuel and time.",
+          "Record 4 numbers per session: start, end, earned, miles. Everything later depends on these."
+        ],
+        "say_this": {
+          "when": "A customer complaint or a bad rating can cost you access to the app. One calm message resolves most of them, and it should go out the same day.",
+          "text": "Hi — sorry about the trouble with this order. [What happened, in one sentence, no excuses.] I've flagged it with support so it's on record.\n\nIf there's anything I can do to sort it out from my end, tell me and I'll do it."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "I'm getting almost no offers.",
+          "likely_cause": "Wrong window, wrong zone, or a new-account throttle.",
+          "do_this": "Move to a peak window in a denser area before concluding the app is dead. New accounts also see fewer offers for the first week — that usually lifts on its own."
+        },
+        {
+          "symptom": "The pay per job looks terrible.",
+          "likely_cause": "You're reading the offer, not the hour.",
+          "do_this": "Judge by what an hour produced, not what a job offered. And start declining the long-distance low-pay offers — accepting them is what keeps the hourly low."
+        }
+      ],
+      "checkin": {
+        "question": "How did the first ten go?",
+        "options": [
+          {
+            "label": "Ten done, and I've been paid.",
+            "signal": "has:first-gig-payout",
+            "then": "Now the important part, and the part almost nobody does: working out what you actually earned after costs.",
+            "routes_to": null
+          },
+          {
+            "label": "Working, fewer than ten so far.",
+            "signal": "gig:mid-run",
+            "then": "Keep to the peak windows and keep writing the four numbers down. The next step needs them.",
+            "routes_to": null
+          },
+          {
+            "label": "Approved but haven't started.",
+            "signal": "blocked:first-shift",
+            "then": "Book one two-hour block this week. The first session is the only genuinely hard one.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The four-number session log",
+          "for": "Start, end, earned, miles — per session.",
+          "why": "Without these four numbers the next play is guesswork, and the next play is the one that protects you."
+        }
+      ]
+    },
+    {
+      "id": "gig.know-your-real-hourly",
+      "name": "Work out what you actually earn",
+      "short_name": "Your real hourly",
+      "sub": "After fuel, wear and tax",
+      "icon": "③",
+      "type": "core",
+      "move": "Take what you were paid, subtract fuel, vehicle wear and the tax you owe, and divide by every hour you were online.",
+      "paths": [
+        "gig"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck"
+      ],
+      "phase": "grow",
+      "prerequisites": [
+        "has:first-gig-payout"
+      ],
+      "unlocks": [
+        "gig.stack-and-schedule",
+        "gig.exit-ramp"
+      ],
+      "time_cost": "1 hour",
+      "payoff": {
+        "speed": "days",
+        "effort": "low",
+        "ceiling": "high"
+      },
+      "confidence": "high",
+      "quick_win": true,
+      "fear_it_calms": "Suspecting the number is worse than it looks and not wanting to check. Knowing is what lets you fix it — and for most people the fix is choosing different hours, not working more of them.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI will do the arithmetic from your session log and show which windows were genuinely worth driving for.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "One honest number: what an hour of this is really worth to you.",
+        "steps": [
+          "Add up everything you were paid across the whole period",
+          "Subtract fuel, and subtract a realistic amount per mile for wear",
+          "Set aside a share for tax — the apps do not withhold it for you",
+          "Divide by every hour you were online, including the waiting"
+        ],
+        "done_when": "You can say your real hourly rate out loud, and you know which window earns the most."
+      },
+      "concrete": {
+        "right_now": "Take your session log and do this one sum: (total paid − fuel) ÷ total hours online. Do it before any tax or wear adjustment. Most people have never seen this number, and seeing it is what changes the decisions.",
+        "tools": [
+          {
+            "name": "Stride",
+            "cost": "Free",
+            "at": "stride.app",
+            "for": "Automatic mileage tracking built for gig workers. Mileage is usually the largest deductible expense, and untracked miles are money left behind."
+          },
+          {
+            "name": "Google Sheets",
+            "cost": "Free",
+            "at": "sheets.google.com",
+            "for": "If you'd rather not install anything: one row per session, five columns, one formula."
+          },
+          {
+            "name": "A separate savings account",
+            "cost": "Free",
+            "at": "—",
+            "for": "Where the tax share goes the day you're paid. Money that stays in the current account gets spent."
+          }
+        ],
+        "numbers": [
+          "Count EVERY hour you were online, including waiting. Counting only busy time is how people fool themselves.",
+          "Fuel is the obvious cost; wear, tyres and servicing are the ones that arrive later and hurt more.",
+          "Set aside roughly 25–30% of profit for tax if you're in the US — nothing is withheld for you. Check your own situation with a tax professional; this is a rule of thumb, not tax advice.",
+          "Track your miles. In the US they're usually deductible at the IRS standard rate — look up the current year's figure, because it changes."
+        ],
+        "say_this": {
+          "when": "Write your real number down in this shape and keep it somewhere you'll see it. It is the number that decides whether any given hour is worth going out for.",
+          "text": "Period: [dates]\nPaid: $[X]\nFuel: −$[X]\nSet aside for tax: −$[X]\nHours online (including waiting): [X]\n\nMy real hourly: $[X]\nBest window: [day + time]\nWorst window: [day + time] — stop working it."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "The number is much worse than I thought.",
+          "likely_cause": "Off-peak hours and long low-paying trips, almost always.",
+          "do_this": "That's the point of doing the sum. Cut the worst window entirely and re-run it in two weeks — most people's rate improves sharply just from deleting bad hours."
+        },
+        {
+          "symptom": "I didn't track my miles.",
+          "likely_cause": "Nobody does at the start.",
+          "do_this": "Start today rather than reconstructing the past. Install a tracker and let it run — a month of tracked miles is worth more than a year of guessed ones."
+        }
+      ],
+      "checkin": {
+        "question": "What's the real number?",
+        "options": [
+          {
+            "label": "I know it, and it's worth doing.",
+            "signal": "has:real-hourly",
+            "then": "Then make it better: cut the dead time, and start thinking about what this money buys you.",
+            "routes_to": null
+          },
+          {
+            "label": "I know it, and it's not enough.",
+            "signal": "gig:rate-too-low",
+            "then": "That is a useful answer, not a failure. It means the hours need changing — or that this is a bridge to something else rather than the destination.",
+            "routes_to": null
+          },
+          {
+            "label": "I can't work it out.",
+            "signal": "blocked:maths",
+            "then": "Bring the numbers and someone will do it with you in fifteen minutes.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The real-hourly sheet",
+          "for": "Turning app payouts into what you actually earned.",
+          "why": "The app shows you revenue. This shows you income. They are not the same number and the gap is usually large."
+        }
+      ]
+    },
+    {
+      "id": "gig.stack-and-schedule",
+      "name": "Kill the dead time",
+      "short_name": "Cut dead time",
+      "sub": "Two apps, fewer wasted hours",
+      "icon": "④",
+      "type": "core",
+      "move": "Run more than one app and be strict about which offers you take — the money is in the gaps you remove, not the hours you add.",
+      "paths": [
+        "gig"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market"
+      ],
+      "phase": "grow",
+      "prerequisites": [
+        "has:real-hourly"
+      ],
+      "unlocks": [],
+      "time_cost": "ongoing, one week to settle",
+      "payoff": {
+        "speed": "weeks",
+        "effort": "medium",
+        "ceiling": "medium"
+      },
+      "confidence": "medium",
+      "quick_win": false,
+      "fear_it_calms": "Feeling the only way up is longer days. It isn't — most people's rate improves by removing waiting, not by adding hours.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can look at your log and tell you the decline threshold that would have raised your hourly across the period.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "A higher rate from the same number of hours.",
+        "steps": [
+          "Run a second app during quiet stretches so waiting turns into work",
+          "Set a decline rule and hold it — a bad offer blocks the good one behind it",
+          "Cut your worst window entirely; do not replace it",
+          "Re-check your real hourly after two weeks"
+        ],
+        "done_when": "Your real hourly has gone up while your hours have not."
+      },
+      "concrete": {
+        "right_now": "Write your decline rule on one line and put it where you'll see it while driving. Without a written rule you will accept a bad offer at hour three out of boredom, and that one acceptance can cost you the rest of the window.",
+        "tools": [
+          {
+            "name": "Two apps on one phone",
+            "cost": "Free",
+            "at": "—",
+            "for": "One accepts while the other is quiet. Check each app's own rules — some restrict this, and being deactivated costs far more than the extra trip."
+          },
+          {
+            "name": "A phone mount",
+            "cost": "~$15, buy it now",
+            "at": "—",
+            "for": "Two apps means two screens. Handling a phone while driving is not a productivity question, it's a safety one."
+          }
+        ],
+        "numbers": [
+          "A decline rule, written down: e.g. \"nothing under $[X], nothing over [Y] miles.\" The exact numbers come from your own log, not from the internet.",
+          "Delete your worst window rather than replacing it. Fewer, better hours is the whole strategy.",
+          "Re-run the real-hourly sum after 2 weeks. If it didn't move, the rule was too soft.",
+          "Never touch the phone while moving. No hourly rate is worth it."
+        ],
+        "say_this": {
+          "when": "Your own rule, in your own words. Concrete beats disciplined — you will not out-willpower hour four.",
+          "text": "My rule:\nDecline anything under $[X].\nDecline anything over [Y] miles unless it pays $[Z]+.\nGo home at [time], even on a good night.\nI do not work [worst window] any more."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "Running two apps got chaotic.",
+          "likely_cause": "You're accepting on both instead of using the second one to fill gaps.",
+          "do_this": "Treat one as primary. The second only exists for stretches where the first has gone quiet for more than ten minutes."
+        },
+        {
+          "symptom": "My acceptance rate dropped and I'm worried about the account.",
+          "likely_cause": "Some apps do weight it.",
+          "do_this": "Read your app's actual terms rather than forum rumour. Where it matters, loosen the rule slightly instead of abandoning it — a rule that costs you the account is not a good rule."
+        }
+      ],
+      "checkin": {
+        "question": "Did the rate move?",
+        "options": [
+          {
+            "label": "Same hours, more money.",
+            "signal": "has:improved-hourly",
+            "then": "That's the ceiling of this path in sight. Worth deciding now what this money is for.",
+            "routes_to": null
+          },
+          {
+            "label": "No change.",
+            "signal": "gig:rule-too-soft",
+            "then": "The rule was probably too soft, or the worst window is still in the schedule. Tighten one thing, not three.",
+            "routes_to": null
+          },
+          {
+            "label": "Haven't tried.",
+            "signal": "blocked:stacking",
+            "then": "Start with the decline rule alone — it's free, it takes a minute, and it does most of the work.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The decline rule card",
+          "for": "One line, on the dashboard.",
+          "why": "The rule has to exist outside your head, because hour four is when it stops existing inside it."
+        }
+      ]
+    },
+    {
+      "id": "gig.exit-ramp",
+      "name": "Turn the hours into something with a ceiling",
+      "short_name": "Build the exit ramp",
+      "sub": "This pays now; it won't compound",
+      "icon": "⑤",
+      "type": "consolidation",
+      "move": "Use the money and the schedule this buys you to start a second path that keeps earning when you stop driving.",
+      "paths": [
+        "gig"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck"
+      ],
+      "phase": "grow",
+      "prerequisites": [
+        "has:real-hourly"
+      ],
+      "unlocks": [],
+      "time_cost": "a few hours a week, alongside",
+      "payoff": {
+        "speed": "months",
+        "effort": "medium",
+        "ceiling": "high"
+      },
+      "confidence": "high",
+      "quick_win": false,
+      "fear_it_calms": "Feeling that admitting this path has a ceiling means you wasted your time. You didn't — it paid this week, which almost nothing else does. It just pays for hours, and hours run out.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can look at what you're already good at and name the two paths that fit the hours gig work leaves you.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "A second, uncapped path started while the gig money keeps the lights on.",
+        "steps": [
+          "Accept the arithmetic: this income stops the moment you stop",
+          "Pick one path with a ceiling and give it a fixed few hours a week",
+          "Fund it with gig money instead of savings — that's what the flexibility is for",
+          "Keep driving until the second thing pays; do not quit on hope"
+        ],
+        "done_when": "A second path is genuinely started, and gig hours are funding it rather than replacing it."
+      },
+      "concrete": {
+        "right_now": "Take your real hourly and multiply it by the most hours you could realistically drive in a month. That number is the ceiling of this path. Look at it, then decide what you want the next twelve months to be.",
+        "tools": [
+          {
+            "name": "The Faimgo assessment",
+            "cost": "Free",
+            "at": "faimgo.vercel.app/assessment",
+            "for": "Run it again and answer for the second path. Your answers are still saved, so it takes two minutes."
+          }
+        ],
+        "numbers": [
+          "Give the second path 3–5 hours a week, on fixed days. Less than that and it never starts.",
+          "Keep driving until the second thing has paid you at least once. Quitting on hope is how people end up back at zero.",
+          "Ceiling check: real hourly × realistic monthly hours. That's the whole path, and no amount of effort moves it much."
+        ],
+        "say_this": {
+          "when": "Write this where you'll see it. The trap in gig work is not the pay — it's how easily a bridge turns into a destination.",
+          "text": "Gig work is paying my bills this month. That is a real win and I'm not embarrassed by it.\n\nBut it pays for hours, and I only have so many. So [N] hours a week go to [the second path], on [days], funded by this money — starting [date].\n\nI stop driving when [the second path] has paid me [X] times."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "I'm too tired after driving to start anything else.",
+          "likely_cause": "You're trying to build in the leftover hours, which are the worst ones you have.",
+          "do_this": "Take the second path's hours out of your driving time, not out of your rest. Three fewer driving hours and three better hours will beat exhaustion every time."
+        },
+        {
+          "symptom": "I don't know what the second path should be.",
+          "likely_cause": "You haven't asked the question with the constraints you now know.",
+          "do_this": "Re-run the assessment. You now know your real hourly and your real free hours — that's much better information than you had the first time."
+        }
+      ],
+      "checkin": {
+        "question": "Is there a second thing?",
+        "options": [
+          {
+            "label": "Started, and it has hours booked.",
+            "signal": "has:second-path",
+            "then": "That's the version of this that ends well — paid now, and building something that doesn't stop when you do.",
+            "routes_to": null
+          },
+          {
+            "label": "I know what it is, haven't started.",
+            "signal": "gig:exit-planned",
+            "then": "Book the hours in a calendar this week. An intention with no time attached is not a plan.",
+            "routes_to": null
+          },
+          {
+            "label": "Driving is enough for now.",
+            "signal": "gig:staying",
+            "then": "Fair — and it genuinely might be, for a while. Come back when the hours stop being enough, and the numbers you've kept will still be here.",
+            "routes_to": null
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The ceiling sum",
+          "for": "Real hourly × realistic monthly hours.",
+          "why": "One multiplication tells you whether this is a job or a bridge, and it's better to know early."
+        }
+      ]
+    },
+    {
       "id": "asset.website",
       "name": "Get a simple website — when you need one",
       "short_name": "I need a website",
@@ -2463,10 +3080,8 @@
     "curation_standard": "Every resource has to be usable by someone with no technical background, on the free tier or close to it, in under an hour. If it fails any of those, it doesn't go in — no matter how good it is."
   },
   "spine_does_not_apply": {
-    "paths": [
-      "gig"
-    ],
-    "why": "The three sales plays (find-buyer, reach-and-close, testimonial) assume you win work by aiming at named humans and messaging them. For gig apps you sign up on a platform and the platform sends the work — handing that person a 20-name prospect list is not an incomplete plan, it is the wrong plan. Content used to be in this list for the same reason; it is out now because it has its own spine rather than because the objection stopped being true."
+    "paths": [],
+    "why": "EMPTY as of Aug 7 — every path now has a spine of its own. Kept, not deleted: it is the mechanism that stops a future path being handed a walkthrough written for a different kind of work, and the router still checks it. The original objection stands and is the reason gig and content got their own plays instead of being fed the sales spine: for gig apps you sign up on a platform and the platform sends the work; for content you publish and an audience finds you. Handing either a 20-name prospect list was never an incomplete plan, it was the wrong plan."
   },
   "path_coverage": {
     "why": "The router needs to know the difference between 'here is your plan' and 'here is the part of your plan we have written'. Saying the second one out loud is the whole point — a short plan served silently reads as a complete one.",
@@ -2476,19 +3091,18 @@
       "local",
       "tutor",
       "care",
-      "content"
+      "content",
+      "gig"
     ],
     "partial": [
       "resell",
       "digital"
     ],
-    "starter": [
-      "gig"
-    ],
+    "starter": [],
     "omissions_on_purpose": [
       "resell — offer.define and setup.minimum-hireable were NOT added. Reselling has no offer to define and no portfolio to show; its equivalents are sourcing and listing, which are not written yet.",
       "digital — freelance.retainer and freelance.productize were NOT added. The real spine for digital is digital.package-into-product and digital.storefront, both referenced by unlocks and neither written.",
-      "content — WRITTEN Aug 7. Six plays of its own. The universal sales plays were rescoped off '*' so they can no longer leak into it: a content creator was never going to be helped by a cold-outreach list."
+      "gig — WRITTEN Aug 7. Five plays, including one that says plainly that the path has a ceiling and treats it as a bridge. A gig walkthrough that pretended it compounds would be the dishonest version."
     ]
   },
   "concrete_layer": {
