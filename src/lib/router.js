@@ -50,6 +50,12 @@ const FACT_DEPTH = {
   "has:first-client": 1,
   "has:one-testimonial": 2,
   "has:repeat-or-recurring-income": 2,
+  /* Content earns in a different order: nothing is sold until an audience
+     exists, so the facts that gate its horizons are about publishing and
+     signal, not about clients. */
+  "has:published-12": 1,
+  "has:content-pattern": 2,
+  "has:owned-audience": 2,
 };
 const factDepth = (f) => (FACT_DEPTH[f] === undefined ? 2 : FACT_DEPTH[f]);
 
@@ -57,6 +63,9 @@ const FACT_LABEL = {
   "has:first-client": "your first paying client",
   "has:one-testimonial": "one testimonial you can show",
   "has:repeat-or-recurring-income": "money arriving more than once",
+  "has:published-12": "twelve pieces published",
+  "has:content-pattern": "a pattern you can repeat",
+  "has:owned-audience": "an audience list of your own",
 };
 export const factLabel = (f) => FACT_LABEL[f] || f;
 
@@ -65,7 +74,7 @@ export const factLabel = (f) => FACT_LABEL[f] || f;
    window that opens once the fact it waits on is true, which is why
    the split lands where it does instead of where a marketer would
    put it. */
-const HORIZONS = [
+const HORIZONS_DEFAULT = [
   {
     key: "d30",
     label: "Days 1–30",
@@ -85,6 +94,33 @@ const HORIZONS = [
     opensWhen: "has:one-testimonial",
   },
 ];
+
+/* Content does not go client → testimonial → package; it goes publish →
+   signal → audience → money. Handing it the horizon labels above would
+   describe a journey it is not on, which is the same mistake as handing it
+   a cold-outreach list. Paths not listed here use the default. */
+const HORIZONS_BY_PATH = {
+  content: [
+    {
+      key: "d30",
+      label: "Days 1–30",
+      aim: "Pick the lane, then get twelve pieces out before you judge anything.",
+      opensWhen: null,
+    },
+    {
+      key: "d60",
+      label: "Days 31–60",
+      aim: "Read what actually worked, make more of it, and move that attention somewhere you own.",
+      opensWhen: "has:published-12",
+    },
+    {
+      key: "d90",
+      label: "Days 61–90",
+      aim: "Turn the people already listening into the first dollar.",
+      opensWhen: "has:content-pattern",
+    },
+  ],
+};
 
 /* ---------- what we hold back, and why ----------
    These plays are written and good. They describe a service that does
@@ -174,13 +210,15 @@ export function buildPlan(A, results) {
 
   const inSequence = new Set(chosen.map((p) => p.id));
 
+  const HZ = HORIZONS_BY_PATH[walkId] || HORIZONS_DEFAULT;
+
   const horizonIndex = (p) => {
     const facts = (p.prerequisites || []).filter(isStateFact);
     if (!facts.length) return 0;
-    return Math.min(HORIZONS.length - 1, Math.max(...facts.map(factDepth)));
+    return Math.min(HZ.length - 1, Math.max(...facts.map(factDepth)));
   };
 
-  const buckets = HORIZONS.map((h) => ({ ...h, plays: [] }));
+  const buckets = HZ.map((h) => ({ ...h, plays: [] }));
   let n = 0;
 
   chosen.forEach((p) => {

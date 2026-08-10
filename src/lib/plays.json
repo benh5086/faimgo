@@ -489,9 +489,15 @@
       "type": "core",
       "move": "Aim at the human who actually feels the problem — not just whoever signs the check.",
       "paths": [
-        "*"
+        "freelance",
+        "local",
+        "va",
+        "tutor",
+        "care",
+        "digital",
+        "resell"
       ],
-      "universal": true,
+      "universal": false,
       "gap": [
         "has-skill",
         "stuck"
@@ -621,9 +627,15 @@
       "type": "core",
       "move": "Send tailored messages, mirror the buying signal back, then close — people buy when they feel understood.",
       "paths": [
-        "*"
+        "freelance",
+        "local",
+        "va",
+        "tutor",
+        "care",
+        "digital",
+        "resell"
       ],
-      "universal": true,
+      "universal": false,
       "gap": [
         "has-skill",
         "can-market",
@@ -768,9 +780,15 @@
       "type": "core",
       "move": "Ask every client for a testimonial and a referral — you're borrowing their credibility to lower the next buyer's risk.",
       "paths": [
-        "*"
+        "freelance",
+        "local",
+        "va",
+        "tutor",
+        "care",
+        "digital",
+        "resell"
       ],
-      "universal": true,
+      "universal": false,
       "gap": [
         "has-skill"
       ],
@@ -1067,6 +1085,765 @@
           }
         ]
       }
+    },
+    {
+      "id": "content.pick-lane",
+      "name": "Pick one platform and one lane",
+      "short_name": "Pick your lane",
+      "sub": "One place, one subject",
+      "icon": "①",
+      "type": "core",
+      "move": "Choose the single platform your content actually suits, and the one subject you could still be talking about in a year.",
+      "paths": [
+        "content"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck",
+        "scratch"
+      ],
+      "phase": "find",
+      "prerequisites": [],
+      "unlocks": [
+        "content.set-up-to-publish"
+      ],
+      "time_cost": "30 minutes",
+      "payoff": {
+        "speed": "days",
+        "effort": "low",
+        "ceiling": "foundational"
+      },
+      "confidence": "high",
+      "quick_win": true,
+      "fear_it_calms": "Thinking you have to be on everything at once. You don't — one platform done properly beats four done badly, and the second one is easier once the first works.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can pressure-test your lane: give it your subject and ask it to list 30 pieces you'd have to make. If you run dry at 12, the lane is too narrow.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "One platform and one sentence: \"I make [format] about [subject] for [who].\"",
+        "steps": [
+          "Pick the platform by what you're willing to do, not by where the money is",
+          "Narrow the subject until you can name 30 pieces you could make",
+          "Write the one sentence and put it in your profile bio"
+        ],
+        "done_when": "You can name your platform, your subject, and who it's for without hedging."
+      },
+      "concrete": {
+        "right_now": "Write down 30 video or post titles in your subject. Not scripts — titles. If you run dry before 20, the lane is too narrow; widen it one notch and try again. This single exercise decides your whole first month.",
+        "tools": [
+          {
+            "name": "YouTube Shorts",
+            "cost": "Free",
+            "at": "youtube.com",
+            "for": "Best if you'll talk to camera OR do voice-over screen recordings, and you want videos to keep earning views for months. Slowest to start, longest tail."
+          },
+          {
+            "name": "TikTok",
+            "cost": "Free",
+            "at": "tiktok.com",
+            "for": "Fastest feedback — you'll know within a week whether a subject lands. Views die quickly, so it rewards volume."
+          },
+          {
+            "name": "Instagram Reels",
+            "cost": "Free",
+            "at": "instagram.com",
+            "for": "Best if your subject is visual (food, home, craft, fitness) or you already have any following there."
+          },
+          {
+            "name": "A newsletter (Substack or beehiiv)",
+            "cost": "Free plan",
+            "at": "substack.com · beehiiv.com",
+            "for": "Best if you'd rather write than film, and if your subject needs more than 60 seconds to be useful. Slower growth, far more durable."
+          }
+        ],
+        "numbers": [
+          "One platform for the first 90 days. Not two. Cross-posting is a month-four problem.",
+          "30 titles is the test. Under 20 and the lane is too narrow to survive a year.",
+          "One audience. \"People who want to get fit\" is not a lane; \"people over 40 starting again after an injury\" is."
+        ],
+        "say_this": {
+          "when": "Your profile bio. Most people write something clever here. Write something clear — a stranger decides whether to follow in about two seconds.",
+          "text": "[Format] about [subject], for [specific person].\nNew [posts/videos] every [day you picked]."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "I can't decide between two subjects.",
+          "likely_cause": "Both are plausible, so there's no information left to reason with.",
+          "do_this": "Make three pieces on each. The one you finish faster and enjoy more is the answer. Six pieces costs you a week; deciding in your head can cost you a month."
+        },
+        {
+          "symptom": "My subject feels too crowded — everyone's doing it.",
+          "likely_cause": "You're comparing your lane to the whole category.",
+          "do_this": "Crowded means proven. Narrow by who it's for, not by what it's about: not \"cooking\" but \"cooking for people on shift work who get home at 11pm.\""
+        }
+      ],
+      "checkin": {
+        "question": "Where did you land?",
+        "options": [
+          {
+            "label": "Platform picked, lane picked, 30 titles written.",
+            "signal": "has:content-lane",
+            "then": "That list is your first month of work — you never have to face a blank page again. Next is the smallest kit that can actually publish.",
+            "routes_to": null
+          },
+          {
+            "label": "Platform picked, but the titles ran dry.",
+            "signal": "content:lane-too-narrow",
+            "then": "That's the exercise working. Widen the subject one notch and run it again before you film anything.",
+            "routes_to": null
+          },
+          {
+            "label": "Still can't choose.",
+            "signal": "blocked:lane",
+            "then": "Three pieces each, then decide with evidence instead of nerve.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The 30-title sheet",
+          "for": "Proving a lane can carry a year before you commit to it.",
+          "why": "Running dry at 12 titles is the cheapest possible way to find out a subject is too narrow."
+        }
+      ]
+    },
+    {
+      "id": "content.set-up-to-publish",
+      "name": "Set up the smallest kit that can publish",
+      "short_name": "Get publishing-ready",
+      "sub": "Phone, free editor, done",
+      "icon": "②",
+      "type": "core",
+      "move": "Get to where you can make and post a piece end to end — with the phone you already own.",
+      "paths": [
+        "content"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck",
+        "scratch"
+      ],
+      "phase": "find",
+      "prerequisites": [],
+      "unlocks": [
+        "content.first-twelve"
+      ],
+      "time_cost": "1 hour",
+      "payoff": {
+        "speed": "days",
+        "effort": "low",
+        "ceiling": "foundational"
+      },
+      "confidence": "high",
+      "quick_win": true,
+      "fear_it_calms": "Believing you need a camera, a mic and a light before you're allowed to start. Every large channel you can name started on worse equipment than the phone in your pocket.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can write your first ten hooks from your title list — the first line is the part that decides whether anyone watches the rest.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "One piece made and posted, end to end, using only free tools.",
+        "steps": [
+          "Install one free editor and learn only: cut, captions, export",
+          "Set up the account properly — name, bio, one clear profile image",
+          "Make and post one piece today, badly, to prove the pipeline works"
+        ],
+        "done_when": "You have posted one piece and know exactly how long the whole process takes you."
+      },
+      "concrete": {
+        "right_now": "Install CapCut, film 40 seconds on your phone about the first title on your list, add auto-captions, export, post it. Today. It will be bad — that is the point. You are testing the pipeline, not the piece.",
+        "tools": [
+          {
+            "name": "CapCut",
+            "cost": "Free",
+            "at": "capcut.com",
+            "for": "Cutting, auto-captions, text on screen. Phone or desktop. This is the only editor you need for the first six months."
+          },
+          {
+            "name": "Your phone camera",
+            "cost": "You own it",
+            "at": "—",
+            "for": "Film in a quiet room facing a window. Natural light beats any lamp you'd buy."
+          },
+          {
+            "name": "Canva",
+            "cost": "Free plan",
+            "at": "canva.com",
+            "for": "Thumbnails and profile image, only if your platform shows them (YouTube, newsletter). Skip it for TikTok."
+          },
+          {
+            "name": "A $20 phone tripod",
+            "cost": "The only thing worth buying",
+            "at": "—",
+            "for": "Not required. Buy it after piece twelve, not before — and buy nothing else until something has worked."
+          }
+        ],
+        "numbers": [
+          "Short video: 30–60 seconds for the first month. Long enough to say one thing, short enough to finish.",
+          "Newsletter: 300–600 words. Nobody's first issue needs to be an essay.",
+          "Captions on, always. Most people watch on mute.",
+          "The first three seconds carry the whole piece. Write that line before you film anything else.",
+          "Budget: $0. If you are shopping for equipment, you are avoiding filming."
+        ],
+        "say_this": {
+          "when": "The first three seconds of a video — the hook. This structure works because it names who it's for and promises one specific thing.",
+          "text": "If you're [the specific person], stop [the common wrong thing] — here's what to do instead.\n\nOR\n\nThe thing nobody tells you about [subject]: [the specific thing].\n\nOR\n\nI spent [time] doing [subject] wrong. Here's the version that finally worked."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "I hate how I look and sound on camera.",
+          "likely_cause": "You're comparing your raw footage to other people's hundredth attempt.",
+          "do_this": "You do not have to be on camera. Voice-over a screen recording, a text-on-screen video, or a newsletter all work. Pick the format you'll actually keep doing — consistency beats presence."
+        },
+        {
+          "symptom": "Editing takes me three hours per video.",
+          "likely_cause": "You're editing like a filmmaker instead of a publisher.",
+          "do_this": "Cap it at 30 minutes and post whatever exists at 30 minutes. Cut only: silences, mistakes, and the first boring sentence. Nothing else."
+        }
+      ],
+      "checkin": {
+        "question": "Did anything go out?",
+        "options": [
+          {
+            "label": "Posted one piece.",
+            "signal": "has:first-piece-published",
+            "then": "The pipeline works, which is the only thing that mattered today. Now it becomes a habit, not an event.",
+            "routes_to": null
+          },
+          {
+            "label": "Made one, haven't posted it.",
+            "signal": "content:unposted",
+            "then": "Post it. An unposted piece teaches you nothing — the whole point of the first one is that it exists in public and the sky doesn't fall.",
+            "routes_to": null
+          },
+          {
+            "label": "Still setting things up.",
+            "signal": "blocked:setup",
+            "then": "Setup is where this dies. Give yourself one hour, then film with whatever you've got.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "tool",
+          "name": "CapCut",
+          "for": "The only editor needed for the first six months.",
+          "why": "Free, works on phone and desktop, and does auto-captions — which is the one edit that measurably changes watch time."
+        }
+      ]
+    },
+    {
+      "id": "content.first-twelve",
+      "name": "Publish twelve before you judge anything",
+      "short_name": "Ship twelve",
+      "sub": "A fixed schedule, no scoreboard",
+      "icon": "③",
+      "type": "core",
+      "move": "Publish on a fixed schedule until twelve pieces exist — and do not read the numbers until then.",
+      "paths": [
+        "content"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck",
+        "scratch"
+      ],
+      "phase": "aim",
+      "prerequisites": [],
+      "unlocks": [
+        "content.read-the-signal"
+      ],
+      "time_cost": "4–6 weeks — this is the one that takes real calendar time",
+      "payoff": {
+        "speed": "months",
+        "effort": "medium",
+        "ceiling": "high"
+      },
+      "confidence": "high",
+      "quick_win": false,
+      "fear_it_calms": "Watching a piece get 40 views and concluding you were right to doubt yourself. Twelve pieces is roughly where a platform has enough signal to know who to show you to — before that, the numbers are noise, not a verdict.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI turns each title into a rough outline in a minute, which removes the blank-page cost that kills most schedules by week three.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "Twelve pieces published on a schedule you actually kept.",
+        "steps": [
+          "Pick the schedule you can keep on your worst week, not your best",
+          "Work from the title list — never decide the subject on the day",
+          "Batch: make several in one sitting so a bad day doesn't break the run",
+          "Do not open analytics until twelve exist"
+        ],
+        "done_when": "Twelve pieces are live and you have kept the schedule for a month."
+      },
+      "concrete": {
+        "right_now": "Open your calendar and put a repeating 90-minute block on the same day each week, named after the task. Then film the first two pieces from your title list in that one sitting. Two in a sitting is what stops week three from killing this.",
+        "tools": [
+          {
+            "name": "Your phone calendar",
+            "cost": "Free",
+            "at": "—",
+            "for": "A repeating block. Content dies from being optional, not from being hard."
+          },
+          {
+            "name": "A notes app",
+            "cost": "Free",
+            "at": "—",
+            "for": "The title list, always open. You never decide a subject on filming day."
+          }
+        ],
+        "numbers": [
+          "12 pieces before you look at a single number. This is the whole discipline of this step.",
+          "3 short videos a week, or 1 newsletter a week. Pick the one you can keep on a bad week.",
+          "Batch 2–3 in one sitting. One sitting a week beats seven daily attempts.",
+          "Expect the first 5 to get almost no views. That is the normal shape, not a signal.",
+          "30 minutes editing, hard cap. Post what exists when the timer goes."
+        ],
+        "say_this": {
+          "when": "Pin this where you'll see it on the week you want to quit — which, for almost everyone, is week three.",
+          "text": "I am not judging this until twelve exist.\n\nPiece 1–5: nobody sees them. Normal.\nPiece 6–9: a few do. Normal.\nPiece 10–12: the platform starts to work out who to show them to.\n\nThe only failure available to me right now is stopping before twelve."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "My views are terrible and I want to stop.",
+          "likely_cause": "You're reading a scoreboard that isn't full yet.",
+          "do_this": "Close analytics. At piece five the platform still doesn't know who you're for. The only number that matters this month is how many you've published."
+        },
+        {
+          "symptom": "I missed a week and now I've lost momentum.",
+          "likely_cause": "You're treating the run as broken rather than paused.",
+          "do_this": "Publish the next one today. A missed week costs you a week; deciding the run is ruined costs you the whole thing."
+        },
+        {
+          "symptom": "I've run out of ideas.",
+          "likely_cause": "You stopped working from the list.",
+          "do_this": "Go back to the 30 titles. If it's genuinely empty, spend 20 minutes reading the comments and questions under bigger accounts in your lane — every question is a title."
+        }
+      ],
+      "checkin": {
+        "question": "How many are live?",
+        "options": [
+          {
+            "label": "Twelve or more.",
+            "signal": "has:published-12",
+            "then": "Now you're allowed to look. There is real signal in there and the next step is finding it.",
+            "routes_to": null
+          },
+          {
+            "label": "Somewhere between one and eleven.",
+            "signal": "content:mid-run",
+            "then": "Keep going and keep analytics closed. You're inside the part where it feels pointless and isn't.",
+            "routes_to": null
+          },
+          {
+            "label": "The schedule broke.",
+            "signal": "blocked:schedule",
+            "then": "Cut the schedule in half rather than abandon it. One a week that survives beats three a week that doesn't.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The twelve-piece tracker",
+          "for": "Counting pieces instead of views for the first month.",
+          "why": "You get what you measure. Measuring views at piece four is how most people quit at piece five."
+        }
+      ]
+    },
+    {
+      "id": "content.read-the-signal",
+      "name": "Find the one that worked, make more of it",
+      "short_name": "Read the signal",
+      "sub": "Copy your own best piece",
+      "icon": "④",
+      "type": "core",
+      "move": "Two of your twelve did better than the rest. Work out what they had in common, and make five more of exactly that.",
+      "paths": [
+        "content"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck"
+      ],
+      "phase": "grow",
+      "prerequisites": [
+        "has:published-12"
+      ],
+      "unlocks": [
+        "content.own-the-audience"
+      ],
+      "time_cost": "1 hour to read, then two weeks to make",
+      "payoff": {
+        "speed": "weeks",
+        "effort": "medium",
+        "ceiling": "high"
+      },
+      "confidence": "high",
+      "quick_win": false,
+      "fear_it_calms": "Feeling you have to keep inventing. You don't — the work now is copying yourself, which is far easier than starting over and is what actually compounds.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "Paste your two best titles and two worst and ask what differs in promise, specificity and who they're aimed at. A second opinion beats staring at your own work.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "A named pattern you can repeat, and five more pieces built on it.",
+        "steps": [
+          "Rank all twelve by the platform's own retention or open-rate number, not by likes",
+          "Take the top two and write down what they share — subject, promise, format, first line",
+          "Make five more that share that thing",
+          "Ignore the bottom two entirely; there's less information in a flop than people think"
+        ],
+        "done_when": "You can say in one sentence what your best pieces have in common — and five newer pieces follow it."
+      },
+      "concrete": {
+        "right_now": "Open your analytics for the first time. Sort by average watch time (video) or open rate (newsletter) — not by views, because views are mostly luck. Write the top two titles on a piece of paper and stare at them until you can say what they share.",
+        "tools": [
+          {
+            "name": "The platform's own analytics",
+            "cost": "Free",
+            "at": "—",
+            "for": "YouTube Studio, TikTok Analytics, or your newsletter dashboard. You need nothing else — third-party tools at this stage are procrastination."
+          }
+        ],
+        "numbers": [
+          "Sort by average watch time or open rate, NOT views. Views measure the algorithm's mood; watch time measures whether you were any good.",
+          "Top 2 out of 12. Not top 5 — you're looking for a pattern, and a pattern needs to be sharp.",
+          "Make 5 more on that pattern before you change anything else.",
+          "A piece that holds 50%+ average watch time is working, whatever the view count says."
+        ],
+        "say_this": {
+          "when": "Write the pattern down in this exact shape. Vague versions (\"people liked the funny one\") are unusable; specific ones tell you what to film next.",
+          "text": "My two best pieces were both: [format] about [narrower subject than my lane], promising [the specific outcome], opening with [the kind of first line].\n\nSo the next five are: [title], [title], [title], [title], [title]."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "Nothing did noticeably better than anything else.",
+          "likely_cause": "The pieces are too similar, or twelve isn't enough yet in your lane.",
+          "do_this": "Publish six more and deliberately vary one thing — the promise in the title. Then look again. Flat results mean not enough variation, not no talent."
+        },
+        {
+          "symptom": "My best piece was a fluke I can't repeat.",
+          "likely_cause": "You're looking at the topic instead of the structure.",
+          "do_this": "Flukes usually share a structure, not a subject — the promise in the first line, or the format. Copy the structure onto a different topic and see if it holds."
+        }
+      ],
+      "checkin": {
+        "question": "Did you find a pattern?",
+        "options": [
+          {
+            "label": "Found it, and made more.",
+            "signal": "has:content-pattern",
+            "then": "That pattern is your actual product. Next: move some of that attention somewhere you own, because you don't own the platform.",
+            "routes_to": null
+          },
+          {
+            "label": "Found it, haven't made more yet.",
+            "signal": "content:pattern-unused",
+            "then": "The insight is worthless until five more pieces exist. That's the next two weeks.",
+            "routes_to": null
+          },
+          {
+            "label": "No pattern I can see.",
+            "signal": "blocked:signal",
+            "then": "Six more pieces with deliberately different title promises, then look again.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The twelve-piece sort",
+          "for": "Ranking your own work by the number that matters.",
+          "why": "Almost everyone sorts by views and learns the wrong lesson. Watch time is the one that tells you about the work."
+        }
+      ]
+    },
+    {
+      "id": "content.own-the-audience",
+      "name": "Move attention somewhere you own",
+      "short_name": "Own the audience",
+      "sub": "An email list, not just followers",
+      "icon": "⑤",
+      "type": "core",
+      "move": "Give people one reason to hand over an email address — followers belong to the platform, a list belongs to you.",
+      "paths": [
+        "content"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market"
+      ],
+      "phase": "grow",
+      "prerequisites": [
+        "has:published-12"
+      ],
+      "unlocks": [
+        "content.first-dollar"
+      ],
+      "time_cost": "2 hours",
+      "payoff": {
+        "speed": "weeks",
+        "effort": "low",
+        "ceiling": "high"
+      },
+      "confidence": "high",
+      "quick_win": false,
+      "fear_it_calms": "Worrying it's too early for an email list. It isn't — a hundred people who chose to hear from you is worth more than ten thousand who scrolled past, and the ones who arrive early are the ones who buy.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can turn your best-performing piece into the one-page thing you give away, which is the fastest version of this step.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "A list you control, growing on its own from work you already publish.",
+        "steps": [
+          "Make one genuinely useful free thing that solves a piece of the problem your best content is about",
+          "Set up a free email tool and one signup page",
+          "Mention it at the end of every piece, in the same words every time",
+          "Email the list at least monthly, or they forget who you are"
+        ],
+        "done_when": "People are joining without you asking individually, and you've sent at least one email."
+      },
+      "concrete": {
+        "right_now": "Take your single best-performing piece and turn it into a one-page PDF or checklist. That is your free thing. It should take you under an hour, because it's work you already did.",
+        "tools": [
+          {
+            "name": "beehiiv or Substack",
+            "cost": "Free plan",
+            "at": "beehiiv.com · substack.com",
+            "for": "The list itself plus a signup page, with no website needed. Either is fine; do not spend an evening comparing them."
+          },
+          {
+            "name": "Canva",
+            "cost": "Free plan",
+            "at": "canva.com",
+            "for": "Turning the checklist into a one-page PDF that looks deliberate."
+          },
+          {
+            "name": "Your link-in-bio",
+            "cost": "Free",
+            "at": "—",
+            "for": "One link, pointing at the signup page. Not five links — one."
+          }
+        ],
+        "numbers": [
+          "One free thing. One page. Not a course.",
+          "Say it at the end of every piece, in the same words — repetition is what makes it register, and changing the wording resets the clock.",
+          "Email at least once a month. Below that, people forget they signed up and mark you as spam.",
+          "100 subscribers is a real milestone. 100 people who chose you beats 10,000 who scrolled."
+        ],
+        "say_this": {
+          "when": "The line at the end of every piece. Same words every time — this is the one place where being boring is correct.",
+          "text": "I made a one-page [checklist / guide] with [the specific thing]. It's free — link's in my bio."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "Nobody's signing up.",
+          "likely_cause": "The free thing is generic, or the ask is buried.",
+          "do_this": "Make the free thing narrower and more specific — \"the 7 questions to ask before X\" beats \"my guide to X.\" And move the ask to the last five seconds, spoken out loud, not just on screen."
+        },
+        {
+          "symptom": "I don't know what to email them.",
+          "likely_cause": "You're treating an email like a broadcast.",
+          "do_this": "Send the same thing you'd post, plus one sentence about what you're working on. People joined for you, not for a newsletter format."
+        }
+      ],
+      "checkin": {
+        "question": "Is anyone on it?",
+        "options": [
+          {
+            "label": "People are signing up on their own.",
+            "signal": "has:owned-audience",
+            "then": "That list is the asset — it survives an algorithm change, and it's what makes the money step possible.",
+            "routes_to": null
+          },
+          {
+            "label": "It's set up but empty.",
+            "signal": "content:list-empty",
+            "then": "The free thing is probably too broad. Narrow it to one specific problem and say the line out loud at the end of every piece.",
+            "routes_to": null
+          },
+          {
+            "label": "Haven't set it up.",
+            "signal": "blocked:list",
+            "then": "Two hours, free tools, and it compounds from the day it exists. This is the highest-return two hours in the whole plan.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The one-page giveaway",
+          "for": "Turning your best piece into the thing people trade an email for.",
+          "why": "The work is already done — this step is repackaging, not creating."
+        }
+      ]
+    },
+    {
+      "id": "content.first-dollar",
+      "name": "Turn attention into the first dollar",
+      "short_name": "Get paid",
+      "sub": "Sell something, not ad revenue",
+      "icon": "⑥",
+      "type": "core",
+      "move": "Sell one thing to the people already listening — waiting for the platform to pay you is the slowest road there is.",
+      "paths": [
+        "content"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market"
+      ],
+      "phase": "grow",
+      "prerequisites": [
+        "has:content-pattern"
+      ],
+      "unlocks": [],
+      "time_cost": "a weekend",
+      "payoff": {
+        "speed": "weeks",
+        "effort": "medium",
+        "ceiling": "very high"
+      },
+      "confidence": "medium",
+      "quick_win": false,
+      "fear_it_calms": "Feeling you haven't earned the right to charge yet. If your content has genuinely helped someone, a paid version that helps them more is a service, not an imposition — and the people who ask you questions are already telling you what to sell.",
+      "common_needs_here": [
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "AI can draft the sales page from your own best pieces, so the wording sounds like you rather than like a marketer.",
+        "community": null,
+        "skip": null
+      },
+      "content": {
+        "goal": "Money from your audience, not from the platform.",
+        "steps": [
+          "Read the questions people actually ask you — the repeated one is the product",
+          "Sell the smallest version of the answer: a paid guide, a template, or an hour of your time",
+          "Say it plainly in three pieces, then stop mentioning it for a while",
+          "Raise the price once three people have paid without hesitating"
+        ],
+        "done_when": "Someone who found you through your content has paid you."
+      },
+      "concrete": {
+        "right_now": "Go through your comments, replies and DMs and write down every question you've been asked more than twice. The one at the top of that list is what you sell. You are not inventing a product — you are noticing one.",
+        "tools": [
+          {
+            "name": "Gumroad or Payhip",
+            "cost": "Free to list; a fee per sale",
+            "at": "gumroad.com · payhip.com",
+            "for": "Selling a guide, template or file with no website and no shop to build."
+          },
+          {
+            "name": "Stripe Payment Links",
+            "cost": "Free to create; a fee per payment",
+            "at": "stripe.com",
+            "for": "Taking money for your time — a call, a review, a session."
+          },
+          {
+            "name": "Calendly",
+            "cost": "Free plan",
+            "at": "calendly.com",
+            "for": "Only if you're selling time. Skip it entirely if you're selling a file."
+          }
+        ],
+        "numbers": [
+          "Price the first thing $19–$49. Low enough to buy on impulse, high enough that you'll take it seriously.",
+          "Sell to the list first. Conversion from an email list runs many times higher than from a feed.",
+          "Mention it in 3 pieces, then stop for a few weeks. Constant selling is what makes an audience leave.",
+          "Ad revenue needs roughly 1,000 subscribers and 4,000 watch hours on YouTube — months away, and small when it arrives. Selling one thing to 20 people beats it."
+        ],
+        "say_this": {
+          "when": "The offer, said inside a piece rather than as an announcement. It works because it names the exact question and the exact person.",
+          "text": "A lot of you have asked me [the repeated question]. I've put the full answer into [the thing] — it's $[X], link in my bio.\n\nIf you can't afford it right now, reply and tell me your situation and I'll send you the short version free. I mean that."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "Nobody bought.",
+          "likely_cause": "You sold something you found interesting rather than the thing they kept asking for.",
+          "do_this": "Go back to the repeated question. If there isn't one, ask directly: \"what's the thing you're most stuck on?\" Twenty replies will name your product for you."
+        },
+        {
+          "symptom": "It feels wrong to charge my audience.",
+          "likely_cause": "You're imagining the people who'd object, not the ones who'd buy.",
+          "do_this": "Offer it once, plainly, with a genuine free fallback for anyone who can't pay. Nobody who values your free work resents a paid version existing."
+        }
+      ],
+      "checkin": {
+        "question": "Has anyone paid?",
+        "options": [
+          {
+            "label": "Yes — first money from the audience.",
+            "signal": "has:first-content-dollar",
+            "then": "That changes what this is. You now have proof the audience will pay, which is the thing almost nobody making content ever gets to.",
+            "routes_to": null
+          },
+          {
+            "label": "It's listed, no sales yet.",
+            "signal": "content:no-sales",
+            "then": "Usually the product, not the pitch. Go back to the question people actually keep asking.",
+            "routes_to": null
+          },
+          {
+            "label": "Haven't put anything up.",
+            "signal": "blocked:selling",
+            "then": "Smallest possible version, $19, one weekend. The first sale is the one that tells you whether any of this is a business.",
+            "routes_to": "help.get-a-human"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "template",
+          "name": "The repeated-question audit",
+          "for": "Finding the product your audience has already described to you.",
+          "why": "The product is almost never the thing you'd guess. It's the question you're tired of answering."
+        }
+      ]
     },
     {
       "id": "asset.website",
@@ -1593,9 +2370,15 @@
       "type": "consolidation",
       "move": "Now that money is coming in, go back and make the rough things good — the site, the video, the price.",
       "paths": [
-        "*"
+        "freelance",
+        "local",
+        "va",
+        "tutor",
+        "care",
+        "digital",
+        "resell"
       ],
-      "universal": true,
+      "universal": false,
       "phase": "grow",
       "prerequisites": [
         "has:repeat-or-recurring-income"
@@ -1681,10 +2464,9 @@
   },
   "spine_does_not_apply": {
     "paths": [
-      "gig",
-      "content"
+      "gig"
     ],
-    "why": "The three universal plays (find-buyer, reach-and-close, testimonial) assume you win work by aiming at named humans and messaging them. For gig apps you sign up on a platform and the platform sends the work; for content you publish and an audience finds you. Handing either of those a 20-name prospect list is not an incomplete plan, it is the wrong plan — so the router shows the path's own starting moves and says plainly that the full walkthrough is not written yet."
+    "why": "The three sales plays (find-buyer, reach-and-close, testimonial) assume you win work by aiming at named humans and messaging them. For gig apps you sign up on a platform and the platform sends the work — handing that person a 20-name prospect list is not an incomplete plan, it is the wrong plan. Content used to be in this list for the same reason; it is out now because it has its own spine rather than because the objection stopped being true."
   },
   "path_coverage": {
     "why": "The router needs to know the difference between 'here is your plan' and 'here is the part of your plan we have written'. Saying the second one out loud is the whole point — a short plan served silently reads as a complete one.",
@@ -1693,20 +2475,20 @@
       "va",
       "local",
       "tutor",
-      "care"
+      "care",
+      "content"
     ],
     "partial": [
       "resell",
       "digital"
     ],
     "starter": [
-      "gig",
-      "content"
+      "gig"
     ],
     "omissions_on_purpose": [
       "resell — offer.define and setup.minimum-hireable were NOT added. Reselling has no offer to define and no portfolio to show; its equivalents are sourcing and listing, which are not written yet.",
       "digital — freelance.retainer and freelance.productize were NOT added. The real spine for digital is digital.package-into-product and digital.storefront, both referenced by unlocks and neither written.",
-      "content — nothing added. Every core play here assumes an outreach model content does not use."
+      "content — WRITTEN Aug 7. Six plays of its own. The universal sales plays were rescoped off '*' so they can no longer leak into it: a content creator was never going to be helped by a cold-outreach list."
     ]
   },
   "concrete_layer": {

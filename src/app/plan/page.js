@@ -389,12 +389,12 @@ export default function PlanPage() {
       {plan.borrowed && p && (
         <div className="p-5 rounded-2xl mb-8" style={{ backgroundColor: C.yellowSoft, border: "1px solid #EAD9A8" }}>
           <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
-            <b>Why this says {w.name} when you chose {p.name}:</b>{" "}
-            {p.name} is still the goal — but the steps for it aren&apos;t written yet, and we&apos;re not going to
-            hand you the wrong plan to look complete. {w.name} is your fastest first win, and it&apos;s the one
-            that pays for the months {p.name.toLowerCase()} takes to ramp. So this is the funding half of your
-            plan, in full. Your own {p.name.toLowerCase()} moves are still on your results page, and they
-            haven&apos;t changed.
+            {/* One template literal, deliberately. Interleaving {expr} with JSX
+                text produced "Content Creationis still the goal" on the live
+                page — the same swallowed-space class that bit this codebase in
+                v9. A single string is one text node and cannot lose a space. */}
+            <b>{`Why this says ${w.name} when you chose ${p.name}:`}</b>{" "}
+            {`${p.name} is still the goal — but the steps for it aren't written yet, and we're not going to hand you the wrong plan to look complete. ${w.name} is your fastest first win, and it's the one that pays for the months ${p.name.toLowerCase()} takes to ramp. So this is the funding half of your plan, in full. Your own ${p.name.toLowerCase()} moves are still on your results page, and they haven't changed.`}
           </p>
         </div>
       )}
