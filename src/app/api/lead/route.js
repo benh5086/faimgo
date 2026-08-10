@@ -212,7 +212,7 @@ async function sendPlan({ email, answers, results, otherIdea, protectFrom }) {
   if (!key) return "skipped:no-api-key";
   if (!email) return "skipped:no-address";
 
-  const site = process.env.SITE_URL || "https://faimgo.vercel.app";
+  const site = process.env.SITE_URL || "https://faimgo.com";
   let mail;
   try {
     mail = renderPlanEmail({

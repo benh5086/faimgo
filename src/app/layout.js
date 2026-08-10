@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 /* Until now every browser tab and every shared link said "Create Next App".
    Cheap to fix, and it is the first thing anyone sees before the site loads. */
 export const metadata = {
-  metadataBase: new URL("https://faimgo.vercel.app"),
+  metadataBase: new URL("https://faimgo.com"),
   title: {
     default: "Faimgo — find the side income that fits your life",
     template: "%s · Faimgo",
@@ -25,7 +25,7 @@ export const metadata = {
     title: "Faimgo — find the side income that fits your life",
     description:
       "A short, honest assessment that points you at one way to earn on the side — then walks you through the first 90 days, step by step.",
-    url: "https://faimgo.vercel.app",
+    url: "https://faimgo.com",
     siteName: "Faimgo",
     type: "website",
   },
