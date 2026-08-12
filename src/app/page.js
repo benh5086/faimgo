@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Reveal from "./Reveal";
 import FeedbackWidget from "./FeedbackWidget";
+import MobileNav from "./MobileNav";
 
 export default function Home() {
   // Crisp modern palette
@@ -22,7 +23,7 @@ export default function Home() {
     <main className="min-h-screen font-sans" style={{backgroundColor: C.white, color: C.ink}}>
 
       {/* Navigation */}
-      <nav style={{backgroundColor: C.green}} className="px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+      <nav style={{backgroundColor: C.green}} className="relative px-8 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center">
           <span className="text-2xl font-bold tracking-tight" style={{color: C.white}}>
             faim<span style={{color: C.goldBright}}>go</span>
@@ -38,6 +39,12 @@ export default function Home() {
             Get Started
           </a>
         </div>
+
+        {/* Below `md` the block above is hidden. Without this, a phone showed
+            the wordmark and nothing else — including no Get Started. */}
+        <MobileNav C={C}>
+          <FeedbackWidget trigger="nav" kind="contact" navLabel="Contact" context="header-contact-mobile" />
+        </MobileNav>
       </nav>
 
       {/* Hero */}
@@ -140,13 +147,23 @@ export default function Home() {
       <section id="how-it-works" className="px-8 py-24 max-w-6xl mx-auto">
         <Reveal>
           <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>How It Works</p>
-          <h2 className="font-display text-4xl md:text-5xl mb-14" style={{color: C.green}}>Four Steps to Your Income Path</h2>
+          <h2 className="font-display text-4xl md:text-5xl mb-4" style={{color: C.green}}>Four Steps to Your Income Path</h2>
+          {/* Step 3 was "Pitch" until Aug 10. Two reasons it had to go. It
+              assumed the outreach model, so it was simply wrong for two of the
+              nine paths — nobody pitches on a gig app, and content creators
+              publish rather than pitch. That is the same mistake the play
+              library had, where the sales spine leaked into paths that do not
+              sell that way. And "Find, Aim, Go" is the only version of the
+              framework the product's own name teaches. */}
+          <p className="text-[17px] leading-relaxed mb-14" style={{color: C.body}}>
+            {"Find, Aim, Go — that's where the name comes from. Grow is what happens after."}
+          </p>
         </Reveal>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {[
             {step: '01', title: 'Find', desc: 'Answer a few honest questions about your time, skills, and what you already have.'},
             {step: '02', title: 'Aim', desc: 'We match you to the paths that actually fit you — with a real reality check on each.'},
-            {step: '03', title: 'Pitch', desc: 'Get your first three concrete moves toward landing your very first customer.'},
+            {step: '03', title: 'Go', desc: 'Get your first concrete moves — what to do, what to say, and how to know a step is done.'},
             {step: '04', title: 'Grow', desc: 'Build from your first dollar into steady income that compounds over time.'},
           ].map((item, i) => (
             <Reveal key={i} delay={i * 90}>
