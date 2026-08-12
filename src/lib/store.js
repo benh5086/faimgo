@@ -204,7 +204,57 @@ export function clearWork() {
   if (!s) return false;
   s.progress = null;
   s.plan = null;
+  /* Completions go too. They belong to the plan that was replaced — carrying
+     them onto a different path would claim credit for steps that are not in
+     the new walkthrough. Note this is the ONLY place steps are cleared, and
+     it is a deliberate act by the person, never something time does to them. */
+  s.steps = {};
   return write(s);
+}
+
+/* ---------- completed steps ----------
+   The record of what someone has actually FINISHED, as opposed to what they
+   were shown. From Aug 10 this is the centre of the product rather than a
+   nice-to-have: nothing can be exchanged, shared or charged for until
+   somebody has finished something, and until now there was nowhere to put
+   the answer to "did you do it?".
+
+   Three rules this shape exists to enforce:
+
+   1. **It never resets.** Not on a new sitting, not after a gap, not ever.
+      There is deliberately no streak and no last-seen comparison anywhere in
+      here, because the person this product is for has fragmented time — and
+      a broken streak is the moment people quit. Come back after a month and
+      the record is exactly where you left it.
+   2. **Marking a step done is reversible.** People tick things by accident,
+      and a record you cannot correct is one people stop trusting.
+   3. **The optional note is the seed of everything later.** Self-report is
+      right for now (friction is what kills completion, and at ten users
+      trust is not the bottleneck), but a year of "what actually happened"
+      is what future verification gets built on top of. Cheap to collect now,
+      impossible to collect retroactively. */
+export function markStep(playId, done, note) {
+  if (!playId) return false;
+  const s = read();
+  if (!s) return false;
+  if (!s.steps || typeof s.steps !== "object") s.steps = {};
+  if (done) {
+    const existing = s.steps[playId] || {};
+    s.steps[playId] = {
+      done: true,
+      at: existing.at || Date.now(),        // first completion time, not the last edit
+      note: note !== undefined ? note : (existing.note || ""),
+    };
+  } else {
+    delete s.steps[playId];
+  }
+  return write(s);
+}
+
+/* What has been finished. Returns {} rather than null so callers never guard. */
+export function readSteps() {
+  const s = read();
+  return (s && s.steps && typeof s.steps === "object") ? s.steps : {};
 }
 
 /* Full reset, id included. For a "forget me" control — not wired to any UI yet. */

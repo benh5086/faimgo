@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
-import { loadSaved, session } from "../../lib/store.js";
+import { loadSaved, session, markStep, readSteps } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
 
@@ -150,7 +150,65 @@ function Concrete({ x }) {
   );
 }
 
-function PlayCard({ play, openByDefault }) {
+/* ---------- the completion control ----------
+   The single most important control on the page, and the reason this page
+   now has a reason to be revisited at all. Everything the product wants to
+   do later — an exchange between members, a profile of what someone can
+   actually do, money — begins with somebody finishing something and saying
+   so. Until this existed there was nowhere to say it.
+
+   Deliberate absences, each one load-bearing:
+   - No streak, no dates, no "you last did this N days ago". This is built
+     for a person whose time comes in fragments; a streak would greet them
+     with guilt at the exact moment they came back.
+   - Unticking is always allowed. A record you cannot correct is a record
+     people stop trusting, and then stop using.
+   - The note is optional and stays optional. Requiring it would trade the
+     thing we need most (completions) for the thing we merely want (texture). */
+function DoneControl({ play, done, onToggle }) {
+  const [note, setNote] = useState("");
+  const [asking, setAsking] = useState(false);
+
+  if (done) {
+    return (
+      <div className="mt-4 p-4 rounded-xl flex items-center justify-between gap-4" style={{ backgroundColor: C.greenSoft }}>
+        <p className="text-[15px] font-semibold" style={{ color: C.green }}>Done. That&apos;s one that actually happened.</p>
+        <button onClick={() => onToggle(play, false)} className="press text-[13px] font-semibold underline underline-offset-2" style={{ color: C.gray }}>
+          Undo
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4">
+      {!asking ? (
+        <button onClick={() => setAsking(true)} className="press w-full py-3 rounded-xl text-[15px] font-bold"
+          style={{ backgroundColor: C.green, color: C.cream }}>
+          I did this
+        </button>
+      ) : (
+        <div className="p-4 rounded-xl" style={{ backgroundColor: C.cream, border: `1px solid ${C.beige}` }}>
+          <p className="text-[14px] leading-relaxed mb-2" style={{ color: C.gray }}>
+            Anything worth remembering about how it went? One line is plenty — and skipping it is completely fine.
+          </p>
+          <input value={note} onChange={(e) => setNote(e.target.value)}
+            placeholder="Optional — what happened"
+            className="w-full px-3 py-2 rounded-lg text-[15px] mb-3"
+            style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}`, color: C.ink }} />
+          <div className="flex gap-2">
+            <button onClick={() => onToggle(play, true, note)} className="press px-5 py-2 rounded-full text-[14px] font-bold"
+              style={{ backgroundColor: C.green, color: C.cream }}>Mark it done</button>
+            <button onClick={() => setAsking(false)} className="press px-4 py-2 rounded-full text-[14px] font-semibold"
+              style={{ color: C.gray }}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlayCard({ play, openByDefault, steps, onToggle }) {
   const [open, setOpen] = useState(Boolean(openByDefault));
   const [stalls, setStalls] = useState(false);
   const c = play.content || {};
@@ -199,6 +257,8 @@ function PlayCard({ play, openByDefault }) {
           )}
 
           <Concrete x={play.concrete} />
+
+          <DoneControl play={play} done={Boolean(steps[play.id])} onToggle={onToggle} />
 
           {c.done_when && (
             <div className="p-4 rounded-xl mt-4" style={{ backgroundColor: C.greenSoft }}>
@@ -304,10 +364,30 @@ function RailCard({ play }) {
 
 export default function PlanPage() {
   const [state, setState] = useState({ loading: true, saved: null });
+  const [steps, setSteps] = useState({});
+  const [ids, setIds] = useState(null);
+
+  /* Marking a step done is the one write on this page that matters, so it
+     does three things at once: store it locally (instant, works offline),
+     re-render, and report it.
+
+     The report puts the play id INSIDE the event name — `step_done:offer.define`
+     rather than a `play` field — because the Sheet behind this has fixed
+     columns and would silently drop an unknown field. `track.js` states that
+     rule at the top of the file; this is the first place it earns its keep.
+     The result is that the one number the whole direction rests on — how many
+     people finish step one — starts accumulating today, with no database and
+     no change to the Apps Script. */
+  const onToggle = (play, done, note) => {
+    markStep(play.id, done, note);
+    setSteps(readSteps());
+    if (done) track(ids, "step_done:" + play.id);
+  };
 
   useEffect(() => {
     const saved = loadSaved();
     setState({ loading: false, saved });
+    setSteps(readSteps());
 
     /* Until now the only way we knew this page had been opened was the
        click on the results screen. The plan email now links straight
@@ -320,8 +400,9 @@ export default function PlanPage() {
        device that has never seen their answers — which is the exact
        limit the email warns about, and the first hard evidence of how
        often the warning is not enough. */
-    const ids = session();
-    track(ids, saved && saved.plan && saved.plan.results ? "plan_view" : "plan_view_empty");
+    const s = session();
+    setIds(s);
+    track(s, saved && saved.plan && saved.plan.results ? "plan_view" : "plan_view_empty");
   }, []);
 
   if (state.loading) {
@@ -364,6 +445,13 @@ export default function PlanPage() {
      has no written spine and we borrowed the fast win — see router.js. */
   const w = plan.walkPath || plan.path;
 
+  /* Progress, computed rather than stored — the sequence can change (a
+     retake, a new play shipped) and a stored pointer would go stale and
+     start lying. `nextUp` is simply the first step not yet ticked. */
+  const ordered = plan.phases.flatMap((ph) => ph.plays);
+  const doneCount = ordered.filter((pl) => steps[pl.id]).length;
+  const nextUp = ordered.find((pl) => !steps[pl.id]) || null;
+
   return (
     <Shell>
       {/* ---- who this is for ---- */}
@@ -374,7 +462,9 @@ export default function PlanPage() {
         </h1>
         <p className="text-[17px] leading-relaxed" style={{ color: C.gray }}>
           {plan.stepCount > 0
-            ? `${plan.stepCount} steps, in the order they actually work. Each one says what done looks like, roughly how long it takes, and what to do when it doesn't go to plan.`
+            ? (doneCount > 0
+                ? `${doneCount} of ${plan.stepCount} done. Nothing here expires and nothing resets — pick it up whenever you next get a spare forty minutes.`
+                : `${plan.stepCount} steps, in the order they actually work. Each one says what done looks like, roughly how long it takes, and what to do when it doesn't go to plan.`)
             : "Here's what we have for this path — and, just as importantly, what we don't."}
           {!plan.borrowed && plan.second ? ` ${plan.second.name} was your other strong fit; you can switch to it any time from your results.` : ""}
         </p>
@@ -413,13 +503,39 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ---- start here ---- */}
-      {plan.firstPlay && (
+      {/* ---- where to pick up ----
+          This card used to be a fixed "Start here" pointing at step one
+          forever, which is only correct on someone's first visit. It now
+          points at the first step they have NOT finished, which is the whole
+          difference between a document and something worth reopening.
+
+          Note what it never says: nothing about days, gaps, streaks or
+          falling behind. Someone returning after three weeks gets the same
+          sentence as someone returning after an hour. */}
+      {nextUp && (
         <div className="p-6 rounded-2xl mb-8" style={{ backgroundColor: C.green }}>
-          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C7B27A" }}>Start here</p>
-          <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>{plan.firstPlay.name}</h2>
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C7B27A" }}>
+            {doneCount > 0 ? "Pick up here" : "Start here"}
+          </p>
+          <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>{nextUp.name}</h2>
           <p className="text-[16px] leading-relaxed" style={{ color: "#D6E2DA" }}>
-            {plan.firstPlay.move} Give it {plan.firstPlay.time_cost}. Everything after it gets easier once this exists.
+            {nextUp.move} Give it {nextUp.time_cost}.
+            {doneCount > 0 ? "" : " Everything after it gets easier once this exists."}
+          </p>
+        </div>
+      )}
+
+      {/* Everything finished. Rare, and worth marking properly rather than
+          letting the page just end. */}
+      {plan.stepCount > 0 && !nextUp && (
+        <div className="p-6 rounded-2xl mb-8" style={{ backgroundColor: C.green }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C7B27A" }}>All of it</p>
+          <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>
+            You finished every step we&apos;ve written.
+          </h2>
+          <p className="text-[16px] leading-relaxed" style={{ color: "#D6E2DA" }}>
+            Tell us what happened — what worked, what didn&apos;t, what you needed and couldn&apos;t find. At this point
+            you know things about this path that we don&apos;t.
           </p>
         </div>
       )}
@@ -436,7 +552,7 @@ export default function PlanPage() {
             </p>
           )}
           {ph.plays.map((pl) => (
-            <PlayCard key={pl.id} play={pl} openByDefault={pl.n === 1} />
+            <PlayCard key={pl.id} play={pl} openByDefault={pl.id === nextUp?.id} steps={steps} onToggle={onToggle} />
           ))}
         </section>
       ))}
