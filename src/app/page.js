@@ -2,6 +2,7 @@ import Link from "next/link";
 import Reveal from "./Reveal";
 import FeedbackWidget from "./FeedbackWidget";
 import MobileNav from "./MobileNav";
+import Arrival from "./Arrival";
 
 export default function Home() {
   // Crisp modern palette
@@ -21,6 +22,8 @@ export default function Home() {
   };
   return (
     <main className="min-h-screen font-sans" style={{backgroundColor: C.white, color: C.ink}}>
+      {/* Renders nothing. Supplies the funnel's denominator — see Arrival.js. */}
+      <Arrival page="home" />
 
       {/* Navigation */}
       <nav style={{backgroundColor: C.green}} className="relative px-8 py-4 flex items-center justify-between sticky top-0 z-50">

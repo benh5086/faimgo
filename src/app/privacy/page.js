@@ -101,9 +101,15 @@ export default function Privacy() {
           <b>On our side.</b> When you finish the assessment we receive your answers, the two paths
           we matched you to, that random id, a count of how many times you&apos;ve visited, and — if
           you entered it — your email address and your answer to &ldquo;what should your plan protect
-          you from?&rdquo; We also record which step of the assessment you reached, so we can see
-          where people give up. If you send feedback, we receive the message, the rating, the page
-          you sent it from and that same random id.
+          you from?&rdquo; We also record which pages you opened and which step of the assessment
+          you reached, so we can see where people give up. If you send feedback, we receive the
+          message, the rating, the page you sent it from and that same random id.
+        </P>
+        <P>
+          Worth being specific, since &ldquo;analytics&rdquo; usually hides more than it says:
+          there are no third-party analytics on this site, we do not record your IP address, and
+          nothing here follows you to any other website. What we keep is the random id above plus
+          a line saying which page it opened and when.
         </P>
         <P>
           <b>What you finish.</b> When you mark a step of your plan as done, we record that — which

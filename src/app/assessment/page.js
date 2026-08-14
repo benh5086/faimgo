@@ -343,8 +343,15 @@ export default function Assessment() {
   const [saved, setSaved] = useState(null);
 
   useEffect(() => {
-    setIds(session());
+    const s = session();
+    setIds(s);
     setSaved(loadSaved() || false);
+    /* Arriving at the assessment and arriving at question one are different
+       events, and the gap between them is the single most actionable number
+       on this page. Until now only the second one existed, so anyone who
+       opened this page and left — including everyone who reached it from a
+       shared link rather than the home page — was invisible. */
+    track(s, "assessment_view");
   }, []);
 
   /* Autosave every answer. Only once they've actually started, and never
@@ -441,7 +448,7 @@ export default function Assessment() {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v10", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v11", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
       // We say "sent" only when it was actually sent. If mail is down we say
