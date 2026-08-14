@@ -35,14 +35,27 @@
   don't get the memory.
 
   SCHEMA CHANGES
-  Bump SCHEMA and add a migration branch in read(). Today an unknown schema
-  is dropped, which is correct while nothing valuable is stored; once real
-  progress lives here, migrate instead of dropping.
+  Bump SCHEMA and add a branch to migrate(). Read the comment above that
+  function before touching it: dropping an unrecognised record used to be
+  correct and is now the most destructive thing this file could do.
 */
 
 const KEY = "faimgo.v1";
-const SCHEMA = 1;
+const SCHEMA = 2;
 const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes away = a new sitting
+const MAX_HISTORY = 20;                // archived completion sets kept on retake
+
+/*
+  What a finished step can have produced. Deliberately four values and no
+  free text, because this is the field that eventually has to be counted.
+
+  The order is the ladder people actually climb, and "not_yet" is first on
+  purpose: it is the honest majority answer, and a question whose easiest
+  answer is a failure is a question people close instead of answering.
+  Nothing here is ever phrased as falling short — a step that produced
+  nothing yet is a step that was still done, and the card says so.
+*/
+export const OUTCOMES = ["not_yet", "reply", "customer", "money"];
 
 /* ---------- low level ---------- */
 
@@ -58,6 +71,52 @@ function available() {
   }
 }
 
+/*
+  MIGRATION — read this before changing SCHEMA.
+
+  This function used to be one line: `if (obj.schema !== SCHEMA) return null`.
+  That was correct in July, when the only thing in storage was a half-finished
+  assessment nobody would miss. It stopped being correct on Aug 12, when the
+  completion record moved in — because from that day the line meant "the next
+  time anyone adds a field, silently delete every user's record of what they
+  have finished." The file's own comment predicted exactly this and the code
+  was never changed to match it. It is changed now.
+
+  Three cases, and the third is the one people get wrong:
+
+  1. Same schema — use it.
+  2. Older schema — walk it forward one step at a time. Each branch must be
+     additive and must never throw; a migration that can fail is a delete
+     with extra steps.
+  3. NEWER schema than this build knows — keep it and use it anyway. This
+     happens when someone has an old cached bundle open in one tab while a
+     new deployment has already written newer data. We only ever read fields
+     we know about, so unknown fields are harmless, and the version number is
+     deliberately NOT renumbered downward — the newer build must still
+     recognise its own data when the tab is refreshed.
+
+  The rule underneath all three: this function may return null when there is
+  genuinely nothing stored. It may never return null because it did not
+  recognise something.
+*/
+function migrate(obj) {
+  let o = obj;
+
+  /* v1 → v2: `steps` and `history` become first-class. v1 records written
+     before Aug 12 have no `steps` key at all; ones written after have it but
+     have never had `history`. Both are handled by filling in the defaults —
+     nothing is read from the old shape that isn't kept. */
+  if (o.schema === 1) {
+    o = Object.assign({}, o, {
+      schema: 2,
+      steps: o.steps && typeof o.steps === "object" ? o.steps : {},
+      history: Array.isArray(o.history) ? o.history : [],
+    });
+  }
+
+  return o;
+}
+
 function read() {
   if (!available()) return null;
   try {
@@ -65,8 +124,10 @@ function read() {
     if (!raw) return null;
     const obj = JSON.parse(raw);
     if (!obj || typeof obj !== "object") return null;
-    if (obj.schema !== SCHEMA) return null; // future: migrate here, don't drop
-    return obj;
+    if (typeof obj.schema !== "number") return null; // not ours, or corrupt
+    if (obj.schema === SCHEMA) return obj;
+    if (obj.schema > SCHEMA) return obj;            // newer build wrote it — leave it alone
+    return migrate(obj);
   } catch (e) {
     return null;
   }
@@ -99,6 +160,8 @@ function blank(now) {
     visits: 0,
     progress: null, // { answers, step, protectFrom, email, ts }
     plan: null,     // { answers, results, email, protectFrom, otherIdea, emailed, ts }
+    steps: {},      // { [playId]: { done, at, note, outcome, outcomeAt } }
+    history: [],    // [{ at, steps }] — completions from plans that were replaced
   };
 }
 
@@ -198,16 +261,48 @@ export function savePlan({ answers, results, email, protectFrom, otherIdea, emai
   Retake. Wipes the answers and the plan but KEEPS fid, visit count and
   createdAt — the person didn't stop being the same person, they just wanted
   a different answer. Losing the id here would quietly poison the numbers.
+  As of Aug 12 it also keeps every completion, moved aside rather than
+  destroyed — see the long comment inside.
 */
 export function clearWork() {
   const s = read();
   if (!s) return false;
   s.progress = null;
   s.plan = null;
-  /* Completions go too. They belong to the plan that was replaced — carrying
-     them onto a different path would claim credit for steps that are not in
-     the new walkthrough. Note this is the ONLY place steps are cleared, and
-     it is a deliberate act by the person, never something time does to them. */
+
+  /*
+    Completions are ARCHIVED here, not deleted — and the difference is the
+    whole business.
+
+    The original reasoning for clearing them was sound as far as it went:
+    they belong to the plan that was replaced, and carrying them onto a
+    different path would claim credit for steps that are not in the new
+    walkthrough. That argument justifies removing them from the CURRENT plan.
+    It does not justify destroying them, and the code did both.
+
+    Which made this the single most dangerous line in the product. The
+    direction this whole thing now rests on says progress never resets; the
+    completion record is the one asset nothing else can substitute for; and
+    yet a person who retook the assessment out of curiosity — which is the
+    normal, encouraged thing to do — silently erased it. Ben did exactly that
+    to his own record, repeatedly, while testing.
+
+    So: the current plan gets a clean slate, and the record survives beside
+    it. Nothing here is rendered today. It exists because the alternative is
+    data that cannot be recovered at any price later, and because "we deleted
+    the proof that you finished things" is not a sentence this product can
+    ever be in a position to say.
+
+    Capped at MAX_HISTORY because localStorage has a hard quota and a write
+    that throws would take the whole record with it. The cap drops the OLDEST
+    entries, never the newest.
+  */
+  const finished = s.steps && typeof s.steps === "object" ? s.steps : {};
+  if (Object.keys(finished).length > 0) {
+    if (!Array.isArray(s.history)) s.history = [];
+    s.history.push({ at: Date.now(), steps: finished });
+    if (s.history.length > MAX_HISTORY) s.history = s.history.slice(-MAX_HISTORY);
+  }
   s.steps = {};
   return write(s);
 }
@@ -245,16 +340,99 @@ export function markStep(playId, done, note) {
       at: existing.at || Date.now(),        // first completion time, not the last edit
       note: note !== undefined ? note : (existing.note || ""),
     };
+    /* Re-marking a step that was already done must not silently drop a
+       reported outcome. Only copied when it exists, so a fresh completion
+       stays free of empty keys. */
+    if (existing.outcome) {
+      s.steps[playId].outcome = existing.outcome;
+      s.steps[playId].outcomeAt = existing.outcomeAt || Date.now();
+    }
   } else {
     delete s.steps[playId];
   }
   return write(s);
 }
 
+/*
+  Did the step produce anything? — the other half of the completion record.
+
+  `markStep` answers "was it done". This answers "did it work", and they are
+  genuinely different questions: the walkthrough is full of steps a person can
+  complete perfectly and still hear nothing back for a fortnight. Recording
+  only the first one tells us people are moving and never tells us whether the
+  advice is any good.
+
+  Three rules this shape enforces:
+
+  1. **It is asked AFTER the step is already marked done, never during.**
+     Friction at the moment of completion is what kills completion. By the
+     time this is asked the record is already safely stored, so the worst
+     case of someone ignoring it is that we learn less — never that we lose
+     the completion itself.
+  2. **It is voluntary, and it is re-answerable.** "Not yet" on Tuesday and
+     "money" on Friday is the single most valuable transition this product
+     can observe, so the answer is deliberately not frozen. `outcomeAt` moves
+     with it; `at` — when the step was finished — never does.
+  3. **Only on a step that is done.** An outcome without a completion is a
+     claim, and this file only stores records.
+
+  Returns false if there is nothing to attach to, so the caller can tell the
+  difference between "stored" and "quietly ignored".
+*/
+export function markOutcome(playId, outcome) {
+  if (!playId) return false;
+  if (outcome !== null && OUTCOMES.indexOf(outcome) === -1) return false;
+  const s = read();
+  if (!s) return false;
+  if (!s.steps || typeof s.steps !== "object") return false;
+  const existing = s.steps[playId];
+  if (!existing || !existing.done) return false;
+  if (outcome === null) {
+    delete existing.outcome;
+    delete existing.outcomeAt;
+  } else {
+    existing.outcome = outcome;
+    existing.outcomeAt = Date.now();
+  }
+  return write(s);
+}
+
+/*
+  Has this person ever reported money, on any step, ever — including on plans
+  they have since replaced?
+
+  This exists so the `first_dollar` event can be fired exactly once per person
+  instead of once per step. It is the number the whole direction points at, so
+  it has to mean what it says: five steps that each produced money is one
+  person's first dollar, not five.
+
+  The archive is searched too, deliberately. Someone who earned on a path they
+  later abandoned still earned.
+*/
+export function hasEverEarned() {
+  const s = read();
+  if (!s) return false;
+  const anyMoney = (set) =>
+    Boolean(set) && typeof set === "object" &&
+    Object.keys(set).some((k) => set[k] && set[k].outcome === "money");
+  if (anyMoney(s.steps)) return true;
+  return Array.isArray(s.history) && s.history.some((h) => h && anyMoney(h.steps));
+}
+
 /* What has been finished. Returns {} rather than null so callers never guard. */
 export function readSteps() {
   const s = read();
   return (s && s.steps && typeof s.steps === "object") ? s.steps : {};
+}
+
+/*
+  Completions carried over from plans that were replaced. Nothing renders this
+  yet — it exists so that retaking the assessment stops being destructive (see
+  clearWork). Returns [] rather than null so callers never guard.
+*/
+export function readHistory() {
+  const s = read();
+  return (s && Array.isArray(s.history)) ? s.history : [];
 }
 
 /* Full reset, id included. For a "forget me" control — not wired to any UI yet. */

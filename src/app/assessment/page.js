@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
 import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
-import { session, loadSaved, saveProgress, savePlan, clearWork } from "../../lib/store.js";
+import { session, loadSaved, saveProgress, savePlan, clearWork, readSteps } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 
 /* ============================================================
@@ -441,7 +441,7 @@ export default function Assessment() {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v9", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v10", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
       // We say "sent" only when it was actually sent. If mail is down we say
@@ -531,6 +531,10 @@ export default function Assessment() {
      mistake in a new place. */
   function WelcomeBack() {
     if (!saved) return null;
+    /* Safe to read storage here: this component only ever renders once the
+       client has loaded `saved`, so it never runs during server rendering
+       and cannot cause a hydration mismatch. */
+    const doneCount = Object.keys(readSteps()).length;
     const plan = saved.plan;
     const prog = saved.progress;
     if (!plan && !prog) return null;
@@ -569,6 +573,18 @@ export default function Assessment() {
               Things changed — start over
             </button>
           </div>
+          {/* Only shown to someone who has actually finished something, and only
+              because it is now true. Starting over used to delete the record of
+              what they had done, which made the honest version of this sentence
+              impossible to write — so the button quietly punished curiosity.
+              Saying it out loud is the point: nobody should have to weigh
+              "should I explore a different path" against "will I lose my
+              progress", because that is not a trade this product wants to win. */}
+          {doneCount > 0 && (
+            <p className="text-[14px] leading-relaxed mt-4" style={{ color: C.gray }}>
+              {`Starting over won't erase the ${doneCount === 1 ? "step" : `${doneCount} steps`} you've already finished. Those stay on your record either way.`}
+            </p>
+          )}
         </div>
       );
     }

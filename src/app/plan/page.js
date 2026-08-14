@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
-import { loadSaved, session, markStep, readSteps } from "../../lib/store.js";
+import { loadSaved, session, markStep, markOutcome, readSteps, hasEverEarned, OUTCOMES } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
 
@@ -165,17 +165,88 @@ function Concrete({ x }) {
      people stop trusting, and then stop using.
    - The note is optional and stays optional. Requiring it would trade the
      thing we need most (completions) for the thing we merely want (texture). */
-function DoneControl({ play, done, onToggle }) {
+/*
+  The outcome question. Deliberately NOT part of marking a step done.
+
+  Completion and result are two different questions asked at two different
+  times: you finish sending ten messages on a Tuesday and find out whether it
+  worked the following week. Asking both at once would put a question with no
+  honest answer in front of the one action we most need people to take.
+
+  So this only ever appears on a card that is already marked done, the record
+  is already safe before it is shown, and every route out of it is a
+  non-answer. "Not yet" is listed first because it is the true majority
+  answer, and a question whose commonest answer feels like an admission is a
+  question people skip.
+*/
+const OUTCOME_LABEL = {
+  not_yet: "Not yet",
+  reply: "A reply or a lead",
+  customer: "A customer",
+  money: "Money",
+};
+const OUTCOME_SAID = {
+  not_yet: "Nothing back yet — that's normal, and the step still counts.",
+  reply: "Something came back. That's the hard part starting to move.",
+  customer: "You got a customer out of this one.",
+  money: "This one made money. That's the whole point of the thing.",
+};
+
+function OutcomeControl({ play, step, onOutcome }) {
+  const [open, setOpen] = useState(false);
+  const chosen = step && step.outcome;
+
+  if (chosen) {
+    return (
+      <div className="mt-2">
+        <p className="text-[14px] leading-relaxed" style={{ color: C.green }}>{OUTCOME_SAID[chosen]}</p>
+        <button onClick={() => onOutcome(play, null)} className="press text-[13px] font-semibold underline underline-offset-2 mt-1" style={{ color: C.gray }}>
+          Change that
+        </button>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="press text-[14px] font-semibold underline underline-offset-2 mt-2" style={{ color: C.gold }}>
+        Did anything come of it yet?
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3">
+      <p className="text-[14px] leading-relaxed mb-2" style={{ color: C.gray }}>
+        {"Only if you feel like saying. You can change it later — most of these turn into something weeks after the step itself."}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {OUTCOMES.map((o) => (
+          <button key={o} onClick={() => onOutcome(play, o)}
+            className="press px-4 py-2 rounded-full text-[14px] font-semibold"
+            style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}`, color: C.ink }}>
+            {OUTCOME_LABEL[o]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DoneControl({ play, done, step, onToggle, onOutcome }) {
   const [note, setNote] = useState("");
   const [asking, setAsking] = useState(false);
 
   if (done) {
     return (
-      <div className="mt-4 p-4 rounded-xl flex items-center justify-between gap-4" style={{ backgroundColor: C.greenSoft }}>
-        <p className="text-[15px] font-semibold" style={{ color: C.green }}>Done. That&apos;s one that actually happened.</p>
-        <button onClick={() => onToggle(play, false)} className="press text-[13px] font-semibold underline underline-offset-2" style={{ color: C.gray }}>
-          Undo
-        </button>
+      <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: C.greenSoft }}>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-[15px] font-semibold" style={{ color: C.green }}>Done. That&apos;s one that actually happened.</p>
+          <button onClick={() => onToggle(play, false)} className="press text-[13px] font-semibold underline underline-offset-2 flex-shrink-0" style={{ color: C.gray }}>
+            Undo
+          </button>
+        </div>
+        <OutcomeControl play={play} step={step} onOutcome={onOutcome} />
       </div>
     );
   }
@@ -208,7 +279,7 @@ function DoneControl({ play, done, onToggle }) {
   );
 }
 
-function PlayCard({ play, openByDefault, steps, onToggle }) {
+function PlayCard({ play, openByDefault, steps, onToggle, onOutcome }) {
   const [open, setOpen] = useState(Boolean(openByDefault));
   const [stalls, setStalls] = useState(false);
   const c = play.content || {};
@@ -258,7 +329,7 @@ function PlayCard({ play, openByDefault, steps, onToggle }) {
 
           <Concrete x={play.concrete} />
 
-          <DoneControl play={play} done={Boolean(steps[play.id])} onToggle={onToggle} />
+          <DoneControl play={play} done={Boolean(steps[play.id])} step={steps[play.id]} onToggle={onToggle} onOutcome={onOutcome} />
 
           {c.done_when && (
             <div className="p-4 rounded-xl mt-4" style={{ backgroundColor: C.greenSoft }}>
@@ -382,6 +453,28 @@ export default function PlanPage() {
     markStep(play.id, done, note);
     setSteps(readSteps());
     if (done) track(ids, "step_done:" + play.id);
+  };
+
+  /* The second half of the same record: not "did you do it" but "did it do
+     anything". Two events fire, and the reason for two rather than one is
+     worth stating because it looks like duplication:
+
+     `step_outcome:<value>:<play id>` is the fine-grained row — it is how we
+     will eventually answer "which steps actually work", which is the only
+     honest basis for rewriting the library.
+
+     `first_dollar` is fired ONCE per person, ever, and only the first time
+     they report money. It is the number the entire direction points at, so
+     it has to mean one person reaching a first dollar — not one person
+     reporting money on five different steps. `hasEverEarned()` is checked
+     BEFORE the write, because after the write it would always be true. */
+  const onOutcome = (play, outcome) => {
+    const firstEver = outcome === "money" && !hasEverEarned();
+    const stored = markOutcome(play.id, outcome);
+    setSteps(readSteps());
+    if (!stored || !outcome) return;
+    track(ids, "step_outcome:" + outcome + ":" + play.id);
+    if (firstEver) track(ids, "first_dollar");
   };
 
   useEffect(() => {
@@ -552,7 +645,7 @@ export default function PlanPage() {
             </p>
           )}
           {ph.plays.map((pl) => (
-            <PlayCard key={pl.id} play={pl} openByDefault={pl.id === nextUp?.id} steps={steps} onToggle={onToggle} />
+            <PlayCard key={pl.id} play={pl} openByDefault={pl.id === nextUp?.id} steps={steps} onToggle={onToggle} onOutcome={onOutcome} />
           ))}
         </section>
       ))}
