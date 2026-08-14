@@ -14,10 +14,30 @@ import Link from "next/link";
   rather than reaching for the usual reassuring phrasing.
 
   WHAT THIS IS NOT: legal advice, and not a lawyer's document. It states
-  practice, not promises Ben has not agreed to make. It needs Ben's review
-  before it counts as the company's word, and it needs revisiting the moment
-  any of these three things change: a database exists, accounts exist, or
-  anything is shared with a party not named here.
+  practice, not promises Ben has not agreed to make. It needs revisiting the
+  moment any of these three things change: a database exists, accounts exist,
+  or anything is shared with a party not named here.
+
+  REVISED Aug 14, 2026, and the reason is the lesson worth keeping.
+  Three things had gone stale in seven days:
+
+  1. This page told people that "start the whole thing over" clears what is
+     on their device. The v11 batch changed `clearWork()` to ARCHIVE
+     completions instead of deleting them — so the page was describing a
+     behaviour the product no longer had, and describing it in the one
+     direction that matters: it promised a deletion that no longer happens.
+  2. The completion record itself (which steps are done, and what came of
+     them) was not disclosed at all. It did not exist when this page was
+     written on Aug 7 and shipped on Aug 12.
+  3. The line about the random id "not being linked to a name" was true and
+     incomplete — we store no names, but the id sits in the same Sheet row
+     as the email address. Now said outright.
+
+  STANDING RULE THIS PRODUCED: when behaviour changes, check whether any
+  public document is still speaking for the old behaviour. A privacy page is
+  the highest-consequence place for that to happen, because an inaccurate
+  policy is worse than a plain one — the exposure comes from saying something
+  untrue, not from saying something simple.
 
   Deliberately no "Terms" page shipped alongside. Terms is a set of legal
   promises, not a description of behaviour; drafting one is not something to
@@ -69,11 +89,13 @@ export default function Privacy() {
 
         <H>What we actually store</H>
         <P>
-          <b>On your device.</b> Your answers, the plan we built, and a random id are saved in your
-          browser&apos;s local storage so the page can remember where you were. The random id is a
-          string of characters — it isn&apos;t your name and it isn&apos;t linked to one. It stays
-          in that browser: clearing your browser data deletes it, and it does not follow you to
-          another device.
+          <b>On your device.</b> Your answers, the plan we built, the steps you&apos;ve marked as
+          done, and a random id are saved in your browser&apos;s local storage so the page can
+          remember where you were. The random id is a string of characters and holds nothing about
+          who you are — but to be exact: once you finish the assessment, that id sits in the same
+          row as the email address you gave us, so treat it as connected to you rather than
+          anonymous. It stays in that browser: clearing your browser data deletes it, and it does
+          not follow you to another device.
         </P>
         <P>
           <b>On our side.</b> When you finish the assessment we receive your answers, the two paths
@@ -82,6 +104,14 @@ export default function Privacy() {
           you from?&rdquo; We also record which step of the assessment you reached, so we can see
           where people give up. If you send feedback, we receive the message, the rating, the page
           you sent it from and that same random id.
+        </P>
+        <P>
+          <b>What you finish.</b> When you mark a step of your plan as done, we record that — which
+          step, and when. If you answer the optional question about whether anything came of it
+          yet, we record that answer too. Both are things you choose to tell us: you can untick a
+          step, change your answer, or remove it, at any time. We keep this because knowing which
+          steps actually work for real people is the only way the plans get better — and, later,
+          it&apos;s what a member can point to as proof of what they&apos;ve actually done.
         </P>
 
         <H>Who else sees it</H>
@@ -113,8 +143,14 @@ export default function Privacy() {
           going to pretend otherwise. In the meantime, use the <b>Contact</b> link at the bottom of
           the home page, or reply to the plan email, and say you want your record deleted. We&apos;ll
           remove it from the spreadsheet and confirm. To clear what&apos;s on your own device, clear
-          your browser data for this site, or use &ldquo;start the whole thing over&rdquo; on the
-          results page.
+          your browser data for this site — that removes everything, the finished steps included.
+        </P>
+        <P>
+          One thing worth being straight about: <b>&ldquo;start over&rdquo; is not a delete.</b> It
+          clears your answers and your plan so you can take the assessment again, but it
+          deliberately keeps the steps you already finished, because having those quietly disappear
+          is the last thing most people would want. If you want them gone, clear your browser data
+          or ask us.
         </P>
 
         <H>Children</H>
@@ -134,7 +170,7 @@ export default function Privacy() {
           </p>
         </div>
 
-        <p className="text-[14px] mt-8" style={{ color: C.gray }}>Last updated: August 7, 2026.</p>
+        <p className="text-[14px] mt-8" style={{ color: C.gray }}>Last updated: August 14, 2026.</p>
       </div>
     </main>
   );
