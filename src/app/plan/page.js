@@ -494,7 +494,23 @@ export default function PlanPage() {
   };
 
   useEffect(() => {
-    const saved = loadSaved();
+    /* Which specific plan this link means, if any. Read directly off
+       window.location rather than next/navigation's useSearchParams() —
+       that hook requires wrapping the page in a <Suspense> boundary in the
+       App Router, which this page doesn't have and doesn't otherwise need.
+       Client-only feature-detected reads like this already exist elsewhere
+       in the codebase (see captureAttribution() in store.js). No id in the
+       URL — every link written before this batch — falls back inside
+       loadSaved() to whatever plan is most recently active on this device,
+       exactly as it always has. */
+    let urlId = null;
+    try {
+      if (typeof window !== "undefined") {
+        urlId = new URLSearchParams(window.location.search).get("id") || null;
+      }
+    } catch (e) { /* URL reads must never break the page */ }
+
+    const saved = loadSaved(urlId || undefined);
     setState({ loading: false, saved });
     setSteps(readSteps());
 

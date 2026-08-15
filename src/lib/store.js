@@ -41,9 +41,10 @@
 */
 
 const KEY = "faimgo.v1";
-const SCHEMA = 2;
+const SCHEMA = 3;
 const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes away = a new sitting
 const MAX_HISTORY = 20;                // archived completion sets kept on retake
+const MAX_PLANS = 5;                   // saved plans kept per device before the oldest is dropped
 
 /*
   What a finished step can have produced. Deliberately four values and no
@@ -114,6 +115,25 @@ function migrate(obj) {
     });
   }
 
+  /* v2 → v3: the single `plan` slot becomes a `plans` array, addressable by
+     id, so that opening one saved walkthrough can no longer show a different
+     one that overwrote it. A v2 record has at most one plan, so this never
+     loses anything — it just gives that one plan an id and a home in the
+     array, and makes it the active one. Records with no plan at all just get
+     an empty array. */
+  if (o.schema === 2) {
+    const legacyPlan = o.plan && typeof o.plan === "object" ? o.plan : null;
+    const plans = legacyPlan
+      ? [{ ...legacyPlan, id: uid(), fingerprint: answersFingerprint(legacyPlan.answers) }]
+      : [];
+    o = Object.assign({}, o, {
+      schema: 3,
+      plans,
+      activePlanId: plans.length ? plans[0].id : null,
+    });
+    delete o.plan;
+  }
+
   return o;
 }
 
@@ -150,6 +170,29 @@ function uid() {
   return "f" + Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+/*
+  A stable fingerprint of an answers object — same answers always produce the
+  same string, regardless of key order or the order values were set in an
+  array-valued answer. This is what tells a genuine resubmit (retry after a
+  blocked send, reopening the gate without changing anything) apart from a
+  person who answered differently on purpose: the former should update the
+  SAME saved plan in place, the latter must get its own.
+*/
+export function answersFingerprint(answers) {
+  const a = answers && typeof answers === "object" ? answers : {};
+  const keys = Object.keys(a).sort();
+  const norm = keys.map((k) => {
+    const v = a[k];
+    const nv = Array.isArray(v) ? [...v].sort() : v;
+    return [k, nv];
+  });
+  try {
+    return JSON.stringify(norm);
+  } catch (e) {
+    return "";
+  }
+}
+
 function blank(now) {
   return {
     schema: SCHEMA,
@@ -159,7 +202,8 @@ function blank(now) {
     lastSeen: 0,
     visits: 0,
     progress: null, // { answers, step, protectFrom, email, ts }
-    plan: null,     // { answers, results, email, protectFrom, otherIdea, emailed, ts }
+    plans: [],      // [{ id, fingerprint, answers, results, email, protectFrom, otherIdea, emailed, ts }]
+    activePlanId: null, // id of the plan most recently viewed/submitted on this device
     steps: {},      // { [playId]: { done, at, note, outcome, outcomeAt } }
     history: [],    // [{ at, steps }] — completions from plans that were replaced
     /* src/ref deliberately absent here — see captureAttribution() below.
@@ -245,12 +289,31 @@ export function whoAmI() {
   return { fid: s.fid || null, sid: s.sid || null, visits: s.visits || 0 };
 }
 
-export function loadSaved() {
+/*
+  What we know for a specific saved plan, or — with no id — the most recently
+  active one. `id` is how a specific "Open my walkthrough" link (from the
+  results page, or from an emailed plan) says which submission it means,
+  instead of always landing on whatever was submitted most recently on this
+  device. Links written before this existed carry no id at all, so the
+  fallback to "most recent" is deliberate and permanent, not a bug.
+*/
+export function loadSaved(id) {
   const s = read();
   if (!s) return null;
-  const has = Boolean(s.plan) || Boolean(s.progress);
+  const plans = Array.isArray(s.plans) ? s.plans : [];
+  let plan = null;
+  if (id) {
+    plan = plans.find((p) => p && p.id === id) || null;
+  }
+  if (!plan && s.activePlanId) {
+    plan = plans.find((p) => p && p.id === s.activePlanId) || null;
+  }
+  if (!plan && plans.length) {
+    plan = plans[plans.length - 1];
+  }
+  const has = Boolean(plan) || Boolean(s.progress);
   if (!has) return null;
-  return { plan: s.plan || null, progress: s.progress || null, visits: s.visits || 0 };
+  return { plan: plan || null, progress: s.progress || null, visits: s.visits || 0 };
 }
 
 /*
@@ -276,11 +339,29 @@ export function saveProgress({ answers, step, protectFrom, email }) {
   The plan they were actually shown. Saved at the moment of submit so a
   returning person lands on their plan instead of an empty intro screen.
   Progress is cleared at the same time — the plan supersedes it.
+
+  Returns the plan's id on success, false on failure — the caller needs the
+  id to build a link that points at THIS plan specifically, not whatever is
+  active on the device by the time the link is opened.
+
+  Resubmitting the exact same answers (a retry after a blocked send, or
+  reopening the gate without changing anything) updates the matching plan in
+  place instead of creating a duplicate — matched by answersFingerprint(), not
+  by id, since the caller may not have an id yet on the very first save.
+  Genuinely different answers always get a new id. The list is capped at
+  MAX_PLANS, oldest dropped first; the plan just written is always most
+  recent.
 */
 export function savePlan({ answers, results, email, protectFrom, otherIdea, emailed }) {
   const s = read();
   if (!s) return false;
-  s.plan = {
+  const plans = Array.isArray(s.plans) ? s.plans : [];
+  const fingerprint = answersFingerprint(answers);
+  const existing = plans.find((p) => p && p.fingerprint === fingerprint);
+  const id = (existing && existing.id) || uid();
+  const entry = {
+    id,
+    fingerprint,
     answers: answers || {},
     results: results || null,
     email: email || "",
@@ -289,22 +370,32 @@ export function savePlan({ answers, results, email, protectFrom, otherIdea, emai
     emailed: emailed || null,
     ts: Date.now(),
   };
+  const rest = plans.filter((p) => p && p.id !== id);
+  rest.push(entry);
+  s.plans = rest.length > MAX_PLANS ? rest.slice(-MAX_PLANS) : rest;
+  s.activePlanId = id;
   s.progress = null;
-  return write(s);
+  return write(s) ? id : false;
 }
 
 /*
-  Retake. Wipes the answers and the plan but KEEPS fid, visit count and
+  Retake. Wipes the in-progress answers but KEEPS fid, visit count and
   createdAt — the person didn't stop being the same person, they just wanted
   a different answer. Losing the id here would quietly poison the numbers.
   As of Aug 12 it also keeps every completion, moved aside rather than
   destroyed — see the long comment inside.
+
+  As of this batch it also KEEPS every saved plan (s.plans / activePlanId
+  untouched). Starting over is no longer destructive to a plan someone
+  already has a link to, in email or on the results page — it used to
+  silently erase that single stored slot, which was the same overwrite bug
+  this batch fixes, just reached from the "start over" button instead of a
+  second submit.
 */
 export function clearWork() {
   const s = read();
   if (!s) return false;
   s.progress = null;
-  s.plan = null;
 
   /*
     Completions are ARCHIVED here, not deleted — and the difference is the

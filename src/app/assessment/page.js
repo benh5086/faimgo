@@ -343,6 +343,10 @@ export default function Assessment() {
   const [retrying, setRetrying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [preEdit, setPreEdit] = useState(null); // answersKey snapshot taken when editing began
+  // id of the plan currently on screen — carried through to postLead() and the
+  // "Open my walkthrough" link so it points at THIS submission specifically,
+  // not whatever is most recently active on this device (the overwrite bug).
+  const [planId, setPlanId] = useState(null);
 
   /* ---------- MEMORY ----------
      Both of these are read after mount, never during render: `saved` and the
@@ -412,7 +416,7 @@ export default function Assessment() {
   const restart = () => {
     clearWork();
     setA({}); setStep(-1); setEmail(""); setProtectFrom(null); setEmailed(null);
-    setEditing(false); setPreEdit(null);
+    setEditing(false); setPreEdit(null); setPlanId(null);
     setSaved(false);
     track(ids, "restart");
   };
@@ -431,6 +435,7 @@ export default function Assessment() {
     setEmail(p.email || "");
     setProtectFrom(p.protectFrom ?? null);
     setEmailed(p.emailed || null);
+    setPlanId(p.id || null);
     setStep(stepsFor(ans).length - 1);
     setSaved(false);
     track(ids, "plan_reopened");
@@ -455,12 +460,12 @@ export default function Assessment() {
      the results screen. It returns "sent" | "failed" and never throws: the
      plan is already on screen and already saved locally, so a mail problem is
      ours to carry, never something they see instead of their results. */
-  async function postLead(results) {
+  async function postLead(results, forPlanId) {
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, src: ids.src || undefined, ref: ids.ref || undefined, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v12", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, src: ids.src || undefined, ref: ids.ref || undefined, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, planId: forPlanId || undefined, version: "v13", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
       // We say "sent" only when it was actually sent. If mail is down we say
@@ -477,10 +482,15 @@ export default function Assessment() {
     setEmailErr("");
     setSubmitting(true);
     const results = computeResults(A);
-    const state = await postLead(results);
+    // Save FIRST so we have an id to put in the email link and to tag the lead
+    // with — otherwise the link mailed out can only ever point at "whatever is
+    // most recent on this device", which is the overwrite bug this fixes.
+    const id = savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: null });
+    setPlanId(id || null);
+    const state = await postLead(results, id || undefined);
     setEmailed(state);
-    // Save it either way. The send failing is exactly when local memory earns
-    // its keep — the plan is still theirs and it should survive a refresh.
+    // Save again with the real outcome. Same answers → same fingerprint → this
+    // updates the entry just written above in place rather than duplicating it.
     savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
     setSubmitting(false);
     // Walking all the way through the gate is itself a valid way to finish an
@@ -499,9 +509,10 @@ export default function Assessment() {
     if (retrying) return;
     setRetrying(true);
     const results = computeResults(A);
-    const state = await postLead(results);
+    const state = await postLead(results, planId || undefined);
     setEmailed(state);
-    savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
+    const id = savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
+    setPlanId(id || null);
     setRetrying(false);
     track(ids, state === "sent" ? "retry_sent" : "retry_failed");
   }
@@ -532,7 +543,8 @@ export default function Assessment() {
     const results = computeResults(A);
     const mail = changed && emailed === "sent" ? "stale" : emailed;
     setEmailed(mail);
-    savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: mail });
+    const id = savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: mail });
+    setPlanId(id || null);
     setEditing(false);
     setPreEdit(null);
     setStep(stepsFor(A).length - 1);
@@ -895,7 +907,7 @@ export default function Assessment() {
         <div className="p-7 rounded-2xl text-center" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
           <h3 className="font-display text-[22px]" style={{ color: C.green }}>This is the map. Here are the directions.</h3>
           <p className="text-sm leading-relaxed my-3" style={{ color: C.ink }}>{tone}{" "}Your walkthrough is ready — the same path, broken into numbered steps with what to do, what to say, and how to tell when a step is done.</p>
-          <Link href="/plan" onClick={() => track(ids, "plan_opened")}
+          <Link href={planId ? `/plan?id=${encodeURIComponent(planId)}` : "/plan"} onClick={() => track(ids, "plan_opened")}
             className="inline-block px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90"
             style={{ backgroundColor: C.green, color: C.cream }}>
             Open my walkthrough →

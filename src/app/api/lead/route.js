@@ -207,17 +207,21 @@ async function alertMailFailure({ status, email, sid, fid }) {
   This function must never throw — a mail failure is our problem,
   not something the person should ever see instead of their results.
 */
-async function sendPlan({ email, answers, results, otherIdea, protectFrom }) {
+async function sendPlan({ email, answers, results, otherIdea, protectFrom, planId }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return "skipped:no-api-key";
   if (!email) return "skipped:no-address";
 
   const site = process.env.SITE_URL || "https://faimgo.com";
+  // planId, when present, makes the link point at THIS submission specifically —
+  // without it, /plan falls back to whatever is most recently active on the
+  // device that opens the link, which is the single-slot overwrite this batch fixes.
+  const planUrl = site + "/plan" + (planId ? "?id=" + encodeURIComponent(planId) : "");
   let mail;
   try {
     mail = renderPlanEmail({
       answers, results, otherIdea, protectFrom,
-      planUrl: site + "/plan",
+      planUrl,
       editUrl: site + "/assessment",
     });
   } catch (e) {
@@ -270,8 +274,8 @@ export async function POST(request) {
     }
 
     // default: treat as lead
-    const { sid, fid, visits, email, answers, results, otherIdea, protectFrom, version, ts } = body || {};
-    console.log("[FAIMGO LEAD]", JSON.stringify({ sid, fid, visits, email, version, ts, otherIdea, protectFrom, results, answers }));
+    const { sid, fid, visits, email, answers, results, otherIdea, protectFrom, planId, version, ts } = body || {};
+    console.log("[FAIMGO LEAD]", JSON.stringify({ sid, fid, visits, email, version, ts, otherIdea, protectFrom, results, answers, planId }));
 
     const now = Date.now();
     const ip = (request.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
@@ -287,7 +291,7 @@ export async function POST(request) {
     }
 
     const [mail] = await Promise.all([
-      sendPlan({ email, answers, results, otherIdea, protectFrom }),
+      sendPlan({ email, answers, results, otherIdea, protectFrom, planId }),
       forward(body),
     ]);
     console.log("[FAIMGO MAIL]", JSON.stringify({ sid, fid, email, status: mail }));
