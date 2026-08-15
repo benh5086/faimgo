@@ -1,7 +1,7 @@
 /*
   Faimgo feedback endpoint.
 
-  Accepts: { rating?, message?, email?, context, page, ts }
+  Accepts: { rating?, message?, email?, fid?, sid?, context, page, ts }
   Storage today: structured console.log, visible in Vercel → Project → Logs
     (search "FAIMGO FEEDBACK").
 
@@ -33,10 +33,12 @@ export async function POST(request) {
     /* This destructure is a fixed allow-list, which is why `fid` used to
        vanish here even after the widget started sending it: anything not
        named is silently dropped. The Sheet has had an empty `fid` column
-       waiting since Apps Script v11. */
-    const { kind, rating, category, message, email, fid, context, page, ts } = body || {};
-    console.log("[FAIMGO FEEDBACK]", JSON.stringify({ kind, rating, category, message, email, fid, context, page, ts }));
-    await forward({ kind, rating, category, message, email, fid, context, page, ts });
+       waiting since Apps Script v11. `sid` was the same story — the widget
+       now sends it, so it has to be named here too, or it drops silently
+       exactly like `fid` did. */
+    const { kind, rating, category, message, email, fid, sid, context, page, ts } = body || {};
+    console.log("[FAIMGO FEEDBACK]", JSON.stringify({ kind, rating, category, message, email, fid, sid, context, page, ts }));
+    await forward({ kind, rating, category, message, email, fid, sid, context, page, ts });
     return Response.json({ ok: true });
   } catch (e) {
     console.error("[FAIMGO FEEDBACK ERROR]", e?.message);

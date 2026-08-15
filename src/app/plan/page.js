@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
+import Gate from "../Gate.js";
 import { loadSaved, session, markStep, markOutcome, readSteps, hasEverEarned, OUTCOMES } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
@@ -733,15 +734,22 @@ export default function PlanPage() {
         </section>
       )}
 
-      {/* ---- help that exists ---- */}
+      {/* ---- help that exists ----
+          Wrapped in <Gate> deliberately, per claude/faimgo-money-seams.md §3.3:
+          allowance() always says yes today, so this renders exactly as it
+          always has — but the mount/check/render path now runs on every
+          real /plan view instead of sitting unexercised in Gate.js, which
+          is the whole point of shipping a switched-off gate live. */}
       {plan.helpRail.length > 0 && (
-        <section className="mb-9">
-          <h2 className="font-display text-[26px] mb-1" style={{ color: C.green }}>When you get stuck</h2>
-          <p className="text-[16px] leading-relaxed mb-4" style={{ color: C.gray }}>
-            These aren&apos;t steps and they have no place in the order. Open one the day you need it — from any point in the plan.
-          </p>
-          {plan.helpRail.map((pl) => <RailCard key={pl.id} play={pl} />)}
-        </section>
+        <Gate need="help_rail" fid={ids?.fid}>
+          <section className="mb-9">
+            <h2 className="font-display text-[26px] mb-1" style={{ color: C.green }}>When you get stuck</h2>
+            <p className="text-[16px] leading-relaxed mb-4" style={{ color: C.gray }}>
+              These aren&apos;t steps and they have no place in the order. Open one the day you need it — from any point in the plan.
+            </p>
+            {plan.helpRail.map((pl) => <RailCard key={pl.id} play={pl} />)}
+          </section>
+        </Gate>
       )}
 
       {/* ---- help that does not exist yet ----

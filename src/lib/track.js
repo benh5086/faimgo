@@ -21,6 +21,15 @@
      has a fixed set of columns and is a manual edit away from
      us, so a new dimension is better expressed as a second
      event name than as a field nothing reads.
+
+   RESERVED NAMES, per claude/faimgo-money-seams.md §3.4 — not enforced
+   here (there is no whitelist, by design, see the rule above), just
+   written down so whoever eventually builds the AI coach or the upgrade
+   flow doesn't have to re-derive them: coach_open, coach_ask, coach_limit,
+   upgrade_view, upgrade_click. step_done:<play id> and first_dollar are
+   already live (shipped in v11 / Batch 1's clearWork() and markOutcome()
+   work) — the five above are the ones still waiting on a feature to fire
+   them.
    ============================================================ */
 
 export function track(ids, name, extra) {

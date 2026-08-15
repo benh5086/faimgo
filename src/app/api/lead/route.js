@@ -273,6 +273,25 @@ export async function POST(request) {
       return Response.json({ ok: true });
     }
 
+    /*
+      Money-seams §3.1's meter() lands here. No real chargeable action
+      exists yet — this is the seam, not the feature — so today this is
+      just a searchable log line ("FAIMGO USAGE", same pattern as FAIMGO
+      EVENT) plus a forward to the same webhook every other payload type
+      already goes through. The day a "Usage" tab and header row exist in
+      the Apps Script's HEADERS map, this data starts landing in the Sheet
+      with no further change here — see claude/faimgo-open-items.md for
+      that one-line Apps Script edit, which is deliberately not done by
+      this change since it lives only inside Google, outside this repo.
+    */
+    if (body?.type === "usage") {
+      console.log("[FAIMGO USAGE]", JSON.stringify({
+        kind: body.kind, sid: body.sid, fid: body.fid, unitsIn: body.unitsIn, unitsOut: body.unitsOut, ts: body.ts,
+      }));
+      await forward(body);
+      return Response.json({ ok: true });
+    }
+
     // default: treat as lead
     const { sid, fid, visits, email, answers, results, otherIdea, protectFrom, planId, version, ts } = body || {};
     console.log("[FAIMGO LEAD]", JSON.stringify({ sid, fid, visits, email, version, ts, otherIdea, protectFrom, results, answers, planId }));
@@ -299,6 +318,34 @@ export async function POST(request) {
     if (String(mail).startsWith("error")) {
       await alertMailFailure({ status: mail, email, sid, fid });
     }
+
+    /*
+      Close the mailStatus gap flagged in claude/faimgo-open-items.md:
+      "a blank mailStatus means 'no failure was reported', not 'delivered.'"
+      Moving forward(body) to after sendPlan() was already correctly
+      rejected — it would delay the Leads row by up to the mail timeout and
+      a slow send could lose the lead entirely. This is the alternative:
+      a plain "event" payload through the same generic forward(), fired
+      AFTER sendPlan() has resolved so it never touches that timing, joined
+      back to the original Leads row by sid exactly the way step_outcome:
+      and first_dollar already prove out (see "Test data in the Sheet" in
+      the open-items doc). No Apps Script change needed — "event" rows
+      already land wherever the script already routes them.
+
+      Awaited, deliberately, even though it delays the response by one more
+      webhook round-trip: this is a serverless function, and a promise left
+      running after `return` has no guarantee of finishing before the
+      instance is frozen or recycled — the same reason every other side
+      effect in this handler (sendPlan, forward(body), alertMailFailure) is
+      already awaited rather than fired-and-forgotten. forward() itself
+      still swallows its own errors internally, so awaiting it can only add
+      latency, never turn a webhook hiccup into a request failure.
+    */
+    await forward({
+      type: "event",
+      name: mail === "sent" ? "mail_sent" : "mail_not_sent:" + mail,
+      sid, fid, ts: new Date().toISOString(),
+    });
 
     // `emailed` lets the results screen tell the truth about what happened.
     return Response.json({ ok: true, emailed: mail === "sent" });

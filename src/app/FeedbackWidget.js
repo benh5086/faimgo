@@ -77,6 +77,13 @@ export default function FeedbackWidget({ trigger = "link", kind = "feedback", co
              not tell one angry person from three. Read passively: calling
              session() here would mint a new sitting on submit. */
           fid: whoAmI().fid || undefined,
+          /* Which SITTING, not just which person. `fid` alone can't tell two
+             pieces of feedback from the same visit apart from two written a
+             week later — `sid` is what lets a complaint be joined back to
+             the exact Events rows from the moment it was written. Same
+             passive read as fid, same reason: session() would mint a new
+             sitting on submit. */
+          sid: whoAmI().sid || undefined,
           page: typeof window !== "undefined" ? window.location.pathname : undefined,
           ts: new Date().toISOString(),
         }),
