@@ -162,7 +162,40 @@ function blank(now) {
     plan: null,     // { answers, results, email, protectFrom, otherIdea, emailed, ts }
     steps: {},      // { [playId]: { done, at, note, outcome, outcomeAt } }
     history: [],    // [{ at, steps }] — completions from plans that were replaced
+    /* src/ref deliberately absent here — see captureAttribution() below.
+       Their absence (undefined, not null) is what marks "never looked yet",
+       which is how first-touch capture tells itself apart from a repeat visit. */
   };
+}
+
+/*
+  First-touch source attribution. Which channel a person arrived from cannot
+  be reconstructed after the fact, and until this batch nothing recorded it —
+  every conversion number we could quote was silent on where the person came
+  from, which decides where Ben actually spends his hours once promotion
+  starts.
+
+  Captured ONCE per fid, ever, the first time session() runs for them —
+  never overwritten by a later visit, because attribution should describe how
+  someone originally found Faimgo, not their most recent click. `src` is the
+  `?src=` query param a link can carry; `ref` is document.referrer, capped to
+  keep one long URL from bloating storage. Both stored as `null` (not left
+  undefined) once looked at, so "captured, found nothing" is distinguishable
+  from "never captured" on every future call.
+*/
+function captureAttribution(s) {
+  if (s.src !== undefined && s.ref !== undefined) return s;
+  let src = null, ref = null;
+  try {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      src = params.get("src") || null;
+    }
+    if (typeof document !== "undefined") {
+      ref = (document.referrer || "").slice(0, 300) || null;
+    }
+  } catch (e) { /* attribution must never break the flow */ }
+  return { ...s, src, ref };
 }
 
 /* ---------- public ---------- */
@@ -175,7 +208,7 @@ function blank(now) {
 export function session() {
   const now = Date.now();
   const existed = read();
-  const s = existed || blank(now);
+  let s = existed || blank(now);
 
   const newSitting = !s.sid || now - (s.lastSeen || 0) > SESSION_GAP_MS;
   if (newSitting) {
@@ -183,6 +216,7 @@ export function session() {
     s.visits = (s.visits || 0) + 1;
   }
   s.lastSeen = now;
+  s = captureAttribution(s);
   const stored = write(s);
 
   return {
@@ -191,6 +225,8 @@ export function session() {
     visits: s.visits,
     newSitting,
     returning: Boolean(existed) && s.visits > 1,
+    src: s.src ?? null,
+    ref: s.ref ?? null,
     stored, // false = storage unavailable; nothing will be remembered
   };
 }

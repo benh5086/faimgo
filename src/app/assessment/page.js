@@ -40,6 +40,18 @@ const QUESTIONS = [
     { t: "Yes — a specific thing I want to do", v: "yes" },
     { t: "Sort of — a general area", v: "sortof", s: "working with people, making things, online business…" },
     { t: "No — that's why I'm here. Match me.", v: "no" }] },
+  /* Designed Jul 26 as the "gap question," approved, never shipped until this
+     batch. Asked of everyone regardless of q1 — it locates someone against
+     income = a problem × your ability to solve it × a channel to reach them,
+     which is a different axis than which of the nine paths fits. The four
+     values match the `gap` array already written on every play in the
+     library (has-skill / can-market / stuck / scratch) — router.js has been
+     reading a weak stand-in derived from qrel; this is the real answer. */
+  { key: "qgap", section: "Your Starting Point", title: "Which feels closest to true for you right now?", opts: [
+    { t: "I have a skill or something to offer — I just don't have people buying it yet", v: "has-skill" },
+    { t: "I'm good at reaching and talking to people — I just don't have anything solid to offer them yet", v: "can-market" },
+    { t: "I already started something and got stuck", v: "stuck" },
+    { t: "I'm starting completely from zero — no offer, no plan yet", v: "scratch", s: "everyone's zero looks like this" }] },
   { key: "q1b", condKey: "named", section: "Your Direction", title: "Which of these is closest to it?", other: true,
     opts: [...PATHS.map((p) => ({ t: p.plain, v: p.id })), { t: "Something else", v: "other", s: "tell us in a few words" }] },
   { key: "qrel", condKey: "named", section: "Your Direction", title: "What's your relationship with it?", opts: [
@@ -448,7 +460,7 @@ export default function Assessment() {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v11", ts: new Date().toISOString() }),
+        body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, src: ids.src || undefined, ref: ids.ref || undefined, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, version: "v12", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
       // We say "sent" only when it was actually sent. If mail is down we say

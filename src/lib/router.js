@@ -163,6 +163,81 @@ const NOT_BUILT_YET = ["help.faimgo-help", "help.ai-coach"];
    surface_as: "opportunity, not need — never in the help rail by default". */
 const NOT_IN_RAIL = ["community.sell-your-skill"];
 
+/* ---------- gap: how far someone stands from the frame, and where ----------
+   income = a problem × your ability to solve it × a channel to reach them.
+   The library was written Jul 26 with a `gap` array on every core play —
+   which of has-skill / can-market / stuck / scratch that step genuinely
+   speaks to — and until this batch nothing ever read it. `gapFrom()` below
+   was the placeholder: derive a weak guess from the relationship question,
+   used only for wording. The assessment now asks directly (`qgap`), so the
+   real answer is used when it exists and the guess only covers old saved
+   plans from before this question existed. */
+const GAP_LABEL = {
+  "has-skill": "you have something to offer but haven't found buyers for it yet",
+  "can-market": "you're good at reaching people but don't have a solid offer yet",
+  stuck: "you already started and got stuck somewhere along the way",
+  scratch: "you're starting from zero — no offer, no plan yet",
+};
+export const gapLabel = (g) => GAP_LABEL[g] || GAP_LABEL.scratch;
+
+/* ---------- pacing: how fast the windows move ----------
+   Two answers govern this together — hours available and how soon they want
+   a first dollar — because both are really the same question asked twice:
+   how much runway does this person actually have. Combined into one
+   multiplier rather than two separate levers so the arithmetic stays
+   checkable; splitting them into independent axes is a reasonable future
+   refinement once real users show whether this granularity is even needed. */
+const HOURS_LABEL = { lt5: "under 5 hours a week", "5to10": "5–10 hours a week", "10to20": "10–20 hours a week", "20plus": "20+ hours a week" };
+const TIME_LABEL = { week: "this week", month: "within a month", quarter: "1–3 months out", norush: "with no rush" };
+export function paceMultiplier(A) {
+  const a = A || {};
+  let m = 1;
+  if (a.qhours === "lt5") m *= 1.5;
+  else if (a.qhours === "5to10") m *= 1.2;
+  else if (a.qhours === "20plus") m *= 0.8;
+  if (a.qtime === "week") m *= 0.85;
+  else if (a.qtime === "norush") m *= 1.15;
+  return Math.max(0.6, Math.min(1.8, m));
+}
+function windowLabels(count, mult) {
+  const width = Math.max(10, Math.round((30 * mult) / 5) * 5);
+  const out = [];
+  let start = 1;
+  for (let i = 0; i < count; i += 1) {
+    const end = start + width - 1;
+    out.push(`Days ${start}–${end}`);
+    start = end + 1;
+  }
+  return out;
+}
+export function paceNote(A) {
+  const a = A || {};
+  const mult = paceMultiplier(A);
+  const hoursTxt = HOURS_LABEL[a.qhours];
+  const timeTxt = TIME_LABEL[a.qtime];
+  if (!hoursTxt && !timeTxt) return null;
+  const dir = mult > 1.08 ? "so the windows below run longer than the default 30/60/90"
+    : mult < 0.92 ? "so the windows below are tighter than the default 30/60/90"
+    : "which lines up with the standard 30/60/90 pace";
+  const bits = [hoursTxt ? `you said ${hoursTxt}` : null, timeTxt ? `wanting a first dollar ${timeTxt}` : null].filter(Boolean);
+  return `${bits.join(" and ")}, ${dir}.`;
+}
+
+/* ---------- protect-from: which reassurance leads ----------
+   The assessment's optional "what should your plan protect you from" answer
+   used to only shape the results-page tone. It never reached the walkthrough
+   itself, which is the page someone actually returns to. */
+const PROTECT_TONE = {
+  steam: "This page is built as a day-by-day sequence on purpose — the thing that kills momentum is deciding what's next, so the order below decides it for you.",
+  scared: "Every step here starts with the free version. Nothing on this page asks you to spend before something has already worked.",
+  start: "You said not knowing where to start was the risk — the card below always points at exactly one next step, never a list to choose from.",
+  time: "You said time is the risk. Nothing below has a deadline attached to it; pick it up whenever you get a real block of time, in any order the steps allow.",
+  first: "First real attempt — the steps below assume nothing and explain everything, including what to do when one doesn't work.",
+};
+export function protectTone(protectFrom) {
+  return PROTECT_TONE[protectFrom] || null;
+}
+
 /* ---------- helpers ---------- */
 
 export function primaryPathId(results) {
@@ -190,9 +265,12 @@ function coverageOf(pathId) {
 
 /* ---------- the router ---------- */
 
-export function buildPlan(A, results) {
+export function buildPlan(A, results, protectFrom) {
   const answers = A || {};
   const r = results || {};
+  /* The real answer when it exists (qgap, added this batch); the old weak
+     guess only for plans saved before this question existed. */
+  const gap = answers.qgap || gapFrom(answers);
   const pathId = primaryPathId(r);
   const path = pathId ? pathById(pathId) : null;
   const secondId = secondPathId(r);
@@ -239,7 +317,13 @@ export function buildPlan(A, results) {
 
   const inSequence = new Set(chosen.map((p) => p.id));
 
-  const HZ = HORIZONS_BY_PATH[walkId] || HORIZONS_DEFAULT;
+  /* Labels only — the aim text and the opensWhen fact stay exactly as the
+     library declares them, since those describe what happens in the window,
+     not how long it runs. Only the day range is a function of the pace. */
+  const baseHZ = HORIZONS_BY_PATH[walkId] || HORIZONS_DEFAULT;
+  const mult = paceMultiplier(answers);
+  const labels = windowLabels(baseHZ.length, mult);
+  const HZ = baseHZ.map((h, i) => ({ ...h, label: labels[i] || h.label }));
 
   const horizonIndex = (p) => {
     const facts = (p.prerequisites || []).filter(isStateFact);
@@ -263,6 +347,14 @@ export function buildPlan(A, results) {
       ...p,
       n,
       waitsOn: (p.prerequisites || []).filter(isStateFact),
+      /* Whether THIS step is what the library says speaks to THIS person's
+         gap. A play with no `gap` array (none of the core spine omits it,
+         but this stays defensive) counts as fitting everyone. This is the
+         one piece of the plan's structure that varies per person without
+         touching order or removing anything — every step still appears,
+         nothing is hidden, the difference is only which ones are marked as
+         the direct answer to what they said they're missing. */
+      fitsGap: !Array.isArray(p.gap) || p.gap.includes(gap),
     });
   });
 
@@ -297,10 +389,14 @@ export function buildPlan(A, results) {
     chosenCoverage,
     spineApplies,
     spineOffWhy,
-    /* Derived, not asked. The assessment has no gap question yet (it is a
-       tracked open item); until it does, the relationship answer is the
-       closest honest read of where someone is starting from. */
-    gap: gapFrom(answers),
+    /* Real as of this batch — see the comment above `gap` near the top of
+       this function. `gapFrom()` below stays only as the fallback it now is. */
+    gap,
+    gapLabel: gapLabel(gap),
+    pace: mult,
+    paceNote: paceNote(answers),
+    protectFrom: protectFrom || null,
+    protectTone: protectTone(protectFrom),
     phases,
     stepCount: n,
     firstPlay,

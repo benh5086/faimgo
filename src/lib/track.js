@@ -31,6 +31,12 @@ export function track(ids, name, extra) {
       body: JSON.stringify({
         type: "event", name,
         sid: ids?.sid || null, fid: ids?.fid || null, visits: ids?.visits || null,
+        /* First-touch attribution, carried on every event since Aug 15 —
+           see captureAttribution() in store.js. Omitted rather than sent as
+           null when absent, so an old cached bundle calling track() with a
+           plain {fid,sid,visits} object still works unchanged. */
+        ...(ids && ids.src !== undefined ? { src: ids.src } : {}),
+        ...(ids && ids.ref !== undefined ? { ref: ids.ref } : {}),
         ts: new Date().toISOString(), ...(extra || {}),
       }),
       /* keepalive so an event fired as the page unloads still lands. */

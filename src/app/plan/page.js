@@ -279,6 +279,21 @@ function DoneControl({ play, done, step, onToggle, onOutcome }) {
   );
 }
 
+/* Shown only on steps the library says speak directly to what this person
+   said they're missing (`fitsGap`, computed in router.js from the answer to
+   the Aug 15 gap question). The absence of the badge is not a demotion —
+   every step still appears, in the same order, with the same content; the
+   badge just tells someone which ones are the direct answer to their gap,
+   so a person skimming under real time pressure knows where to slow down. */
+function GapBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[12px] font-bold px-2.5 py-1 rounded-full mb-2"
+      style={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }}>
+      Closes your gap
+    </span>
+  );
+}
+
 function PlayCard({ play, openByDefault, steps, onToggle, onOutcome }) {
   const [open, setOpen] = useState(Boolean(openByDefault));
   const [stalls, setStalls] = useState(false);
@@ -293,6 +308,7 @@ function PlayCard({ play, openByDefault, steps, onToggle, onOutcome }) {
           {play.n}
         </span>
         <span className="block flex-1">
+          {play.fitsGap && <span className="block"><GapBadge /></span>}
           <span className="block font-semibold text-[18px] leading-snug" style={{ color: C.ink }}>{play.name}</span>
           <span className="block text-[14px] mt-1" style={{ color: C.gray }}>
             {play.sub}
@@ -532,7 +548,7 @@ export default function PlanPage() {
     );
   }
 
-  const plan = buildPlan(stored.answers, stored.results);
+  const plan = buildPlan(stored.answers, stored.results, stored.protectFrom);
   const p = plan.path;
   /* The path the steps below belong to. Same as `p` unless the chosen path
      has no written spine and we borrowed the fast win — see router.js. */
@@ -562,6 +578,25 @@ export default function PlanPage() {
           {!plan.borrowed && plan.second ? ` ${plan.second.name} was your other strong fit; you can switch to it any time from your results.` : ""}
         </p>
       </div>
+
+      {/* ---- why this looks the way it does ----
+          Layer 1 of the personalization model: say their own answers back to
+          them. Added this batch alongside the router changes it depends on
+          (gap badges, pacing) — a sentence claiming the plan adapted to you
+          is only honest once something in the plan actually did, which is
+          why these two ship together rather than this one first. */}
+      {plan.spineApplies && (
+        <div className="p-5 rounded-2xl mb-8" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
+          <p className="text-[12px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.gold }}>Why this looks the way it does</p>
+          <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
+            You told us {plan.gapLabel} — steps below marked <b style={{ color: "#0F6B3F" }}>&quot;Closes your gap&quot;</b>{" "}are the direct answer to that. The rest are still here in full, they&apos;re just not the part you said is missing, so feel free to move faster through them.
+            {plan.paceNote ? ` And ${plan.paceNote}` : ""}
+          </p>
+          {plan.protectTone && (
+            <p className="text-[16px] leading-relaxed mt-3" style={{ color: C.ink }}>{plan.protectTone}</p>
+          )}
+        </div>
+      )}
 
       {/* ---- we borrowed a spine, and we say so ----
           This page used to be empty for anyone whose path has no written
