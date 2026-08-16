@@ -267,6 +267,12 @@ export default function Home() {
               as a document you are not being shown, which is worse than an
               absent one. It comes back when it exists. */}
           <Link href="/privacy" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Privacy</Link>
+          {/* Added Aug 16 alongside /restore — a second, quieter door back to
+              a plan for anyone who lands on the homepage instead of straight
+              into the assessment (a bookmark, a search result, a share). The
+              assessment's own start screen carries the same link for the
+              more common case of clicking "Start" first. */}
+          <Link href="/restore" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Get your plan back</Link>
           <FeedbackWidget trigger="link" kind="contact" navLabel="Contact" context="footer-contact" />
         </div>
       </footer>

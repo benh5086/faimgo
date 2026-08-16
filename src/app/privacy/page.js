@@ -42,6 +42,15 @@ import Link from "next/link";
   Deliberately no "Terms" page shipped alongside. Terms is a set of legal
   promises, not a description of behaviour; drafting one is not something to
   do by inference from source code.
+
+  REVISED AGAIN Aug 16, 2026 — the trigger named in the section above just
+  fired: a real database (Neon/Postgres) is now wired into code, behind the
+  "already did this? get your plan back" cross-device restore feature (see
+  src/lib/db.js, sql/001_identity.sql, src/app/api/restore/route.js). "Three
+  services" became four, and the deletion answer now covers it too. No
+  accounts, usernames, or public profiles exist yet — the database's
+  `people` table has empty, unused columns reserved for that later, and this
+  page will need another pass the day those are actually built and rendered.
 */
 
 export const metadata = {
@@ -119,13 +128,25 @@ export default function Privacy() {
           steps actually work for real people is the only way the plans get better — and, later,
           it&apos;s what a member can point to as proof of what they&apos;ve actually done.
         </P>
+        <P>
+          <b>If you use &ldquo;already did this? get your plan back.&rdquo;</b> This lets you see
+          your plans again on a new device or browser, using your email to prove it&apos;s you. When
+          you ask for it, we send a one-time link to that address; clicking it is what proves
+          ownership, and the link stops working after 30 minutes or one use, whichever comes first.
+          We don&apos;t store the link itself in a form anyone could read back out of our systems —
+          only a scrambled version used to check it, the same way a password would be. Every plan
+          you submit is now kept a second place, alongside the spreadsheet, specifically so this can
+          work: your email, the answers behind each plan, and which browser you used it from.
+        </P>
 
         <H>Who else sees it</H>
         <P>
-          Three services, and nobody else. <b>Vercel</b> hosts the site and briefly holds server logs.
-          <b> Resend</b> sends your plan email and therefore handles your email address. <b>Google
-          Sheets</b> is where the records are kept — a private spreadsheet that only we can open.
-          That is the complete list. Nothing is sold, and nothing is shared for advertising.
+          Four services, and nobody else. <b>Vercel</b> hosts the site and briefly holds server
+          logs. <b>Resend</b> sends your plan email and therefore handles your email address.
+          <b> Google Sheets</b> is where the human-readable records are kept — a private spreadsheet
+          that only we can open. <b>Neon</b> hosts the database behind &ldquo;get your plan
+          back&rdquo; above — your email, your plans, and which browser you&apos;ve used. That is
+          the complete list. Nothing is sold, and nothing is shared for advertising.
         </P>
 
         <H>How long we keep it</H>
@@ -148,8 +169,9 @@ export default function Privacy() {
           There is no self-serve delete button yet — building one is on the list and we&apos;re not
           going to pretend otherwise. In the meantime, use the <b>Contact</b> link at the bottom of
           the home page, or reply to the plan email, and say you want your record deleted. We&apos;ll
-          remove it from the spreadsheet and confirm. To clear what&apos;s on your own device, clear
-          your browser data for this site — that removes everything, the finished steps included.
+          remove it from the spreadsheet and the database described above, and confirm. To clear
+          what&apos;s on your own device, clear your browser data for this site — that removes
+          everything, the finished steps included.
         </P>
         <P>
           One thing worth being straight about: <b>&ldquo;start over&rdquo; is not a delete.</b> It
@@ -164,9 +186,10 @@ export default function Privacy() {
 
         <H>When this changes</H>
         <P>
-          We&apos;re small and building in the open, so this will change — particularly when accounts
-          and a real database arrive, which is the point at which some of the answers above get
-          better. We&apos;ll update this page when it does.
+          We&apos;re small and building in the open, so this will change — particularly if a public
+          profile or community features arrive later, which would mean a person choosing to make
+          some of this visible to other members on purpose. Nothing like that exists yet. We&apos;ll
+          update this page when it does.
         </P>
 
         <div className="p-5 rounded-2xl mt-10" style={{ backgroundColor: C.greenSoft }}>
@@ -176,7 +199,7 @@ export default function Privacy() {
           </p>
         </div>
 
-        <p className="text-[14px] mt-8" style={{ color: C.gray }}>Last updated: August 14, 2026.</p>
+        <p className="text-[14px] mt-8" style={{ color: C.gray }}>Last updated: August 16, 2026.</p>
       </div>
     </main>
   );

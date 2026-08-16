@@ -41,7 +41,7 @@
 */
 
 const KEY = "faimgo.v1";
-const SCHEMA = 3;
+const SCHEMA = 4;
 const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes away = a new sitting
 const MAX_HISTORY = 20;                // archived completion sets kept on retake
 const MAX_PLANS = 5;                   // saved plans kept per device before the oldest is dropped
@@ -134,6 +134,17 @@ function migrate(obj) {
     delete o.plan;
   }
 
+  /* v3 → v4: adds `linkedEmail` — set once this device has proven ownership
+     of an email via the restore flow (see mergeRestoredPlans() below). A v3
+     record has never gone through that flow, so `null` is exactly correct
+     for every existing record; nothing is inferred or guessed. */
+  if (o.schema === 3) {
+    o = Object.assign({}, o, {
+      schema: 4,
+      linkedEmail: o.linkedEmail !== undefined ? o.linkedEmail : null,
+    });
+  }
+
   return o;
 }
 
@@ -206,6 +217,7 @@ function blank(now) {
     activePlanId: null, // id of the plan most recently viewed/submitted on this device
     steps: {},      // { [playId]: { done, at, note, outcome, outcomeAt } }
     history: [],    // [{ at, steps }] — completions from plans that were replaced
+    linkedEmail: null, // set once this device has verified an email via the restore flow
     /* src/ref deliberately absent here — see captureAttribution() below.
        Their absence (undefined, not null) is what marks "never looked yet",
        which is how first-touch capture tells itself apart from a repeat visit. */
@@ -560,6 +572,88 @@ export function readSteps() {
 export function readHistory() {
   const s = read();
   return (s && Array.isArray(s.history)) ? s.history : [];
+}
+
+/* ---------- cross-device restore ----------
+   The other half of api/restore/route.js's verify step. That endpoint proves
+   someone owns an email and hands back every plan Postgres has on record for
+   them (src/lib/db.js's mirrorPlan() is what put them there in the first
+   place, on every ordinary submit). This is where those plans actually
+   become usable on a device that has never seen them: merged into the same
+   `plans` array everything else in this file already reads from, so nothing
+   downstream — /plan, the results screen, MAX_PLANS trimming — needs to know
+   restored plans are any different from ones submitted locally. */
+
+/*
+  Which email this device has proven ownership of, if any — set by
+  mergeRestoredPlans() below. Read-only counterpart, used to show a subtle
+  "restored — you're seeing plans for X" indicator without needing a full
+  session/cookie system: the device already remembers who it belongs to the
+  same way it remembers fid, just now optionally an email too.
+*/
+export function getLinkedEmail() {
+  const s = read();
+  return (s && s.linkedEmail) || null;
+}
+
+/*
+  Merge plans fetched from the server (api/restore/route.js's verify
+  response) into this device's local `plans` array, and remember the email
+  that authorized it.
+
+  Matched by id first (a restored plan whose id already exists locally —
+  e.g. this same device, reconnecting after clearing storage — updates in
+  place rather than duplicating), falling back to answersFingerprint() for
+  anything id-less. Genuinely new plans are appended. The existing MAX_PLANS
+  cap then applies uniformly by recency (`ts`), exactly as it already does
+  for locally-submitted plans — restoring five years of history onto a
+  five-slot device still only keeps the five most recent, which is the same
+  trade-off this file already makes everywhere else, not a new one invented
+  for this feature.
+
+  Returns the number of plans actually merged, or false if storage is
+  unavailable.
+*/
+export function mergeRestoredPlans(serverPlans, email) {
+  const s = read();
+  if (!s) return false;
+  const incoming = Array.isArray(serverPlans) ? serverPlans : [];
+  const existing = Array.isArray(s.plans) ? s.plans : [];
+
+  let merged = existing.slice();
+  let mergedCount = 0;
+  for (const sp of incoming) {
+    if (!sp || !sp.plan_id) continue;
+    const fingerprint = answersFingerprint(sp.answers);
+    const matchIdx = merged.findIndex(
+      (p) => p && (p.id === sp.plan_id || p.fingerprint === fingerprint)
+    );
+    const entry = {
+      id: sp.plan_id,
+      fingerprint,
+      answers: sp.answers || {},
+      results: sp.results || null,
+      email: email || "",
+      protectFrom: sp.protect_from ?? null,
+      otherIdea: sp.other_idea || "",
+      emailed: "sent", // it reached Postgres via a successful submit; treat as delivered
+      ts: sp.updated_at ? new Date(sp.updated_at).getTime() : Date.now(),
+    };
+    if (matchIdx === -1) {
+      merged.push(entry);
+      mergedCount++;
+    } else {
+      merged[matchIdx] = entry;
+      mergedCount++;
+    }
+  }
+
+  merged.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  s.plans = merged.length > MAX_PLANS ? merged.slice(-MAX_PLANS) : merged;
+  if (s.plans.length) s.activePlanId = s.plans[s.plans.length - 1].id;
+  s.linkedEmail = email || s.linkedEmail || null;
+
+  return write(s) ? mergedCount : false;
 }
 
 /* Full reset, id included. For a "forget me" control — not wired to any UI yet. */

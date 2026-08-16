@@ -26,8 +26,21 @@
        not a control; anything that only runs in the browser is advisory.
 
   A blocked request still returns ok:true with emailed:false. The person on
-  the other end sees their plan and the honest "we couldn't send it" card with
-  a retry button; they never see an error. Every block is logged.
+  the other end sees their plan and an honest card — worded differently
+  depending on WHY, see `outcome`/`reason` below — with a retry button; they
+  never see an error. Every block is logged.
+
+  `outcome` / `reason` (added Aug 16, closing the "that's on us" honesty gap
+  flagged in claude/faimgo-open-items.md): a rate limit or the daily cap
+  doing its job is not the same thing as a real send failure, and the two
+  used to be indistinguishable to the client, which said "that's on us" for
+  both. `outcome` is one of "sent" | "limited" | "failed" — "limited" for
+  every blockReason() guard (this is the system protecting itself working
+  correctly, never a failure); "failed" for every real sendPlan() problem
+  (skipped/error — this really is on us). `reason` carries the specific
+  short string for either case, for logging/debugging; the client only
+  needs `outcome` to pick the right copy. `emailed` stays as a plain
+  boolean alongside it for anything simpler that only needs yes/no.
 
   HONEST LIMIT: these counters live in module memory, which on Vercel means
   per serverless instance, reset on cold start, and there may be several
@@ -71,12 +84,16 @@
     Search "FAIMGO BLOCKED" → requests the guard refused
 
   NOTE: Vercel's Hobby plan keeps runtime logs for ONE HOUR. These lines are
-  for debugging, not for record-keeping. The Sheet behind LEAD_WEBHOOK_URL is
-  the only durable copy of a lead until the database exists.
+  for debugging, not for record-keeping. The Sheet behind LEAD_WEBHOOK_URL
+  stays the durable, human-readable copy of every lead; as of Aug 16, 2026 a
+  submitted lead is ALSO mirrored into Postgres (see mirrorPlan() below and
+  src/lib/db.js) — that copy exists specifically to make cross-device restore
+  possible (src/app/api/restore/route.js), not to replace the Sheet.
 */
 
 import { renderPlanEmail } from "../../../lib/planEmail.js";
 import { PATHS } from "../../../lib/paths.js";
+import { mirrorPlan } from "../../../lib/db.js";
 
 const SANDBOX_FROM = "Faimgo <onboarding@resend.dev>";
 
@@ -306,7 +323,7 @@ export async function POST(request) {
       // limit sees the retry card, never an error.
       console.warn("[FAIMGO BLOCKED]", JSON.stringify({ reason: blocked, ip, email, sid, fid }));
       await forward(body);
-      return Response.json({ ok: true, emailed: false });
+      return Response.json({ ok: true, emailed: false, outcome: "limited", reason: blocked });
     }
 
     const [mail] = await Promise.all([
@@ -347,8 +364,31 @@ export async function POST(request) {
       sid, fid, ts: new Date().toISOString(),
     });
 
-    // `emailed` lets the results screen tell the truth about what happened.
-    return Response.json({ ok: true, emailed: mail === "sent" });
+    /*
+      Mirror this plan into Postgres (Aug 16, 2026) — see src/lib/db.js's
+      mirrorPlan() and sql/001_identity.sql. Runs regardless of whether the
+      email actually sent: the plan and the answers behind it are the
+      valuable thing, independent of delivery, and this is what makes
+      "already did this? get your plan back" (src/app/api/restore/route.js)
+      possible on a device that never saw this submission. Never throws —
+      mirrorPlan() is wrapped internally with the same must-never-break-the-
+      flow discipline as meter.js — so a database problem here can only ever
+      cost the restore feature for this one plan, never the Sheet write or
+      the email that just happened above.
+    */
+    if (planId) {
+      await mirrorPlan({ email, fid, planId, answers, results, protectFrom, otherIdea });
+    }
+
+    // `outcome`/`emailed` let the results screen tell the truth about what
+    // happened, and distinguish a real failure from nothing having gone
+    // wrong at all — see the file header.
+    return Response.json({
+      ok: true,
+      emailed: mail === "sent",
+      outcome: mail === "sent" ? "sent" : "failed",
+      reason: mail === "sent" ? null : mail,
+    });
   } catch (e) {
     console.error("[FAIMGO LEAD ERROR]", e?.message);
     return Response.json({ ok: false }, { status: 400 });

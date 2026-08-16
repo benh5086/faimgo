@@ -339,7 +339,7 @@ export default function Assessment() {
   const otherTxt = A.otherTxt || "";
   const [protectFrom, setProtectFrom] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [emailed, setEmailed] = useState(null); // null | "sent" | "failed" | "stale"
+  const [emailed, setEmailed] = useState(null); // null | "sent" | "limited" | "failed" | "stale"
   const [retrying, setRetrying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [preEdit, setPreEdit] = useState(null); // answersKey snapshot taken when editing began
@@ -457,9 +457,17 @@ export default function Assessment() {
 
   /* ---------- SENDING THE PLAN ----------
      One function, used both by the gate on submit and by the retry button on
-     the results screen. It returns "sent" | "failed" and never throws: the
-     plan is already on screen and already saved locally, so a mail problem is
-     ours to carry, never something they see instead of their results. */
+     the results screen. It returns "sent" | "limited" | "failed" and never
+     throws: the plan is already on screen and already saved locally, so a
+     mail problem is ours to carry, never something they see instead of their
+     results.
+
+     "limited" vs "failed" (added Aug 16): the API now says which one
+     happened instead of a flat true/false. A rate limit or the daily cap
+     doing its job is the system working correctly, not a failure on our
+     end — the two used to be indistinguishable here and both got the same
+     "that's on us" copy, which wasn't honest in the rate-limit case. See
+     api/lead/route.js's header comment for the full reasoning. */
   async function postLead(results, forPlanId) {
     try {
       const res = await fetch("/api/lead", {
@@ -468,8 +476,12 @@ export default function Assessment() {
         body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, src: ids.src || undefined, ref: ids.ref || undefined, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, planId: forPlanId || undefined, version: "v13", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
-      // We say "sent" only when it was actually sent. If mail is down we say
-      // that instead — a false confirmation is worse than no confirmation.
+      if (data?.outcome === "sent" || data?.outcome === "limited" || data?.outcome === "failed") {
+        return data.outcome;
+      }
+      // Fallback for a response with no `outcome` (shouldn't happen once this
+      // ships, but a cached client hitting an older/rolled-back API is a real
+      // scenario — degrade to the old true/false read rather than crash).
       return data?.emailed === true ? "sent" : "failed";
     } catch (e) {
       return "failed"; /* never block results on network issues */
@@ -514,7 +526,9 @@ export default function Assessment() {
     const id = savePlan({ answers: A, results, email, protectFrom, otherIdea: otherTxt, emailed: state });
     setPlanId(id || null);
     setRetrying(false);
-    track(ids, state === "sent" ? "retry_sent" : "retry_failed");
+    // Three real outcomes now, not two — a retry that hits the same rate
+    // limit isn't a failure, so it shouldn't log as one.
+    track(ids, state === "sent" ? "retry_sent" : state === "limited" ? "retry_limited" : "retry_failed");
   }
 
   /* ---------- CHANGING AN ANSWER ----------
@@ -781,6 +795,30 @@ export default function Assessment() {
         </div>
       );
     }
+    if (emailed === "limited") {
+      /* Added Aug 16 — this used to fall through to the "that's on us" copy
+         below, which wasn't honest: a rate limit is the system protecting
+         itself working correctly, not a failure. Same yellow/gold treatment
+         as "stale" (informational, not alarming) rather than the failure
+         card's tone. Retry is left in — if the limit has lifted since, it
+         just works; if not, they see the same honest message again, which
+         is still true. */
+      return (
+        <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
+          <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
+          <div>
+            <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
+              We&apos;re holding off on sending another copy to <b>{email}</b>{" "}right now — a safety limit after a few sends in a short time, not a problem with your email or ours. Nothing is lost: your whole plan is right below, and this browser has it saved. Try again in a bit, or copy the plan now.
+            </p>
+            <button onClick={retrySend} disabled={retrying}
+              className="mt-3 px-5 py-2.5 press rounded-full font-semibold text-[15px] hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: C.gold, color: C.green }}>
+              {retrying ? "Trying…" : "Try again"}
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
         <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
@@ -990,6 +1028,14 @@ export default function Assessment() {
             <button onClick={start} className="px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90" style={{ backgroundColor: C.green, color: C.cream }}>
               Start
             </button>
+            {/* Shown only here — the one screen that means this device has no
+                record of anyone. Exactly the person a new phone or a cleared
+                browser would leave stranded, so this is where they need the
+                door back to their plan, not buried in a footer they'd have
+                to already know to look for. Added Aug 16 alongside /restore. */}
+            <p className="text-[14px] mt-4" style={{ color: C.gray }}>
+              Already did this? <Link href="/restore" className="underline hover:opacity-80" style={{ color: C.gray }}>Get your plan back</Link>.
+            </p>
           </div>
         )}
 
