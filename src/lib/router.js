@@ -450,5 +450,17 @@ export function validateLibrary() {
     });
   });
 
+  /* unlocks / cross_path_unlock point forward at plays the way prerequisites
+     point backward. Same shape of bug (a typo'd or renamed id), same need
+     to be caught here rather than only at render time. */
+  ALL.forEach((p) => {
+    (p.unlocks || []).forEach((u) => {
+      if (!known.has(u)) problems.push(`${p.id} unlocks unknown play ${u}`);
+    });
+    if (p.cross_path_unlock && !known.has(p.cross_path_unlock)) {
+      problems.push(`${p.id} cross_path_unlock points to unknown play ${p.cross_path_unlock}`);
+    }
+  });
+
   return problems;
 }
