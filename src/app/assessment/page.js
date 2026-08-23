@@ -979,10 +979,10 @@ export default function Assessment() {
   return (
     <main className="min-h-screen font-sans" style={{ backgroundColor: C.cream, color: C.ink }}>
       <nav style={{ backgroundColor: C.green }} className="px-8 py-4 flex items-center justify-between">
-        <a href="/" className="text-2xl font-bold tracking-tight" style={{ color: C.cream }}>
+        <Link href="/" className="text-2xl font-bold tracking-tight" style={{ color: C.cream }}>
           faim<span style={{ color: C.gold }}>go</span>
-        </a>
-        <a href="/" className="text-sm font-medium" style={{ color: C.cream }}>← Back to home</a>
+        </Link>
+        <Link href="/" className="text-sm font-medium" style={{ color: C.cream }}>← Back to home</Link>
       </nav>
 
       <div className="max-w-2xl mx-auto px-6 py-10">
