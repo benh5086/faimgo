@@ -1,0 +1,95 @@
+{
+  "common": {
+    "howItWorks": "How It Works",
+    "contact": "Contact",
+    "getStarted": "Get Started",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "nav": {
+    "examples": "Examples",
+    "faq": "FAQ"
+  },
+  "hero": {
+    "badge": "Free 2-minute assessment →",
+    "titlePre": "Find, Aim, and ",
+    "titleHighlight": "Grow",
+    "titlePost": " Your Side Income",
+    "subtitle": "Most people already have what it takes — skills, experience, ideas — they just haven't discovered how to turn it into real income yet. Faimgo finds your hidden opportunity and gives you a clear path to act on it.",
+    "startAssessment": "Start My Assessment",
+    "cardLabel": "Your two paths",
+    "card1Title": "Freelancing Your Skill",
+    "card1Badge": "Fastest first win",
+    "card1Desc": "Your computer is the only equipment it needs.",
+    "firstDollarLabel": "First dollar",
+    "firstDollarValue": "1–3 weeks",
+    "toStartLabel": "To start",
+    "toStartValue": "$0",
+    "ceilingLabel": "Income ceiling",
+    "ceilingValue": "High",
+    "card2Title": "Digital Products",
+    "card2Badge": "Long-term path",
+    "card2Desc": "Build it once — it keeps earning while you build the next.",
+    "cardFooter": "Based on your time, inventory, and how you work"
+  },
+  "problem": {
+    "eyebrow": "The Problem",
+    "title": "Why Most People Never Start",
+    "subtitle": "It's not laziness. It's that nobody shows you a path built specifically for your situation.",
+    "items": [
+      { "title": "Too many conflicting ideas", "desc": "You jump between options, second-guess yourself, and never commit to a path that actually fits you." },
+      { "title": "Generic advice that doesn't apply", "desc": "Most \"business advice\" ignores your skills, budget, and experience — sending you in the wrong direction." },
+      { "title": "No clear roadmap", "desc": "Even a solid idea falls apart without realistic milestones and next steps you can actually follow." },
+      { "title": "No alignment with your strengths", "desc": "You don't know which opportunities match what you can realistically do today — so you waste time." }
+    ]
+  },
+  "howItWorks": {
+    "eyebrow": "How It Works",
+    "title": "Four Steps to Your Income Path",
+    "subtitle": "Find, Aim, Go — that's where the name comes from. Grow is what happens after.",
+    "steps": [
+      { "step": "01", "title": "Find", "desc": "Answer a few honest questions about your time, skills, and what you already have." },
+      { "step": "02", "title": "Aim", "desc": "We match you to the paths that actually fit you — with a real reality check on each." },
+      { "step": "03", "title": "Go", "desc": "Get your first concrete moves — what to do, what to say, and how to know a step is done." },
+      { "step": "04", "title": "Grow", "desc": "Build from your first dollar into steady income that compounds over time." }
+    ]
+  },
+  "examples": {
+    "eyebrow": "Example Outputs",
+    "title": "Real Paths for Real People",
+    "timeLabel": "Time to start:",
+    "budgetLabel": "Budget:",
+    "items": [
+      { "persona": "Corporate Professional", "path": "Freelancing Your Skill", "why": "Turns years of expertise into paid client work — no new skills required.", "time": "1–3 weeks to first client", "budget": "$0 to start" },
+      { "persona": "Busy Parent", "path": "Tutoring & Coaching", "why": "Teach what you already know, on a schedule that fits around the kids.", "time": "1–2 weeks to first session", "budget": "$0 to start" },
+      { "persona": "Hands-On & Practical", "path": "Local Services", "why": "High-demand work in your own neighborhood, paid the same week.", "time": "Days to first job", "budget": "Rent gear, buy later" }
+    ]
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Common Questions",
+    "items": [
+      { "q": "What kinds of opportunities does Faimgo find?", "a": "Faimgo matches you with realistic side income paths based on your skills, available time, budget, and goals — from freelancing and tutoring to reselling, local services, digital products, and more." },
+      { "q": "Is this free to use?", "a": "Yes — the assessment is completely free. You'll get your personalized two-path plan at no cost." },
+      { "q": "How long does the assessment take?", "a": "About two minutes. It's designed to be fast and specific — no fluff, just what we need to find your best path." },
+      { "q": "Do I need any prior business experience?", "a": "Not at all. Faimgo is built for people who are just starting out. We meet you where you are and build a path from there." }
+    ]
+  },
+  "cta": {
+    "titlePre": "Your Income Is Already ",
+    "titleHighlight": "Waiting",
+    "subtitle": "Take the free assessment and get your personalized plan in about two minutes.",
+    "startFree": "Start Free Assessment"
+  },
+  "footer": {
+    "copyright": "© 2026 Faimgo. All rights reserved.",
+    "privacy": "Privacy",
+    "getPlanBack": "Get your plan back"
+  },
+  "langSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "es": "Español",
+    "zh": "中文"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "common": {
+    "howItWorks": "Cómo Funciona",
+    "contact": "Contacto",
+    "getStarted": "Comenzar",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
+  },
+  "nav": {
+    "examples": "Ejemplos",
+    "faq": "Preguntas"
+  },
+  "hero": {
+    "badge": "Evaluación gratis de 2 minutos →",
+    "titlePre": "Encuentra, Enfoca y Haz ",
+    "titleHighlight": "Crecer",
+    "titlePost": " Tu Ingreso Extra",
+    "subtitle": "La mayoría de las personas ya tiene lo necesario — habilidades, experiencia, ideas — solo les falta descubrir cómo convertirlo en ingresos reales. Faimgo encuentra tu oportunidad oculta y te da un camino claro para lograrlo.",
+    "startAssessment": "Comenzar Mi Evaluación",
+    "cardLabel": "Tus dos caminos",
+    "card1Title": "Freelance con Tu Habilidad",
+    "card1Badge": "El más rápido",
+    "card1Desc": "Tu computadora es el único equipo que necesitas.",
+    "firstDollarLabel": "Primer ingreso",
+    "firstDollarValue": "1–3 semanas",
+    "toStartLabel": "Para empezar",
+    "toStartValue": "$0",
+    "ceilingLabel": "Potencial de ingreso",
+    "ceilingValue": "Alto",
+    "card2Title": "Productos Digitales",
+    "card2Badge": "Camino a largo plazo",
+    "card2Desc": "Lo creas una vez y sigue generando mientras construyes el siguiente.",
+    "cardFooter": "Basado en tu tiempo, tus recursos y tu forma de trabajar"
+  },
+  "problem": {
+    "eyebrow": "El Problema",
+    "title": "Por Qué la Mayoría Nunca Empieza",
+    "subtitle": "No es flojera. Es que nadie te muestra un camino hecho específicamente para tu situación.",
+    "items": [
+      { "title": "Demasiadas ideas que se contradicen", "desc": "Saltas entre opciones, dudas de ti mismo, y nunca te comprometes con un camino que de verdad te quede." },
+      { "title": "Consejos genéricos que no aplican", "desc": "La mayoría de los \"consejos de negocio\" ignoran tus habilidades, tu presupuesto y tu experiencia — mandándote en la dirección equivocada." },
+      { "title": "Sin un plan claro", "desc": "Hasta una buena idea se cae sin metas realistas y pasos concretos que de verdad puedas seguir." },
+      { "title": "Sin conexión con tus fortalezas", "desc": "No sabes qué oportunidades encajan con lo que realmente puedes hacer hoy — así que pierdes el tiempo." }
+    ]
+  },
+  "howItWorks": {
+    "eyebrow": "Cómo Funciona",
+    "title": "Cuatro Pasos Hacia Tu Ingreso",
+    "subtitle": "Encuentra, Enfoca, Ve — de ahí viene el nombre. Crecer es lo que pasa después.",
+    "steps": [
+      { "step": "01", "title": "Encuentra", "desc": "Responde unas preguntas honestas sobre tu tiempo, tus habilidades y lo que ya tienes." },
+      { "step": "02", "title": "Enfoca", "desc": "Te conectamos con los caminos que de verdad te quedan — con un análisis real de cada uno." },
+      { "step": "03", "title": "Ve", "desc": "Recibe tus primeros pasos concretos — qué hacer, qué decir, y cómo saber que ya lo lograste." },
+      { "step": "04", "title": "Crece", "desc": "Construye desde tu primer dólar hasta un ingreso estable que crece con el tiempo." }
+    ]
+  },
+  "examples": {
+    "eyebrow": "Ejemplos de Resultados",
+    "title": "Caminos Reales para Personas Reales",
+    "timeLabel": "Tiempo para empezar:",
+    "budgetLabel": "Presupuesto:",
+    "items": [
+      { "persona": "Profesional Corporativo", "path": "Freelance con Tu Habilidad", "why": "Convierte años de experiencia en trabajo pagado con clientes — sin necesidad de nuevas habilidades.", "time": "1–3 semanas para el primer cliente", "budget": "$0 para empezar" },
+      { "persona": "Padre o Madre Ocupado(a)", "path": "Tutorías y Asesoría", "why": "Enseña lo que ya sabes, con un horario que se ajusta a tus hijos.", "time": "1–2 semanas para la primera sesión", "budget": "$0 para empezar" },
+      { "persona": "Práctico(a) y Manual", "path": "Servicios Locales", "why": "Trabajo con alta demanda en tu propio vecindario, pagado la misma semana.", "time": "Días para el primer trabajo", "budget": "Renta equipo, compra después" }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Preguntas Frecuentes",
+    "title": "Preguntas Comunes",
+    "items": [
+      { "q": "¿Qué tipo de oportunidades encuentra Faimgo?", "a": "Faimgo te conecta con caminos de ingreso extra realistas según tus habilidades, tiempo disponible, presupuesto y metas — desde freelance y tutorías hasta reventa, servicios locales, productos digitales y más." },
+      { "q": "¿Esto es gratis?", "a": "Sí — la evaluación es completamente gratis. Recibirás tu plan personalizado de dos caminos sin ningún costo." },
+      { "q": "¿Cuánto tiempo toma la evaluación?", "a": "Como dos minutos. Está diseñada para ser rápida y específica — sin relleno, solo lo necesario para encontrar tu mejor camino." },
+      { "q": "¿Necesito experiencia previa en negocios?", "a": "Para nada. Faimgo está hecho para personas que apenas están empezando. Te recibimos donde estás y construimos un camino desde ahí." }
+    ]
+  },
+  "cta": {
+    "titlePre": "Tu Ingreso Ya Te Está ",
+    "titleHighlight": "Esperando",
+    "subtitle": "Toma la evaluación gratis y recibe tu plan personalizado en unos dos minutos.",
+    "startFree": "Comenzar Evaluación Gratis"
+  },
+  "footer": {
+    "copyright": "© 2026 Faimgo. Todos los derechos reservados.",
+    "privacy": "Privacidad",
+    "getPlanBack": "Recuperar mi plan"
+  },
+  "langSwitcher": {
+    "label": "Idioma",
+    "en": "English",
+    "es": "Español",
+    "zh": "中文"
+  }
+}

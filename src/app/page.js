@@ -1,10 +1,31 @@
+"use client";
+
+/*
+  This page was a server component until the i18n batch below. Every
+  visible section on it needs a translated string, so keeping it server-
+  rendered would mean either duplicating the whole render tree per locale
+  or piping translated strings down from the server — real complexity for
+  a homepage. The honest trade-off, made deliberately: this page now
+  server-renders in English (the default locale) and swaps client-side
+  to a visitor's saved language choice a moment after hydration — the
+  same "correct once JS runs" pattern MobileNav.js already uses for its
+  menu. A search engine crawling the raw HTML sees the English version,
+  which is normal and fine unless a future project deliberately wants
+  separate indexed URLs per language (a bigger, distinct piece of work,
+  not needed for a switcher used by the people already on the page).
+*/
+
 import Link from "next/link";
 import Reveal from "./Reveal";
 import FeedbackWidget from "./FeedbackWidget";
 import MobileNav from "./MobileNav";
 import Arrival from "./Arrival";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useLocale } from "../lib/i18n/LocaleContext";
 
 export default function Home() {
+  const { t, tRaw } = useLocale();
+
   // Crisp modern palette
   const C = {
     white: '#FFFFFF',
@@ -20,6 +41,12 @@ export default function Home() {
     sand: '#FBF3DE', sandText: '#8A6A14',
     soft: '0 1px 2px rgba(20,36,27,0.04), 0 14px 34px -20px rgba(20,36,27,0.14)',
   };
+
+  const problemItems = tRaw("problem.items");
+  const stepItems = tRaw("howItWorks.steps");
+  const exampleItems = tRaw("examples.items");
+  const faqItems = tRaw("faq.items");
+
   return (
     <main className="min-h-screen font-sans" style={{backgroundColor: C.white, color: C.ink}}>
       {/* Renders nothing. Supplies the funnel's denominator — see Arrival.js. */}
@@ -33,20 +60,21 @@ export default function Home() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <a href="#how-it-works" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>How It Works</a>
-          <a href="#examples" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>Examples</a>
-          <a href="#faq" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>FAQ</a>
-          <FeedbackWidget trigger="nav" kind="contact" navLabel="Contact" context="header-contact" />
+          <a href="#how-it-works" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>{t("common.howItWorks")}</a>
+          <a href="#examples" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>{t("nav.examples")}</a>
+          <a href="#faq" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>{t("nav.faq")}</a>
+          <FeedbackWidget trigger="nav" kind="contact" navLabel={t("common.contact")} context="header-contact" />
+          <LanguageSwitcher tone="dark" />
           <a href="/assessment" className="press px-5 py-2.5 rounded-full text-[15px] font-semibold hover:opacity-90"
             style={{backgroundColor: C.goldBright, color: C.green}}>
-            Get Started
+            {t("common.getStarted")}
           </a>
         </div>
 
         {/* Below `md` the block above is hidden. Without this, a phone showed
             the wordmark and nothing else — including no Get Started. */}
         <MobileNav C={C}>
-          <FeedbackWidget trigger="nav" kind="contact" navLabel="Contact" context="header-contact-mobile" />
+          <FeedbackWidget trigger="nav" kind="contact" navLabel={t("common.contact")} context="header-contact-mobile" />
         </MobileNav>
       </nav>
 
@@ -57,60 +85,58 @@ export default function Home() {
           <div className="flex-1">
             <a href="/assessment" className="hero-rise inline-flex items-center gap-2 px-4 py-2 rounded-full text-[14px] font-semibold mb-7 transition-all hover:opacity-80"
               style={{backgroundColor: C.white, color: C.green, border: `1px solid ${C.line}`, boxShadow: C.soft, animationDelay: '0ms'}}>
-              Free 2-minute assessment →
+              {t("hero.badge")}
             </a>
             <h1 className="hero-rise font-display text-5xl md:text-6xl leading-[1.08] mb-6" style={{color: C.green, animationDelay: '80ms'}}>
-              Find, Aim, and <span style={{color: C.gold}}>Grow</span> Your Side Income
+              {t("hero.titlePre")}<span style={{color: C.gold}}>{t("hero.titleHighlight")}</span>{t("hero.titlePost")}
             </h1>
             <p className="hero-rise text-xl leading-relaxed mb-9" style={{color: C.body, animationDelay: '160ms'}}>
-              Most people already have what it takes — skills, experience, ideas —
-              they just haven&apos;t discovered how to turn it into real income yet.
-              Faimgo finds your hidden opportunity and gives you a clear path to act on it.
+              {t("hero.subtitle")}
             </p>
             <div className="hero-rise flex flex-wrap gap-4" style={{animationDelay: '240ms'}}>
               <a href="/assessment" className="press px-8 py-4 rounded-full font-semibold text-[17px] hover:opacity-90"
                 style={{backgroundColor: C.green, color: C.white, boxShadow: C.soft}}>
-                Start My Assessment
+                {t("hero.startAssessment")}
               </a>
               <a href="#how-it-works" className="press px-8 py-4 rounded-full font-semibold text-[17px] border-2 hover:bg-black/[0.03]"
                 style={{borderColor: C.green, color: C.green}}>
-                How It Works
+                {t("common.howItWorks")}
               </a>
             </div>
           </div>
 
           {/* Hero Card — mirrors a real assessment result */}
           <div className="hero-rise lift flex-1 w-full rounded-2xl p-8" style={{backgroundColor: C.tint, border: `1px solid ${C.line}`, boxShadow: C.soft, animationDelay: '320ms'}}>
-            <p className="text-[13px] font-bold uppercase tracking-widest mb-4" style={{color: C.gold}}>Your two paths</p>
+            <p className="text-[13px] font-bold uppercase tracking-widest mb-4" style={{color: C.gold}}>{t("hero.cardLabel")}</p>
             <div className="rounded-xl p-5 mb-3" style={{backgroundColor: C.white, border: `1px solid ${C.line}`}}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[16px] font-semibold" style={{color: C.green}}>Freelancing Your Skill</span>
-                <span className="text-[12px] px-2.5 py-1 rounded-full font-semibold" style={{backgroundColor: C.mint, color: C.mintText}}>Fastest first win</span>
+                <span className="text-[16px] font-semibold" style={{color: C.green}}>{t("hero.card1Title")}</span>
+                <span className="text-[12px] px-2.5 py-1 rounded-full font-semibold" style={{backgroundColor: C.mint, color: C.mintText}}>{t("hero.card1Badge")}</span>
               </div>
-              <p className="text-[14px] mb-4" style={{color: C.body}}>Your computer is the only equipment it needs.</p>
+              <p className="text-[14px] mb-4" style={{color: C.body}}>{t("hero.card1Desc")}</p>
               <div className="flex gap-7">
                 <div>
-                  <p className="text-[12px] font-semibold" style={{color: C.ink}}>First dollar</p>
-                  <p className="text-[14px]" style={{color: C.body}}>1–3 weeks</p>
+                  <p className="text-[12px] font-semibold" style={{color: C.ink}}>{t("hero.firstDollarLabel")}</p>
+                  <p className="text-[14px]" style={{color: C.body}}>{t("hero.firstDollarValue")}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] font-semibold" style={{color: C.ink}}>To start</p>
-                  <p className="text-[14px]" style={{color: C.body}}>$0</p>
+                  <p className="text-[12px] font-semibold" style={{color: C.ink}}>{t("hero.toStartLabel")}</p>
+                  <p className="text-[14px]" style={{color: C.body}}>{t("hero.toStartValue")}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] font-semibold" style={{color: C.ink}}>Income ceiling</p>
-                  <p className="text-[14px]" style={{color: C.body}}>High</p>
+                  <p className="text-[12px] font-semibold" style={{color: C.ink}}>{t("hero.ceilingLabel")}</p>
+                  <p className="text-[14px]" style={{color: C.body}}>{t("hero.ceilingValue")}</p>
                 </div>
               </div>
             </div>
             <div className="rounded-xl p-5" style={{backgroundColor: C.white, border: `1px solid ${C.line}`}}>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[16px] font-semibold" style={{color: C.green}}>Digital Products</span>
-                <span className="text-[12px] px-2.5 py-1 rounded-full font-semibold" style={{backgroundColor: C.sand, color: C.sandText}}>Long-term path</span>
+                <span className="text-[16px] font-semibold" style={{color: C.green}}>{t("hero.card2Title")}</span>
+                <span className="text-[12px] px-2.5 py-1 rounded-full font-semibold" style={{backgroundColor: C.sand, color: C.sandText}}>{t("hero.card2Badge")}</span>
               </div>
-              <p className="text-[14px]" style={{color: C.body}}>Build it once — it keeps earning while you build the next.</p>
+              <p className="text-[14px]" style={{color: C.body}}>{t("hero.card2Desc")}</p>
             </div>
-            <p className="text-[13px] mt-4 text-center" style={{color: C.body}}>Based on your time, inventory, and how you work</p>
+            <p className="text-[13px] mt-4 text-center" style={{color: C.body}}>{t("hero.cardFooter")}</p>
           </div>
         </div>
       </section>
@@ -119,21 +145,16 @@ export default function Home() {
       <section className="px-8 py-24" style={{backgroundColor: C.tint}}>
         <div className="max-w-6xl mx-auto">
           <Reveal>
-            <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>The Problem</p>
+            <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>{t("problem.eyebrow")}</p>
             <h2 className="font-display text-4xl md:text-5xl mb-4" style={{color: C.green}}>
-              Why Most People Never Start
+              {t("problem.title")}
             </h2>
             <p className="text-xl mb-14 max-w-2xl leading-relaxed" style={{color: C.body}}>
-              It&apos;s not laziness. It&apos;s that nobody shows you a path built specifically for your situation.
+              {t("problem.subtitle")}
             </p>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              {title: 'Too many conflicting ideas', desc: 'You jump between options, second-guess yourself, and never commit to a path that actually fits you.'},
-              {title: "Generic advice that doesn't apply", desc: 'Most "business advice" ignores your skills, budget, and experience — sending you in the wrong direction.'},
-              {title: 'No clear roadmap', desc: 'Even a solid idea falls apart without realistic milestones and next steps you can actually follow.'},
-              {title: 'No alignment with your strengths', desc: "You don't know which opportunities match what you can realistically do today — so you waste time."},
-            ].map((item, i) => (
+            {problemItems.map((item, i) => (
               <Reveal key={i} delay={i * 80}>
                 <div className="lift h-full p-8 rounded-2xl" style={{backgroundColor: C.white, border: `1px solid ${C.line}`, boxShadow: C.soft}}>
                   <p className="text-[15px] font-bold mb-3 tracking-widest" style={{color: C.gold}}>{String(i + 1).padStart(2, '0')}</p>
@@ -149,8 +170,8 @@ export default function Home() {
       {/* How It Works */}
       <section id="how-it-works" className="px-8 py-24 max-w-6xl mx-auto">
         <Reveal>
-          <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>How It Works</p>
-          <h2 className="font-display text-4xl md:text-5xl mb-4" style={{color: C.green}}>Four Steps to Your Income Path</h2>
+          <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>{t("howItWorks.eyebrow")}</p>
+          <h2 className="font-display text-4xl md:text-5xl mb-4" style={{color: C.green}}>{t("howItWorks.title")}</h2>
           {/* Step 3 was "Pitch" until Aug 10. Two reasons it had to go. It
               assumed the outreach model, so it was simply wrong for two of the
               nine paths — nobody pitches on a gig app, and content creators
@@ -159,16 +180,11 @@ export default function Home() {
               sell that way. And "Find, Aim, Go" is the only version of the
               framework the product's own name teaches. */}
           <p className="text-[17px] leading-relaxed mb-14" style={{color: C.body}}>
-            {"Find, Aim, Go — that's where the name comes from. Grow is what happens after."}
+            {t("howItWorks.subtitle")}
           </p>
         </Reveal>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          {[
-            {step: '01', title: 'Find', desc: 'Answer a few honest questions about your time, skills, and what you already have.'},
-            {step: '02', title: 'Aim', desc: 'We match you to the paths that actually fit you — with a real reality check on each.'},
-            {step: '03', title: 'Go', desc: 'Get your first concrete moves — what to do, what to say, and how to know a step is done.'},
-            {step: '04', title: 'Grow', desc: 'Build from your first dollar into steady income that compounds over time.'},
-          ].map((item, i) => (
+          {stepItems.map((item, i) => (
             <Reveal key={i} delay={i * 90}>
               <div className="flex flex-col gap-3">
                 <span className="font-display text-5xl" style={{color: C.gold}}>{item.step}</span>
@@ -184,23 +200,19 @@ export default function Home() {
       <section id="examples" className="px-8 py-24" style={{backgroundColor: C.tint}}>
         <div className="max-w-6xl mx-auto">
           <Reveal>
-            <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>Example Outputs</p>
-            <h2 className="font-display text-4xl md:text-5xl mb-14" style={{color: C.green}}>Real Paths for Real People</h2>
+            <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>{t("examples.eyebrow")}</p>
+            <h2 className="font-display text-4xl md:text-5xl mb-14" style={{color: C.green}}>{t("examples.title")}</h2>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {persona: 'Corporate Professional', path: 'Freelancing Your Skill', why: 'Turns years of expertise into paid client work — no new skills required.', time: '1–3 weeks to first client', budget: '$0 to start'},
-              {persona: 'Busy Parent', path: 'Tutoring & Coaching', why: 'Teach what you already know, on a schedule that fits around the kids.', time: '1–2 weeks to first session', budget: '$0 to start'},
-              {persona: 'Hands-On & Practical', path: 'Local Services', why: 'High-demand work in your own neighborhood, paid the same week.', time: 'Days to first job', budget: 'Rent gear, buy later'},
-            ].map((item, i) => (
+            {exampleItems.map((item, i) => (
               <Reveal key={i} delay={i * 80}>
                 <div className="lift h-full p-7 rounded-2xl" style={{backgroundColor: C.white, border: `1px solid ${C.line}`, boxShadow: C.soft}}>
                   <p className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{color: C.gold}}>{item.persona}</p>
                   <h3 className="text-xl font-bold mb-3" style={{color: C.green}}>{item.path}</h3>
                   <p className="text-[16px] mb-5 leading-relaxed" style={{color: C.body}}>{item.why}</p>
                   <div className="border-t pt-4 flex flex-col gap-1.5" style={{borderColor: C.line}}>
-                    <p className="text-[14px]" style={{color: C.body}}><span className="font-semibold" style={{color: C.ink}}>Time to start:</span> {item.time}</p>
-                    <p className="text-[14px]" style={{color: C.body}}><span className="font-semibold" style={{color: C.ink}}>Budget:</span> {item.budget}</p>
+                    <p className="text-[14px]" style={{color: C.body}}><span className="font-semibold" style={{color: C.ink}}>{t("examples.timeLabel")}</span> {item.time}</p>
+                    <p className="text-[14px]" style={{color: C.body}}><span className="font-semibold" style={{color: C.ink}}>{t("examples.budgetLabel")}</span> {item.budget}</p>
                   </div>
                 </div>
               </Reveal>
@@ -212,16 +224,11 @@ export default function Home() {
       {/* FAQ */}
       <section id="faq" className="px-8 py-24 max-w-4xl mx-auto">
         <Reveal>
-          <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>FAQ</p>
-          <h2 className="font-display text-4xl md:text-5xl mb-14" style={{color: C.green}}>Common Questions</h2>
+          <p className="text-[14px] font-bold tracking-widest uppercase mb-3" style={{color: C.gold}}>{t("faq.eyebrow")}</p>
+          <h2 className="font-display text-4xl md:text-5xl mb-14" style={{color: C.green}}>{t("faq.title")}</h2>
         </Reveal>
         <div className="flex flex-col gap-5">
-          {[
-            {q: 'What kinds of opportunities does Faimgo find?', a: 'Faimgo matches you with realistic side income paths based on your skills, available time, budget, and goals — from freelancing and tutoring to reselling, local services, digital products, and more.'},
-            {q: 'Is this free to use?', a: "Yes — the assessment is completely free. You'll get your personalized two-path plan at no cost."},
-            {q: 'How long does the assessment take?', a: "About two minutes. It's designed to be fast and specific — no fluff, just what we need to find your best path."},
-            {q: 'Do I need any prior business experience?', a: 'Not at all. Faimgo is built for people who are just starting out. We meet you where you are and build a path from there.'},
-          ].map((item, i) => (
+          {faqItems.map((item, i) => (
             <Reveal key={i} delay={i * 60}>
               <div className="p-7 rounded-2xl" style={{backgroundColor: C.tint, border: `1px solid ${C.line}`}}>
                 <h3 className="font-semibold text-lg mb-2" style={{color: C.green}}>{item.q}</h3>
@@ -236,19 +243,19 @@ export default function Home() {
       <section id="start" className="px-8 py-28 text-center" style={{backgroundColor: C.green}}>
         <Reveal>
           <h2 className="font-display text-4xl md:text-5xl mb-5" style={{color: C.white}}>
-            Your Income Is Already <span style={{color: C.goldBright}}>Waiting</span>
+            {t("cta.titlePre")}<span style={{color: C.goldBright}}>{t("cta.titleHighlight")}</span>
           </h2>
           <p className="text-xl mb-11 max-w-xl mx-auto leading-relaxed" style={{color: '#B7C9BF'}}>
-            Take the free assessment and get your personalized plan in about two minutes.
+            {t("cta.subtitle")}
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <a href="/assessment" className="press px-10 py-4 rounded-full font-semibold text-[17px] hover:opacity-90"
               style={{backgroundColor: C.goldBright, color: C.green}}>
-              Start Free Assessment
+              {t("cta.startFree")}
             </a>
             <a href="#how-it-works" className="press px-10 py-4 rounded-full font-semibold text-[17px] border-2 hover:bg-white/10"
               style={{borderColor: C.white, color: C.white}}>
-              How It Works
+              {t("common.howItWorks")}
             </a>
           </div>
         </Reveal>
@@ -260,20 +267,20 @@ export default function Home() {
         <span className="text-xl font-bold tracking-tight" style={{color: C.white}}>
           faim<span style={{color: C.goldBright}}>go</span>
         </span>
-        <p className="text-[14px]" style={{color: '#9DB0A6'}}>© 2026 Faimgo. All rights reserved.</p>
+        <p className="text-[14px]" style={{color: '#9DB0A6'}}>{t("footer.copyright")}</p>
         <div className="flex gap-6 items-center">
           {/* Privacy is a real page now. Terms was removed rather than left
               pointing at "#": a dead link on a site that collects email reads
               as a document you are not being shown, which is worse than an
               absent one. It comes back when it exists. */}
-          <Link href="/privacy" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Privacy</Link>
+          <Link href="/privacy" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>{t("footer.privacy")}</Link>
           {/* Added Aug 16 alongside /restore — a second, quieter door back to
               a plan for anyone who lands on the homepage instead of straight
               into the assessment (a bookmark, a search result, a share). The
               assessment's own start screen carries the same link for the
               more common case of clicking "Start" first. */}
-          <Link href="/restore" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>Get your plan back</Link>
-          <FeedbackWidget trigger="link" kind="contact" navLabel="Contact" context="footer-contact" />
+          <Link href="/restore" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>{t("footer.getPlanBack")}</Link>
+          <FeedbackWidget trigger="link" kind="contact" navLabel={t("common.contact")} context="footer-contact" />
         </div>
       </footer>
 
