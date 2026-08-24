@@ -537,6 +537,53 @@ export function markOutcome(playId, outcome) {
 }
 
 /*
+  The check-in answer — how a finished step actually LANDED, in the person's
+  own words from the play's `checkin.options`. This is the third question in
+  the record, and the one the coaching loop turns on.
+
+  `markStep` answers "was it done". `markOutcome` answers "did it make money".
+  This answers "are you unstuck, or where did you snag" — a genuinely different
+  question, because a step can be done, produce nothing yet, AND leave the
+  person blocked on the next move, all at once. The signal string is the
+  library's own vocabulary (has:offer / blocked:offer / setup:rough / …), and
+  it is what routes the person to the right next thing on the plan page.
+
+  Deliberately mirrors markOutcome's shape and its three rules:
+   1. Only ever attached to a step already marked done — the `then` coaching
+      line is a response to a completion, never a gate in front of one.
+   2. Re-answerable. "I'm still stuck" on Tuesday and "got it" on Friday is a
+      transition worth seeing; `signalAt` moves with the answer.
+   3. Stored, not interpreted here — the plan page reads the signal back and
+      decides what to show. This file only records.
+
+  It is also the exact input the future AI coach consumes: help.ai-coach's
+  `need_signals` lists checkin_answer signals (blocked:offer, …). Collecting
+  it now, by hand-written options, is what gives that coach real history to
+  pick up from later instead of starting cold — the same "cheap to collect
+  now, impossible to collect retroactively" logic markOutcome already follows.
+
+  Returns false if there is nothing to attach to, so the caller can tell
+  "stored" from "quietly ignored".
+*/
+export function markSignal(playId, signal) {
+  if (!playId) return false;
+  const s = read();
+  if (!s) return false;
+  if (!s.steps || typeof s.steps !== "object") return false;
+  const existing = s.steps[playId];
+  if (!existing || !existing.done) return false;
+  if (signal === null) {
+    delete existing.signal;
+    delete existing.signalAt;
+  } else {
+    if (typeof signal !== "string") return false;
+    existing.signal = signal;
+    existing.signalAt = Date.now();
+  }
+  return write(s);
+}
+
+/*
   Has this person ever reported money, on any step, ever — including on plans
   they have since replaced?
 

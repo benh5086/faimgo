@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
 import Gate from "../Gate.js";
-import { loadSaved, session, markStep, markOutcome, readSteps, hasEverEarned, OUTCOMES } from "../../lib/store.js";
+import { loadSaved, session, markStep, markOutcome, markSignal, readSteps, hasEverEarned, OUTCOMES } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
 
@@ -234,20 +234,115 @@ function OutcomeControl({ play, step, onOutcome }) {
   );
 }
 
-function DoneControl({ play, done, step, onToggle, onOutcome }) {
+/* ---------- the check-in ----------
+   The turn that makes this page a conversation instead of a checklist, and
+   the reason someone comes BACK to it rather than reading it once. It is the
+   `checkin` block that has sat written-but-unrendered in every core play in
+   plays.json since the library was authored: a question ("How did that
+   land?"), a handful of honest answers, and for each answer a `then` — the
+   one sentence a coach would say next — plus a `routes_to` pointing at the
+   exact thing to do about it.
+
+   THREE THINGS IT DOES, AND WHY EACH MATTERS
+   1. It responds. The person marks a step done and the page says something
+      specific back, in the library's own written voice. That specificity is
+      the whole difference between a document and a coach — and it is what the
+      first cohort experiences as the product paying attention to them.
+   2. It routes. When the answer is "I'm still stuck", `routes_to` names where
+      to go — another step, the get-a-human card, or, where the target is the
+      not-yet-built AI coach, an honest hand to a real person. It never
+      renders a dead link: a route to something not on this page falls back to
+      the human channel rather than a button that goes nowhere.
+   3. It records the signal (markSignal). blocked:offer / has:price / … is the
+      exact vocabulary help.ai-coach's `need_signals` is written to consume,
+      so every answer given here is training history the future coach picks up
+      from instead of starting cold.
+
+   Re-answerable on purpose (see markSignal): "still stuck" turning into "got
+   it" is the transition the product most wants to see, so the answer is never
+   frozen. */
+function CheckinRoute({ option, play, renderedIds, onGoto }) {
+  const rt = option.routes_to;
+  if (!rt) return null;
+  /* The AI coach and the ask-anything box are written and good and are not
+     live — routing a person to a control that does not exist is exactly the
+     dishonesty this codebase refuses everywhere else. So a route to either
+     becomes a hand to the real person who reads these. */
+  const notBuilt = rt === "help.ai-coach" || rt === "help.faimgo-help";
+  const onPage = Boolean(renderedIds && renderedIds.has(rt)) && !notBuilt;
+
+  if (onPage) {
+    return (
+      <button onClick={() => onGoto(rt)} className="press text-[14px] font-bold underline underline-offset-2 mt-3" style={{ color: C.gold }}>
+        Take me to the step that fixes this →
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
+      {notBuilt && (
+        <p className="text-[14px] leading-relaxed mb-2" style={{ color: C.gray }}>
+          The AI coach that would take this from here isn&apos;t live yet — so a real person reads it instead. That&apos;s the honest version of what we have today.
+        </p>
+      )}
+      <FeedbackWidget trigger="cta" kind="contact" context={"checkin:" + play.id + ":" + option.signal} navLabel="Tell us exactly where you're stuck" />
+    </div>
+  );
+}
+
+function CheckinControl({ play, step, renderedIds, onSignal, onGoto }) {
+  const ck = play.checkin;
+  if (!ck || !Array.isArray(ck.options) || ck.options.length === 0) return null;
+
+  const chosenSignal = step && step.signal;
+  const chosen = chosenSignal ? ck.options.find((o) => o.signal === chosenSignal) : null;
+
+  if (chosen) {
+    return (
+      <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: C.cream, border: `1px solid ${C.beige}` }}>
+        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{chosen.then}</p>
+        <CheckinRoute option={chosen} play={play} renderedIds={renderedIds} onGoto={onGoto} />
+        <button onClick={() => onSignal(play, null)} className="press text-[13px] font-semibold underline underline-offset-2 mt-3" style={{ color: C.gray }}>
+          That&apos;s not quite where I am
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: C.cream, border: `1px solid ${C.beige}` }}>
+      <p className="text-[15px] font-semibold mb-2.5" style={{ color: C.ink }}>{ck.question}</p>
+      <div className="flex flex-col gap-2">
+        {ck.options.map((o) => (
+          <button key={o.signal} onClick={() => onSignal(play, o.signal)}
+            className="press text-left px-4 py-2.5 rounded-xl text-[15px] leading-snug hover:opacity-90"
+            style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}`, color: C.ink }}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DoneControl({ play, done, step, onToggle, onOutcome, onSignal, onGoto, renderedIds }) {
   const [note, setNote] = useState("");
   const [asking, setAsking] = useState(false);
 
   if (done) {
     return (
-      <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: C.greenSoft }}>
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-[15px] font-semibold" style={{ color: C.green }}>Done. That&apos;s one that actually happened.</p>
-          <button onClick={() => onToggle(play, false)} className="press text-[13px] font-semibold underline underline-offset-2 flex-shrink-0" style={{ color: C.gray }}>
-            Undo
-          </button>
+      <div className="mt-4">
+        <div className="p-4 rounded-xl" style={{ backgroundColor: C.greenSoft }}>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[15px] font-semibold" style={{ color: C.green }}>Done. That&apos;s one that actually happened.</p>
+            <button onClick={() => onToggle(play, false)} className="press text-[13px] font-semibold underline underline-offset-2 flex-shrink-0" style={{ color: C.gray }}>
+              Undo
+            </button>
+          </div>
+          <OutcomeControl play={play} step={step} onOutcome={onOutcome} />
         </div>
-        <OutcomeControl play={play} step={step} onOutcome={onOutcome} />
+        <CheckinControl play={play} step={step} renderedIds={renderedIds} onSignal={onSignal} onGoto={onGoto} />
       </div>
     );
   }
@@ -295,14 +390,23 @@ function GapBadge() {
   );
 }
 
-function PlayCard({ play, openByDefault, steps, onToggle, onOutcome }) {
+function PlayCard({ play, openByDefault, forceOpen, steps, onToggle, onOutcome, onSignal, onGoto, renderedIds }) {
   const [open, setOpen] = useState(Boolean(openByDefault));
   const [stalls, setStalls] = useState(false);
   const c = play.content || {};
   const how = play.how_to || {};
 
+  /* A check-in on another card can route the person here — "take me to the
+     step that fixes this". When it does, the target must actually open, not
+     just scroll to a collapsed header. forceOpen flips true for the focused
+     card; this opens it and never forces it shut again, so a person who then
+     collapses it by hand keeps that choice. */
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
+
   return (
-    <div className="rounded-2xl mb-3 overflow-hidden" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
+    <div id={"play-" + play.id} className="rounded-2xl mb-3 overflow-hidden" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
       <button onClick={() => setOpen(!open)} className="w-full text-left px-5 py-4 flex items-start gap-4 hover:opacity-90">
         <span className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[15px] font-bold mt-[2px]"
           style={{ backgroundColor: C.greenSoft, color: C.green }}>
@@ -346,7 +450,7 @@ function PlayCard({ play, openByDefault, steps, onToggle, onOutcome }) {
 
           <Concrete x={play.concrete} />
 
-          <DoneControl play={play} done={Boolean(steps[play.id])} step={steps[play.id]} onToggle={onToggle} onOutcome={onOutcome} />
+          <DoneControl play={play} done={Boolean(steps[play.id])} step={steps[play.id]} onToggle={onToggle} onOutcome={onOutcome} onSignal={onSignal} onGoto={onGoto} renderedIds={renderedIds} />
 
           {c.done_when && (
             <div className="p-4 rounded-xl mt-4" style={{ backgroundColor: C.greenSoft }}>
@@ -409,11 +513,18 @@ function PlayCard({ play, openByDefault, steps, onToggle, onOutcome }) {
 
 /* ---------- on-demand card ---------- */
 
-function RailCard({ play }) {
+function RailCard({ play, forceOpen }) {
   const [open, setOpen] = useState(false);
   const c = play.content || {};
+
+  /* Same as PlayCard: a check-in that routes to this help card (e.g. "get a
+     human") must open it, not just scroll to its shut header. */
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
+
   return (
-    <div className="rounded-2xl mb-3" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
+    <div id={"rail-" + play.id} className="rounded-2xl mb-3" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
       <button onClick={() => setOpen(!open)} className="w-full text-left px-5 py-4 flex items-center gap-3 hover:opacity-90">
         <span aria-hidden="true" className="text-[20px]" style={{ color: C.gold }}>{play.icon}</span>
         <span className="block flex-1">
@@ -454,6 +565,9 @@ export default function PlanPage() {
   const [state, setState] = useState({ loading: true, saved: null });
   const [steps, setSteps] = useState({});
   const [ids, setIds] = useState(null);
+  /* Which card a check-in has routed the person to, so it opens on arrival
+     rather than being scrolled to while still collapsed. */
+  const [focusId, setFocusId] = useState(null);
 
   /* Marking a step done is the one write on this page that matters, so it
      does three things at once: store it locally (instant, works offline),
@@ -492,6 +606,38 @@ export default function PlanPage() {
     if (!stored || !outcome) return;
     track(ids, "step_outcome:" + outcome + ":" + play.id);
     if (firstEver) track(ids, "first_dollar");
+  };
+
+  /* The check-in answer. Records the library-vocabulary signal locally
+     (markSignal), re-renders so the `then` coaching line replaces the
+     question, and reports it. The signal goes INSIDE the event name for the
+     same fixed-column reason step_done does — `checkin:blocked:offer:offer.define`
+     — so the blockers people actually hit start accumulating today, which is
+     the first real evidence of where the walkthrough loses people and the
+     exact history the future AI coach is written to pick up from. A null
+     signal is the person un-answering; nothing is reported for that. */
+  const onSignal = (play, signal) => {
+    markSignal(play.id, signal);
+    setSteps(readSteps());
+    if (signal) track(ids, "checkin:" + signal + ":" + play.id);
+  };
+
+  /* A check-in routed the person to another card. Open it and bring it into
+     view. The scroll waits a beat for forceOpen to expand the target, and
+     both failure paths (no element, no scrollIntoView) are silent — a
+     navigation aid must never throw. */
+  const onGoto = (targetId) => {
+    if (!targetId) return;
+    setFocusId(targetId);
+    track(ids, "checkin_route:" + targetId);
+    try {
+      setTimeout(() => {
+        try {
+          const el = document.getElementById("play-" + targetId) || document.getElementById("rail-" + targetId);
+          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        } catch (e) { /* scroll is a nicety, never a requirement */ }
+      }, 80);
+    } catch (e) { /* setTimeout unavailable is not a reason to fail a click */ }
   };
 
   useEffect(() => {
@@ -578,10 +724,25 @@ export default function PlanPage() {
   const doneCount = ordered.filter((pl) => steps[pl.id]).length;
   const nextUp = ordered.find((pl) => !steps[pl.id]) || null;
 
+  /* Every card actually on this page — the sequence plus the help rail. A
+     check-in only offers "take me there" when its `routes_to` is in here;
+     anything else falls back to the human channel, so no route is ever a dead
+     link. */
+  const renderedIds = new Set([...ordered.map((pl) => pl.id), ...plan.helpRail.map((pl) => pl.id)]);
+
   return (
     <Shell>
       {/* ---- who this is for ---- */}
       <div className="mb-8">
+        {/* A warm word for someone coming back — but nothing about how long
+            they were gone. The record never resets and never counts days, so
+            the greeting can't either: a person returning after a month gets
+            "welcome back", never "it's been a while". Only shown once they've
+            actually finished something, so it lands as recognition, not as a
+            greeting bolted onto a stranger's first visit. */}
+        {ids && ids.returning && doneCount > 0 && (
+          <p className="text-[15px] font-bold mb-2" style={{ color: C.gold }}>Welcome back — right where you left off.</p>
+        )}
         <Tag>Your walkthrough</Tag>
         <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
           {w ? `${w.name}, step by step.` : "Your next 90 days."}
@@ -697,7 +858,8 @@ export default function PlanPage() {
             </p>
           )}
           {ph.plays.map((pl) => (
-            <PlayCard key={pl.id} play={pl} openByDefault={pl.id === nextUp?.id} steps={steps} onToggle={onToggle} onOutcome={onOutcome} />
+            <PlayCard key={pl.id} play={pl} openByDefault={pl.id === nextUp?.id} forceOpen={pl.id === focusId}
+              steps={steps} onToggle={onToggle} onOutcome={onOutcome} onSignal={onSignal} onGoto={onGoto} renderedIds={renderedIds} />
           ))}
         </section>
       ))}
@@ -747,7 +909,7 @@ export default function PlanPage() {
             <p className="text-[16px] leading-relaxed mb-4" style={{ color: C.gray }}>
               These aren&apos;t steps and they have no place in the order. Open one the day you need it — from any point in the plan.
             </p>
-            {plan.helpRail.map((pl) => <RailCard key={pl.id} play={pl} />)}
+            {plan.helpRail.map((pl) => <RailCard key={pl.id} play={pl} forceOpen={pl.id === focusId} />)}
           </section>
         </Gate>
       )}
