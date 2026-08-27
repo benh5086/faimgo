@@ -55,9 +55,13 @@ export default function Home() {
       {/* Navigation */}
       <nav style={{backgroundColor: C.green}} className="relative px-8 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center">
-          <span className="text-2xl font-bold tracking-tight" style={{color: C.white}}>
+          {/* The wordmark links home. It used to be a plain <span>, so the one
+              thing every visitor instinctively clicks to get back to the top —
+              the logo — did nothing. On the homepage it's a no-op scroll-to-top;
+              from anywhere the header is reused it's the way back. */}
+          <Link href="/" aria-label="Faimgo — home" className="text-2xl font-bold tracking-tight" style={{color: C.white, textDecoration: "none"}}>
             faim<span style={{color: C.goldBright}}>go</span>
-          </span>
+          </Link>
         </div>
         <div className="hidden md:flex items-center gap-8">
           <a href="#how-it-works" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>{t("common.howItWorks")}</a>

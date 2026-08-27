@@ -7,6 +7,7 @@ import Gate from "../Gate.js";
 import { loadSaved, session, markStep, markOutcome, markSignal, readSteps, hasEverEarned, OUTCOMES } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
+import { toolHref } from "../../lib/affiliate.js";
 
 /* ============================================================
    FAIMGO — THE WALKTHROUGH (/plan)
@@ -116,16 +117,28 @@ function Concrete({ x }) {
       {tools.length > 0 && (
         <div className="mb-4">
           <p className="text-[12px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.gold }}>What you&apos;ll use</p>
-          {tools.map((t, i) => (
-            <div key={i} className="py-2" style={{ borderTop: i ? `1px dashed ${C.beige}` : "none" }}>
-              <p className="text-[15px]" style={{ color: C.ink }}>
-                <b>{t.name}</b>
-                {t.cost ? <span style={{ color: C.green }}> · {t.cost}</span> : null}
-                {t.at && t.at !== "—" ? <span style={{ color: C.gray }}> · {t.at}</span> : null}
-              </p>
-              {t.for && <p className="text-[14px] leading-relaxed mt-0.5" style={{ color: C.gray }}>{t.for}</p>}
-            </div>
-          ))}
+          {tools.map((t, i) => {
+            /* The tool name links to the tool — its normal site today, or a
+               referral link the day one is registered in affiliate.js. These
+               links live only on our own page, never in outreach. */
+            const link = toolHref(t.name, t.at);
+            return (
+              <div key={i} className="py-2" style={{ borderTop: i ? `1px dashed ${C.beige}` : "none" }}>
+                <p className="text-[15px]" style={{ color: C.ink }}>
+                  {link ? (
+                    <a href={link.href} target="_blank"
+                      rel={link.isAffiliate ? "noopener sponsored" : "noopener noreferrer"}
+                      style={{ color: C.green, fontWeight: 700, textDecorationColor: C.beige, textUnderlineOffset: "2px" }}>
+                      {t.name}
+                    </a>
+                  ) : <b>{t.name}</b>}
+                  {t.cost ? <span style={{ color: C.green }}> · {t.cost}</span> : null}
+                  {t.at && t.at !== "—" ? <span style={{ color: C.gray }}> · {t.at}</span> : null}
+                </p>
+                {t.for && <p className="text-[14px] leading-relaxed mt-0.5" style={{ color: C.gray }}>{t.for}</p>}
+              </div>
+            );
+          })}
         </div>
       )}
 
