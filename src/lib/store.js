@@ -41,7 +41,7 @@
 */
 
 const KEY = "faimgo.v1";
-const SCHEMA = 4;
+const SCHEMA = 5;
 const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes away = a new sitting
 const MAX_HISTORY = 20;                // archived completion sets kept on retake
 const MAX_PLANS = 5;                   // saved plans kept per device before the oldest is dropped
@@ -145,6 +145,22 @@ function migrate(obj) {
     });
   }
 
+  /* v4 → v5: adds `accountPersonId` + `accountEditSessionToken` — set once
+     this device has verified an email via the NEW /account flow (see
+     setAccountSession() below). Deliberately separate from linkedEmail:
+     that field authorizes reading your own restored plans, this pair
+     authorizes WRITING to your public profile, and conflating the two
+     would mean anything that can read plans could also edit a profile.
+     A v4 record has never gone through /account, so null is exactly
+     correct for every existing record. */
+  if (o.schema === 4) {
+    o = Object.assign({}, o, {
+      schema: 5,
+      accountPersonId: o.accountPersonId !== undefined ? o.accountPersonId : null,
+      accountEditSessionToken: o.accountEditSessionToken !== undefined ? o.accountEditSessionToken : null,
+    });
+  }
+
   return o;
 }
 
@@ -218,6 +234,8 @@ function blank(now) {
     steps: {},      // { [playId]: { done, at, note, outcome, outcomeAt } }
     history: [],    // [{ at, steps }] — completions from plans that were replaced
     linkedEmail: null, // set once this device has verified an email via the restore flow
+    accountPersonId: null,          // set once this device has verified an email via the /account flow
+    accountEditSessionToken: null,  // long-lived proof-of-ownership for profile writes — see api/profile
     /* src/ref deliberately absent here — see captureAttribution() below.
        Their absence (undefined, not null) is what marks "never looked yet",
        which is how first-touch capture tells itself apart from a repeat visit. */
@@ -701,6 +719,45 @@ export function mergeRestoredPlans(serverPlans, email) {
   s.linkedEmail = email || s.linkedEmail || null;
 
   return write(s) ? mergedCount : false;
+}
+
+/* ---------- account (Sep 6) ----------
+   The other half of api/profile/route.js's verify step. Deliberately a
+   separate pair from linkedEmail/mergeRestoredPlans above, even though the
+   underlying magic-link mechanics are shared server-side — reading your own
+   restored plans and writing your public profile are different privileges,
+   and a single shared flag would grant both together whether that was
+   intended or not. */
+
+/* Which person id + edit-session token this device holds, if any. Read-only
+   pair, used by /account to skip straight to the edit form on a return
+   visit instead of asking for email again — same "verify once per device"
+   convenience as getLinkedEmail(). */
+export function getAccountSession() {
+  const s = read();
+  if (!s || !s.accountPersonId || !s.accountEditSessionToken) return null;
+  return { personId: s.accountPersonId, editSessionToken: s.accountEditSessionToken };
+}
+
+/* Store the session returned by a successful /api/profile verify. */
+export function setAccountSession(personId, editSessionToken) {
+  const s = read();
+  if (!s) return false;
+  s.accountPersonId = personId || null;
+  s.accountEditSessionToken = editSessionToken || null;
+  return write(s);
+}
+
+/* Signs this device out of the account flow only — does not touch
+   linkedEmail, plans, or completions. A person can still read their plans
+   on this device after this; they'd just need to re-verify to edit their
+   profile again. */
+export function clearAccountSession() {
+  const s = read();
+  if (!s) return false;
+  s.accountPersonId = null;
+  s.accountEditSessionToken = null;
+  return write(s);
 }
 
 /* Full reset, id included. For a "forget me" control — not wired to any UI yet. */

@@ -84,7 +84,8 @@
   "footer": {
     "copyright": "© 2026 Faimgo. 保留所有权利。",
     "privacy": "隐私政策",
-    "getPlanBack": "找回我的规划"
+    "getPlanBack": "找回我的规划",
+    "myAccount": "我的账户"
   },
   "langSwitcher": {
     "label": "语言",

@@ -84,7 +84,8 @@
   "footer": {
     "copyright": "© 2026 Faimgo. Todos los derechos reservados.",
     "privacy": "Privacidad",
-    "getPlanBack": "Recuperar mi plan"
+    "getPlanBack": "Recuperar mi plan",
+    "myAccount": "Mi cuenta"
   },
   "langSwitcher": {
     "label": "Idioma",

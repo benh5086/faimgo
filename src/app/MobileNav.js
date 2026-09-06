@@ -78,6 +78,9 @@ export default function MobileNav({ C, children }) {
           <a href="#how-it-works" onClick={() => setOpen(false)} className={link} style={{ color: C.white }}>{t("common.howItWorks")}</a>
           <a href="#examples" onClick={() => setOpen(false)} className={link} style={{ color: C.white }}>{t("nav.examples")}</a>
           <a href="#faq" onClick={() => setOpen(false)} className={link} style={{ color: C.white }}>{t("nav.faq")}</a>
+          {/* Added Sep 6 alongside the homepage footer link — same page,
+              same understated treatment. See claude/faimgo-profile-scope-sep6.md. */}
+          <a href="/account" onClick={() => setOpen(false)} className={link} style={{ color: C.white }}>{t("footer.myAccount")}</a>
           <div className="py-3" onClick={() => setOpen(false)}>{children}</div>
           <div className="py-3 border-t" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
             <LanguageSwitcher tone="dark" />

@@ -84,7 +84,8 @@
   "footer": {
     "copyright": "© 2026 Faimgo. All rights reserved.",
     "privacy": "Privacy",
-    "getPlanBack": "Get your plan back"
+    "getPlanBack": "Get your plan back",
+    "myAccount": "My account"
   },
   "langSwitcher": {
     "label": "Language",

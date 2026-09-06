@@ -597,6 +597,23 @@ export default function PlanPage() {
     markStep(play.id, done, note);
     setSteps(readSteps());
     if (done) track(ids, "step_done:" + play.id);
+
+    /* Mirror into Postgres (person_steps) so this completion counts toward
+       the person's PUBLIC record — see claude/faimgo-profile-scope-sep6.md.
+       Fire-and-forget, on purpose: the local write above is what must never
+       fail, this is a background sync that can silently fail without the
+       person noticing anything except their profile's count lagging by one
+       action. Only fires when we know which email this plan belongs to —
+       the same submitted-address trust level api/lead's mirrorPlan already
+       uses, no new proof-of-ownership needed to record your own action. */
+    const email = stored?.email;
+    if (email) {
+      fetch("/api/step", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, fid: ids?.fid, playId: play.id, done, note }),
+      }).catch(() => { /* best-effort — see comment above */ });
+    }
   };
 
   /* The second half of the same record: not "did you do it" but "did it do

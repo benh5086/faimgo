@@ -284,6 +284,11 @@ export default function Home() {
               assessment's own start screen carries the same link for the
               more common case of clicking "Start" first. */}
           <Link href="/restore" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>{t("footer.getPlanBack")}</Link>
+          {/* Added Sep 6, same understated treatment as the link above —
+              this is a private "my account" page (display name, bio, your
+              own stats), not a public directory. See
+              claude/faimgo-profile-scope-sep6.md. */}
+          <Link href="/account" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>{t("footer.myAccount")}</Link>
           <FeedbackWidget trigger="link" kind="contact" navLabel={t("common.contact")} context="footer-contact" />
         </div>
       </footer>

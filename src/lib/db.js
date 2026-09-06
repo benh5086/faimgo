@@ -196,9 +196,217 @@ export async function verifyMagicToken({ token, fid }) {
       ORDER BY updated_at DESC
     `;
 
-    return { ok: true, email: row.email, plans };
+    return { ok: true, email: row.email, personId: person.id, plans };
   } catch (e) {
     console.error("[FAIMGO DB ERROR] verifyMagicToken", e?.message);
     return { ok: false };
+  }
+}
+
+/*
+  ---------- account/profile + completion record + reviews (added Sep 6) ----------
+
+  See claude/faimgo-profile-scope-sep6.md for the full reasoning. Follows the
+  same conventions as everything above: best-effort/fail-open for anything
+  called from a hot path a person is mid-action on (mirrorStep, same
+  discipline as mirrorPlan); fail-closed only for the one function that
+  decides whether a write is authorized (verifyEditSession, mirroring
+  verifyMagicToken's own fail-closed reasoning — the harm of wrongly allowing
+  a profile edit is not symmetric with the harm of wrongly refusing one).
+*/
+
+/*
+  Best-effort mirror of a single step completion into Postgres. Called from
+  /plan's onToggle right after markStep() succeeds locally — never on the
+  critical path of the click itself (the local write already happened;
+  losing this one is a missed public completed-count, never a lost local
+  record). Upserts the person by email (same as mirrorPlan — the email came
+  from their own submitted assessment, no proof-of-ownership token needed to
+  record their own action against their own address), then upserts the step.
+
+  `done=false` deletes the row rather than leaving a done:false record —
+  matches markStep()'s own local behaviour (un-marking removes the entry
+  entirely, it doesn't keep a false flag around).
+*/
+export async function mirrorStep({ email, fid, playId, done, note }) {
+  const db = sql();
+  if (!db || !email || !playId) return false;
+  try {
+    const [person] = await db`
+      INSERT INTO people (email) VALUES (${String(email).toLowerCase()})
+      ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+      RETURNING id
+    `;
+    if (!person) return false;
+
+    if (fid) {
+      await db`
+        INSERT INTO person_devices (person_id, fid)
+        VALUES (${person.id}, ${fid})
+        ON CONFLICT (person_id, fid) DO UPDATE SET last_seen_at = now()
+      `;
+    }
+
+    if (done) {
+      await db`
+        INSERT INTO person_steps (person_id, play_id, note)
+        VALUES (${person.id}, ${playId}, ${note || null})
+        ON CONFLICT (person_id, play_id) DO UPDATE SET
+          note = EXCLUDED.note, updated_at = now()
+      `;
+    } else {
+      await db`DELETE FROM person_steps WHERE person_id = ${person.id} AND play_id = ${playId}`;
+    }
+    return true;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] mirrorStep", e?.message);
+    return false;
+  }
+}
+
+/*
+  Public read for a profile page (/u/[id]) — no auth, by design: this is the
+  link-shareable view, the same trust boundary as "anyone with the link" on
+  a shared doc. Returns null for an id that doesn't exist or on any failure,
+  never partial data — the page treats null as "nothing here."
+
+  Deliberately does NOT return email or any other private field — only what
+  the profile page is meant to show. Rating is omitted entirely (not "0")
+  when there are no reviews yet, so the page can render an honest "no
+  reviews yet" instead of a misleadingly low number.
+*/
+export async function getPublicProfile(personId) {
+  const db = sql();
+  if (!db || !personId) return null;
+  try {
+    const [person] = await db`
+      SELECT id, username, avatar_url, bio, headline, profile_public, created_at
+      FROM people WHERE id = ${personId}
+    `;
+    if (!person) return null;
+
+    const [{ count: completedCount }] = await db`
+      SELECT count(*)::int AS count FROM person_steps WHERE person_id = ${personId}
+    `;
+
+    const [{ count: reviewCount, avg: ratingAvg }] = await db`
+      SELECT count(*)::int AS count, avg(rating)::numeric(10,2) AS avg
+      FROM reviews WHERE reviewee_person_id = ${personId}
+    `;
+
+    return {
+      id: person.id,
+      username: person.username || null,
+      avatarUrl: person.avatar_url || null,
+      bio: person.bio || null,
+      headline: person.headline || null,
+      memberSince: person.created_at,
+      completedCount: completedCount || 0,
+      reviewCount: reviewCount || 0,
+      ratingAvg: reviewCount > 0 ? Number(ratingAvg) : null,
+    };
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] getPublicProfile", e?.message);
+    return null;
+  }
+}
+
+/*
+  Create a long-lived (~1 year) edit-session token for a person, right after
+  their email ownership was just proven via verifyMagicToken. Same
+  hash-at-rest pattern as magic_tokens, different lifetime — this is meant
+  to be verified-once-per-device the same way `linkedEmail` already works
+  for reading plans (see store.js), not re-checked on every visit.
+
+  Returns the raw token on success (the client stores it, same as
+  linkedEmail), null on any failure.
+*/
+export async function createEditSession(personId) {
+  const db = sql();
+  if (!db || !personId) return null;
+  try {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    const token = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+    const hash = await sha256Hex(token);
+    const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    await db`
+      INSERT INTO edit_sessions (token_hash, person_id, expires_at)
+      VALUES (${hash}, ${personId}, ${expiresAt})
+    `;
+    return token;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] createEditSession", e?.message);
+    return null;
+  }
+}
+
+/*
+  Verify an edit-session token. FAILS CLOSED, same reasoning as
+  verifyMagicToken: any doubt at all (no database, malformed token, not
+  found, expired) returns null rather than guessing. Does NOT single-use
+  this token (unlike magic_tokens) — it's meant to authorize many edits
+  over the life of the session, not one restore.
+*/
+export async function verifyEditSession(token) {
+  const db = sql();
+  if (!db || !token) return null;
+  try {
+    const hash = await sha256Hex(token);
+    const [row] = await db`
+      SELECT person_id FROM edit_sessions
+      WHERE token_hash = ${hash} AND expires_at > now()
+    `;
+    return row ? row.person_id : null;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] verifyEditSession", e?.message);
+    return null;
+  }
+}
+
+/*
+  Update the self-entered half of a profile (display name, bio). Requires an
+  already-verified personId (the caller — api/profile/route.js — must have
+  called verifyEditSession first; this function does not check
+  authorization itself, same separation of concerns as the rest of this
+  file: routes decide who's allowed, db.js just writes).
+
+  `username` is UNIQUE on the people table — a collision returns
+  { ok: false, reason: "taken" } rather than throwing, so the page can say
+  something useful instead of a generic error.
+*/
+export async function updateProfile({ personId, username, bio, headline }) {
+  const db = sql();
+  if (!db || !personId) return { ok: false, reason: "no-db" };
+  try {
+    // headline is only ever set from a value the caller computed off the
+    // person's own local plan data (src/lib/paths.js) — `undefined` here
+    // means "the caller didn't send one this time" (e.g. an ordinary
+    // display-name/bio edit) and must NOT overwrite a previously-saved
+    // headline with null, unlike username/bio which always take whatever
+    // the form currently holds.
+    if (headline !== undefined) {
+      await db`
+        UPDATE people SET
+          username = ${username || null},
+          bio = ${bio || null},
+          headline = ${headline || null}
+        WHERE id = ${personId}
+      `;
+    } else {
+      await db`
+        UPDATE people SET
+          username = ${username || null},
+          bio = ${bio || null}
+        WHERE id = ${personId}
+      `;
+    }
+    return { ok: true };
+  } catch (e) {
+    const msg = e?.message || "";
+    if (msg.includes("people_username_key") || msg.toLowerCase().includes("unique")) {
+      return { ok: false, reason: "taken" };
+    }
+    console.error("[FAIMGO DB ERROR] updateProfile", msg);
+    return { ok: false, reason: "error" };
   }
 }
