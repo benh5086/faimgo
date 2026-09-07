@@ -1194,9 +1194,10 @@ export default function PlanPage() {
       {plan.notBuiltYet.length > 0 && (
         <div className="p-5 rounded-2xl mb-9" style={{ backgroundColor: "#FFFFFF", border: `1px dashed ${C.gray}` }}>
           <p className="text-[15px] leading-relaxed" style={{ color: C.gray }}>
-            <b style={{ color: C.ink }}>Not built yet, and we&apos;d rather say so:</b>{" "}an ask-anything box that already knows
-            which step you&apos;re on, and AI coaching that picks up from your answers instead of starting cold. Both are
-            designed and neither is live. Until they are, the box below reaches a person, not a bot.
+            <b style={{ color: C.ink }}>Not built yet, and we&apos;d rather say so:</b>{" "}an always-open ask-anything box
+            that already knows which step you&apos;re on. When a check-in above flags you&apos;re stuck, our AI already
+            gives you a first-pass answer on the spot — there&apos;s just no general box yet to ask it anything, anytime.
+            Until there is, deeper help below reaches a person, not a bot.
           </p>
           <p className="text-[15px] leading-relaxed mt-3" style={{ color: C.gray }}>
             Same for getting a person to help with a step. Several of these steps have a version where someone who has
