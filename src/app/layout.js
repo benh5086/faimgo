@@ -17,24 +17,24 @@ const geistMono = Geist_Mono({
 export const metadata = {
   metadataBase: new URL("https://faimgo.com"),
   title: {
-    default: "Faimgo — find the side income that fits your life",
+    default: "Faimgo — find the supplemental income that fits your life",
     template: "%s · Faimgo",
   },
   description:
-    "A short, honest assessment that points you at one way to earn on the side — then walks you through the first 90 days, step by step.",
+    "A short, honest assessment that points you at one way to earn supplemental income — then walks you through the first 90 days, step by step.",
   openGraph: {
-    title: "Faimgo — find the side income that fits your life",
+    title: "Faimgo — find the supplemental income that fits your life",
     description:
-      "A short, honest assessment that points you at one way to earn on the side — then walks you through the first 90 days, step by step.",
+      "A short, honest assessment that points you at one way to earn supplemental income — then walks you through the first 90 days, step by step.",
     url: "https://faimgo.com",
     siteName: "Faimgo",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Faimgo — find the side income that fits your life",
+    title: "Faimgo — find the supplemental income that fits your life",
     description:
-      "A short, honest assessment that points you at one way to earn on the side — then walks you through the first 90 days.",
+      "A short, honest assessment that points you at one way to earn supplemental income — then walks you through the first 90 days.",
   },
 };
 

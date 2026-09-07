@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
+import AccountLink from "../AccountLink";
 import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
 import { session, loadSaved, saveProgress, savePlan, clearWork, readSteps } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
@@ -1050,7 +1051,10 @@ export default function Assessment() {
         <Link href="/" className="text-2xl font-bold tracking-tight" style={{ color: C.cream }}>
           faim<span style={{ color: C.gold }}>go</span>
         </Link>
-        <Link href="/" className="text-sm font-medium" style={{ color: C.cream }}>← Back to home</Link>
+        <div className="flex items-center gap-5">
+          <Link href="/" className="text-sm font-medium" style={{ color: C.cream }}>← Back to home</Link>
+          <AccountLink color={C.cream} />
+        </div>
       </nav>
 
       <div className="max-w-2xl mx-auto px-6 py-10">

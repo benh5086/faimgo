@@ -19,6 +19,7 @@ import Link from "next/link";
 import Reveal from "./Reveal";
 import FeedbackWidget from "./FeedbackWidget";
 import MobileNav from "./MobileNav";
+import AccountLink from "./AccountLink";
 import Arrival from "./Arrival";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLocale } from "../lib/i18n/LocaleContext";
@@ -69,6 +70,7 @@ export default function Home() {
           <a href="#faq" className="text-[15px] font-medium transition-opacity hover:opacity-80" style={{color: C.white}}>{t("nav.faq")}</a>
           <FeedbackWidget trigger="nav" kind="contact" navLabel={t("common.contact")} context="header-contact" />
           <LanguageSwitcher tone="dark" />
+          <AccountLink label={t("footer.myAccount")} color={C.white} />
           <a href="/assessment" className="press px-5 py-2.5 rounded-full text-[15px] font-semibold hover:opacity-90"
             style={{backgroundColor: C.goldBright, color: C.green}}>
             {t("common.getStarted")}

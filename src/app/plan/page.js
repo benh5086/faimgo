@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
+import AccountLink from "../AccountLink";
 import Gate from "../Gate.js";
 import { loadSaved, session, markStep, markOutcome, markSignal, readSteps, hasEverEarned, OUTCOMES } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
@@ -57,9 +58,12 @@ function Shell({ children }) {
       <header className="px-5 py-4" style={{ backgroundColor: C.green }}>
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link href="/" className="font-display text-[20px] font-bold" style={{ color: C.cream }}>Faimgo</Link>
-          <Link href="/assessment" className="text-[15px] font-medium hover:opacity-80" style={{ color: "#9DB0A6" }}>
-            Back to my results
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link href="/assessment" className="text-[15px] font-medium hover:opacity-80" style={{ color: "#9DB0A6" }}>
+              Back to my results
+            </Link>
+            <AccountLink color="#9DB0A6" />
+          </div>
         </div>
       </header>
       <div className="max-w-3xl mx-auto px-5 py-10">{children}</div>

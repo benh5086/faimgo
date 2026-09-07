@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Avatar from "../../Avatar.js";
+import AccountLink from "../../AccountLink";
 
 /*
   FAIMGO — PUBLIC PROFILE (/u/[id])
@@ -74,7 +75,10 @@ export default function PublicProfile() {
         <Link href="/" className="text-2xl font-bold tracking-tight" style={{ color: "#FFFFFF" }}>
           faim<span style={{ color: "#D2A54A" }}>go</span>
         </Link>
-        <Link href="/" className="text-[15px] font-medium" style={{ color: "#FFFFFF" }}>Back to Faimgo</Link>
+        <div className="flex items-center gap-5">
+          <Link href="/" className="text-[15px] font-medium" style={{ color: "#FFFFFF" }}>Back to Faimgo</Link>
+          <AccountLink />
+        </div>
       </div>
 
       <div className="max-w-[560px] mx-auto px-6 py-16">
