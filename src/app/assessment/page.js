@@ -127,10 +127,35 @@ function resolveOther(txt) {
   }
   return { kind: "custom" };
 }
+/*
+  The real fix for the "stuck + free text ignored" bug (see
+  claude/faimgo-plan-redesign-batch-sep6.md). resolveOther() above is a fixed
+  keyword list — it still runs, unchanged, as the INSTANT fallback: nothing
+  ever waits on a network call. `next()` fires a real classification
+  (src/lib/coach.js via /api/coach) the moment someone leaves the q1b "other"
+  question; by the time they reach the results screen it has ~7 more
+  questions to land in A.otherClassify. If it hasn't landed — still loading,
+  the API isn't configured, or it failed — this returns exactly what
+  resolveOther() always returned, so there is zero regression risk either
+  way (coach-constraints.md rule 4: degrade, never refuse).
+
+  Doubt stays authoritative even when a classification exists: a real
+  question ("what should I do?") is about HOW someone wrote it, not what it
+  means, so it's checked first regardless of what the model returned.
+*/
+function effectiveOtherRead(A) {
+  const c = A.otherClassify;
+  if (c && c.ok) {
+    const t = (A.otherTxt || "").trim().toLowerCase();
+    if (!t || DOUBT_PATTERNS.some((r) => r.test(t))) return { kind: "doubt" };
+    return c.pathId ? { kind: "matched", pathId: c.pathId } : { kind: "custom" };
+  }
+  return resolveOther(A.otherTxt);
+}
 function effectiveChosen(A) {
   if (!A.q1b) return null;
   if (A.q1b !== "other") return A.q1b;
-  const r = resolveOther(A.otherTxt);
+  const r = effectiveOtherRead(A);
   return r.kind === "matched" ? r.pathId : null;
 }
 
@@ -239,7 +264,7 @@ function computeResults(A) {
   }
   const fw = fastestWin(A);
   const lt = longTerm(A, fw ? fw.id : undefined);
-  const otherKind = named && A.q1b === "other" ? resolveOther(A.otherTxt).kind : null;
+  const otherKind = named && A.q1b === "other" ? effectiveOtherRead(A).kind : null;
   return { mode: named ? (otherKind || "other") : "match", fastestWin: fw ? fw.id : null, longTerm: lt ? lt.id : null };
 }
 
@@ -405,11 +430,54 @@ export default function Assessment() {
     const cur = steps[step];
     if (cur && cur.type === "insight1") track(ids, "s1_done");
     if (cur && cur.type === "insight2") track(ids, "s2_done");
+    /* Fire the real classification the moment someone leaves the "something
+       else" question — never awaited, never blocks Continue. See
+       effectiveOtherRead() above for what happens if it's still pending (or
+       never lands) by the time results render. */
+    if (cur && cur.key === "q1b" && A.q1b === "other") classifyOtherIdea();
     setStep((s) => s + 1);
     const nxt = steps[Math.min(step + 1, steps.length - 1)];
     if (nxt && nxt.type === "gate") track(ids, "gate_view");
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  /*
+    The classify_idea half of the AI coach (src/lib/coach.js /
+    src/app/api/coach/route.js). Same fire-and-forget discipline as
+    track()/meter() elsewhere: never awaited by a caller, never shown as a
+    loading state, and its own failure (network error, API not configured,
+    daily ceiling hit) is silently absorbed — A.otherClassify simply stays
+    unset or gets { ok:false }, and effectiveOtherRead() already treats both
+    of those exactly like "hasn't answered yet."
+  */
+  function classifyOtherIdea() {
+    const txt = (A.otherTxt || "").trim();
+    if (!txt) return;
+    if (DOUBT_PATTERNS.some((r) => r.test(txt.toLowerCase()))) return; // a question, not an idea to classify
+    fetch("/api/coach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "classify_idea", text: txt, fid: ids.fid, sid: ids.sid }),
+    })
+      .then((r) => r.json())
+      .catch(() => ({ ok: false, reason: "network_error" }))
+      .then((data) => {
+        setA((prev) => {
+          // They may have changed their answer while this was in flight —
+          // don't apply a classification of text that's no longer current.
+          if ((prev.otherTxt || "").trim() !== txt) return prev;
+          if (!data || !data.ok) return { ...prev, otherClassify: { ok: false } };
+          return {
+            ...prev,
+            otherClassify: {
+              ok: true,
+              pathId: data.reply?.pathId || null,
+              coverage: data.reply?.coverage || "partial",
+              message: data.reply?.message || null,
+            },
+          };
+        });
+      });
+  }
   /* While editing, Back must not fall off the front of the assessment into the
      intro screen — they have a finished plan waiting behind them, not nothing. */
   const back = () => setStep((s) => Math.max(editing ? 0 : -1, s - 1));
@@ -673,7 +741,7 @@ export default function Assessment() {
     let chipBg = C.greenSoft, chipColor = C.green, chip, head, body;
     if (named) {
       const eff = effectiveChosen(A);
-      const otherKind = A.q1b === "other" && !eff ? resolveOther(otherTxt).kind : null;
+      const otherKind = A.q1b === "other" && !eff ? effectiveOtherRead(A).kind : null;
       if (otherKind === "doubt") {
         return (
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
@@ -889,7 +957,7 @@ export default function Assessment() {
           </div>
         );
       }
-    } else if (named && A.q1b === "other" && resolveOther(otherTxt).kind === "doubt") {
+    } else if (named && A.q1b === "other" && effectiveOtherRead(A).kind === "doubt") {
       const fw = fastestWin(A);
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(

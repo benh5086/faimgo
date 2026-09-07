@@ -274,21 +274,103 @@ function OutcomeControl({ play, step, onOutcome }) {
    Re-answerable on purpose (see markSignal): "still stuck" turning into "got
    it" is the transition the product most wants to see, so the answer is never
    frozen. */
-function CheckinRoute({ option, play, renderedIds, onGoto }) {
+/*
+  `help.ai-coach` is real now (src/lib/coach.js / src/app/api/coach/route.js)
+  — this component tries it live, once, when it renders. `help.faimgo-help`
+  (the general ask-anything box) is a separate, bigger seam and stays exactly
+  as it was: an honest hand to a real person. Never conflate the two.
+
+  DEGRADE, NEVER REFUSE (coach-constraints.md rule 4 / money-seams §2.4):
+  loading is the only new visible state, and it's brief and low-key, not a
+  spinner-heavy wall. Any failure — not configured, daily ceiling, network,
+  the model declining — renders EXACTLY what this used to always render, so
+  there is no new way for this card to disappoint someone; the floor is the
+  same honest "not live yet, a person reads it instead" it always was. The
+  FeedbackWidget contact box stays visible even after a good coach reply —
+  a coach reply is not a reason to take away the door to a real person.
+*/
+function CheckinRoute({ option, play, renderedIds, onGoto, planPathId, planGap, doneIds, ids }) {
   const rt = option.routes_to;
+  const isCoach = rt === "help.ai-coach";
+  const [coach, setCoach] = useState({ status: "idle" });
+
+  useEffect(() => {
+    if (!isCoach) return;
+    if (coach.status !== "idle") return;
+    setCoach({ status: "loading" });
+    fetch("/api/coach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        kind: "stuck_help",
+        focusPlayId: play.id,
+        situationText: option.signal || null,
+        path: planPathId || null,
+        gap: planGap || null,
+        doneIds: doneIds || [],
+        fid: ids?.fid || null,
+        sid: ids?.sid || null,
+      }),
+    })
+      .then((r) => r.json())
+      .catch(() => ({ ok: false, reason: "network_error" }))
+      .then((data) => {
+        if (data && data.ok) setCoach({ status: "done", reply: data.reply });
+        else setCoach({ status: "error" });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCoach, play.id, option.signal]);
+
   if (!rt) return null;
-  /* The AI coach and the ask-anything box are written and good and are not
-     live — routing a person to a control that does not exist is exactly the
-     dishonesty this codebase refuses everywhere else. So a route to either
-     becomes a hand to the real person who reads these. */
-  const notBuilt = rt === "help.ai-coach" || rt === "help.faimgo-help";
-  const onPage = Boolean(renderedIds && renderedIds.has(rt)) && !notBuilt;
+  const notBuilt = rt === "help.faimgo-help" || (isCoach && coach.status === "error");
+  const onPage = Boolean(renderedIds && renderedIds.has(rt)) && rt !== "help.faimgo-help" && !(isCoach && coach.status !== "done");
 
   if (onPage) {
     return (
       <button onClick={() => onGoto(rt)} className="press text-[14px] font-bold underline underline-offset-2 mt-3" style={{ color: C.gold }}>
         Take me to the step that fixes this →
       </button>
+    );
+  }
+
+  if (isCoach && (coach.status === "idle" || coach.status === "loading")) {
+    return (
+      <p className="mt-3 text-[14px]" style={{ color: C.gray }}>
+        Thinking about your specific situation…
+      </p>
+    );
+  }
+
+  if (isCoach && coach.status === "done") {
+    /* Same lookup Concrete() uses for every other tool row on this page
+       (line ~124): find the tool's real domain from the play's own
+       concrete.tools so a not-yet-affiliate tool still links to its real
+       site, not just plain text. The coach is instructed to only ever name
+       a tool that's actually in this play's concrete.tools, so this should
+       always resolve. */
+    const toolAt = (play.concrete?.tools || []).find((t) => t.name === coach.reply.toolName)?.at || null;
+    const toolLink = coach.reply.toolName ? toolHref(coach.reply.toolName, toolAt) : null;
+    return (
+      <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
+        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{coach.reply.message}</p>
+        {coach.reply.toolName && (
+          <p className="text-[14px] mt-2" style={{ color: C.gray }}>
+            Tool: {toolLink ? (
+              <a href={toolLink.href} target="_blank" rel={toolLink.isAffiliate ? "sponsored noopener" : "noopener"} className="underline font-semibold" style={{ color: C.gold }}>
+                {coach.reply.toolName}
+              </a>
+            ) : coach.reply.toolName}
+          </p>
+        )}
+        {coach.reply.coverage === "partial" && (
+          <p className="text-[13px] mt-2" style={{ color: C.gray }}>
+            This only partly covers it — if it's not enough, use the box below to reach a real person.
+          </p>
+        )}
+        <div className="mt-3">
+          <FeedbackWidget trigger="cta" kind="contact" context={"checkin:" + play.id + ":" + option.signal} navLabel="Still stuck? Tell us exactly where" />
+        </div>
+      </div>
     );
   }
 
@@ -304,7 +386,7 @@ function CheckinRoute({ option, play, renderedIds, onGoto }) {
   );
 }
 
-function CheckinControl({ play, step, renderedIds, onSignal, onGoto }) {
+function CheckinControl({ play, step, renderedIds, onSignal, onGoto, planPathId, planGap, doneIds, ids }) {
   const ck = play.checkin;
   if (!ck || !Array.isArray(ck.options) || ck.options.length === 0) return null;
 
@@ -315,7 +397,7 @@ function CheckinControl({ play, step, renderedIds, onSignal, onGoto }) {
     return (
       <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: C.cream, border: `1px solid ${C.beige}` }}>
         <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{chosen.then}</p>
-        <CheckinRoute option={chosen} play={play} renderedIds={renderedIds} onGoto={onGoto} />
+        <CheckinRoute option={chosen} play={play} renderedIds={renderedIds} onGoto={onGoto} planPathId={planPathId} planGap={planGap} doneIds={doneIds} ids={ids} />
         <button onClick={() => onSignal(play, null)} className="press text-[13px] font-semibold underline underline-offset-2 mt-3" style={{ color: C.gray }}>
           That&apos;s not quite where I am
         </button>
@@ -339,7 +421,7 @@ function CheckinControl({ play, step, renderedIds, onSignal, onGoto }) {
   );
 }
 
-function DoneControl({ play, done, step, onToggle, onOutcome, onSignal, onGoto, renderedIds }) {
+function DoneControl({ play, done, step, onToggle, onOutcome, onSignal, onGoto, renderedIds, planPathId, planGap, doneIds, ids }) {
   const [note, setNote] = useState("");
   const [asking, setAsking] = useState(false);
 
@@ -355,7 +437,7 @@ function DoneControl({ play, done, step, onToggle, onOutcome, onSignal, onGoto, 
           </div>
           <OutcomeControl play={play} step={step} onOutcome={onOutcome} />
         </div>
-        <CheckinControl play={play} step={step} renderedIds={renderedIds} onSignal={onSignal} onGoto={onGoto} />
+        <CheckinControl play={play} step={step} renderedIds={renderedIds} onSignal={onSignal} onGoto={onGoto} planPathId={planPathId} planGap={planGap} doneIds={doneIds} ids={ids} />
       </div>
     );
   }
@@ -403,7 +485,8 @@ function GapBadge() {
   );
 }
 
-function PlayCard({ play, openByDefault, forceOpen, standalone, steps, onToggle, onOutcome, onSignal, onGoto, renderedIds }) {
+function PlayCard({ play, openByDefault, forceOpen, standalone, steps, onToggle, onOutcome, onSignal, onGoto, renderedIds, planPathId, planGap, ids }) {
+  const doneIds = Object.keys(steps || {}).filter((id) => steps[id]);
   const [open, setOpen] = useState(Boolean(openByDefault));
   const [stalls, setStalls] = useState(false);
   const c = play.content || {};
@@ -482,7 +565,7 @@ function PlayCard({ play, openByDefault, forceOpen, standalone, steps, onToggle,
 
           <Concrete x={play.concrete} />
 
-          <DoneControl play={play} done={Boolean(steps[play.id])} step={steps[play.id]} onToggle={onToggle} onOutcome={onOutcome} onSignal={onSignal} onGoto={onGoto} renderedIds={renderedIds} />
+          <DoneControl play={play} done={Boolean(steps[play.id])} step={steps[play.id]} onToggle={onToggle} onOutcome={onOutcome} onSignal={onSignal} onGoto={onGoto} renderedIds={renderedIds} planPathId={planPathId} planGap={planGap} doneIds={doneIds} ids={ids} />
 
           {c.done_when && (
             <div className="p-4 rounded-xl mt-4" style={{ backgroundColor: C.greenSoft }}>
@@ -1021,7 +1104,8 @@ export default function PlanPage() {
             </div>
 
             <PlayCard play={activePlay} standalone
-              steps={steps} onToggle={onToggle} onOutcome={onOutcome} onSignal={onSignal} onGoto={onGoto} renderedIds={renderedIds} />
+              steps={steps} onToggle={onToggle} onOutcome={onOutcome} onSignal={onSignal} onGoto={onGoto} renderedIds={renderedIds}
+              planPathId={plan.pathId} planGap={plan.gap} ids={ids} />
 
             {/* Finished steps never disappear — they're just not in the way.
                 One line each, closed by default, so looking back at what you
