@@ -403,7 +403,7 @@ function GapBadge() {
   );
 }
 
-function PlayCard({ play, openByDefault, forceOpen, steps, onToggle, onOutcome, onSignal, onGoto, renderedIds }) {
+function PlayCard({ play, openByDefault, forceOpen, standalone, steps, onToggle, onOutcome, onSignal, onGoto, renderedIds }) {
   const [open, setOpen] = useState(Boolean(openByDefault));
   const [stalls, setStalls] = useState(false);
   const c = play.content || {};
@@ -418,28 +418,47 @@ function PlayCard({ play, openByDefault, forceOpen, steps, onToggle, onOutcome, 
     if (forceOpen) setOpen(true);
   }, [forceOpen]);
 
+  /* `standalone` is the one-task-per-screen view (see PlanPage below): the
+     card IS the page, so it renders permanently open with no collapse
+     header to click — there's nothing to expand into, and a toggle that
+     does nothing is worse than no toggle. The old accordion header (with
+     the number badge and the ▲▼ arrow) only makes sense when several cards
+     share one long page, which is exactly the layout this batch removes. */
+  const isOpen = standalone || open;
+
   return (
     <div id={"play-" + play.id} className="rounded-2xl mb-3 overflow-hidden" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
-      <button onClick={() => setOpen(!open)} className="w-full text-left px-5 py-4 flex items-start gap-4 hover:opacity-90">
-        <span className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[15px] font-bold mt-[2px]"
-          style={{ backgroundColor: C.greenSoft, color: C.green }}>
-          {play.n}
-        </span>
-        <span className="block flex-1">
-          {play.fitsGap && <span className="block"><GapBadge /></span>}
-          <span className="block font-semibold text-[18px] leading-snug" style={{ color: C.ink }}>{play.name}</span>
-          <span className="block text-[14px] mt-1" style={{ color: C.gray }}>
+      {standalone ? (
+        <div className="px-5 pt-5 pb-1">
+          {play.fitsGap && <GapBadge />}
+          <h2 className="font-display text-[24px] leading-snug mt-1" style={{ color: C.ink }}>{play.name}</h2>
+          <p className="text-[14px] mt-1" style={{ color: C.gray }}>
             {play.sub}
             {play.time_cost ? <span> · {play.time_cost}</span> : null}
+          </p>
+        </div>
+      ) : (
+        <button onClick={() => setOpen(!open)} className="w-full text-left px-5 py-4 flex items-start gap-4 hover:opacity-90">
+          <span className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[15px] font-bold mt-[2px]"
+            style={{ backgroundColor: C.greenSoft, color: C.green }}>
+            {play.n}
           </span>
-        </span>
-        <span aria-hidden="true" className="flex-shrink-0 text-[13px] font-bold mt-2" style={{ color: C.gold }}>
-          {open ? "▲" : "▼"}
-        </span>
-      </button>
+          <span className="block flex-1">
+            {play.fitsGap && <span className="block"><GapBadge /></span>}
+            <span className="block font-semibold text-[18px] leading-snug" style={{ color: C.ink }}>{play.name}</span>
+            <span className="block text-[14px] mt-1" style={{ color: C.gray }}>
+              {play.sub}
+              {play.time_cost ? <span> · {play.time_cost}</span> : null}
+            </span>
+          </span>
+          <span aria-hidden="true" className="flex-shrink-0 text-[13px] font-bold mt-2" style={{ color: C.gold }}>
+            {open ? "▲" : "▼"}
+          </span>
+        </button>
+      )}
 
-      {open && (
-        <div className="px-5 pb-5" style={{ borderTop: `1px dashed ${C.beige}` }}>
+      {isOpen && (
+        <div className="px-5 pb-5" style={{ borderTop: standalone ? "none" : `1px dashed ${C.beige}` }}>
           <p className="text-[17px] leading-relaxed mt-4" style={{ color: C.ink }}>{play.move}</p>
 
           {c.goal && (
@@ -579,8 +598,24 @@ export default function PlanPage() {
   const [steps, setSteps] = useState({});
   const [ids, setIds] = useState(null);
   /* Which card a check-in has routed the person to, so it opens on arrival
-     rather than being scrolled to while still collapsed. */
+     rather than being scrolled to while still collapsed. Only meaningful
+     for help-rail cards now (see below) — a route into the sequence itself
+     is handled by activeOverrideId instead, since the sequence is no longer
+     a long page to scroll, it's one card at a time. */
   const [focusId, setFocusId] = useState(null);
+  /* One-task-per-screen (Sep 6 batch): the page normally shows whichever
+     step is next in the person's own order (`nextUp`, computed below from
+     which steps are already ticked). A check-in's "take me to the step that
+     fixes this" is the one thing allowed to override that — someone got
+     routed to an EARLIER, already-unlocked step to go fix something, and
+     needs to see that step specifically, not be dropped back at the front
+     of the line. Clearing it (on completing a step, or via the explicit
+     "back to my current step" link) returns to normal, automatic ordering. */
+  const [activeOverrideId, setActiveOverrideId] = useState(null);
+  /* Whether the read-only list of already-done steps is expanded. Shut by
+     default on purpose — the whole point of one-task-per-screen is that a
+     finished step is not something you have to look at again to keep going. */
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   /* Marking a step done is the one write on this page that matters, so it
      does three things at once: store it locally (instant, works offline),
@@ -597,6 +632,14 @@ export default function PlanPage() {
     markStep(play.id, done, note);
     setSteps(readSteps());
     if (done) track(ids, "step_done:" + play.id);
+    /* Finishing a step is the moment to hand control back to normal
+       ordering — whether this step was the person's natural next-up or one
+       a check-in routed them back to. Leaving an override in place after
+       the very thing it existed for is done would strand them on a step
+       they already finished instead of moving them forward. Undoing a step
+       (done === false) never touches this — someone reviewing/correcting
+       history is not asking to be moved anywhere. */
+    if (done) setActiveOverrideId(null);
 
     /* Mirror into Postgres (person_steps) so this completion counts toward
        the person's PUBLIC record — see claude/faimgo-profile-scope-sep6.md.
@@ -652,18 +695,31 @@ export default function PlanPage() {
     if (signal) track(ids, "checkin:" + signal + ":" + play.id);
   };
 
-  /* A check-in routed the person to another card. Open it and bring it into
-     view. The scroll waits a beat for forceOpen to expand the target, and
-     both failure paths (no element, no scrollIntoView) are silent — a
-     navigation aid must never throw. */
+  /* A check-in routed the person to another card. Two different things can
+     be true about the target, and they need two different responses now
+     that the sequence shows one card at a time instead of a long page:
+
+     - The target is one of the person's own steps (`ordered`, below) — the
+       page needs to actually SHOW that step, so `activeOverrideId` swaps
+       the single visible card to it. There is nothing to scroll to; the
+       card that appears IS the destination.
+     - The target is a help-rail card (on-demand, always fully rendered,
+       still its own scrollable section) — the old scroll-and-expand
+       behavior is still exactly right there, nothing about the rail
+       changed this batch. */
   const onGoto = (targetId) => {
     if (!targetId) return;
-    setFocusId(targetId);
     track(ids, "checkin_route:" + targetId);
+    if (ordered.some((pl) => pl.id === targetId)) {
+      setActiveOverrideId(targetId);
+      try { if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { /* nicety only */ }
+      return;
+    }
+    setFocusId(targetId);
     try {
       setTimeout(() => {
         try {
-          const el = document.getElementById("play-" + targetId) || document.getElementById("rail-" + targetId);
+          const el = document.getElementById("rail-" + targetId);
           if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
         } catch (e) { /* scroll is a nicety, never a requirement */ }
       }, 80);
@@ -747,12 +803,38 @@ export default function PlanPage() {
      has no written spine and we borrowed the fast win — see router.js. */
   const w = plan.walkPath || plan.path;
 
+  /* The assessment's "which of these is closest to it? → Something else"
+     free-text answer, when it didn't keyword-match one of the nine paths
+     (computeResults' `mode` is "custom" for a real described idea, "doubt"
+     for "not sure / no idea" text — see assessment/page.js's resolveOther).
+     Either way, `results.chosen` was never set, so `plan.path` above is
+     already silently the generic best-scored fallback (fastestWin), not
+     anything about what this person actually described. The results page
+     says this honestly (the "Your idea" / "you don't need the answer yet"
+     cards); this page used to not say it at all, which reads as the
+     walkthrough having thrown their own words away — because, without this
+     banner, it looks exactly like it did. */
+  const resultsMode = stored.results?.mode;
+  const otherIdea = stored.otherIdea || "";
+
   /* Progress, computed rather than stored — the sequence can change (a
      retake, a new play shipped) and a stored pointer would go stale and
      start lying. `nextUp` is simply the first step not yet ticked. */
   const ordered = plan.phases.flatMap((ph) => ph.plays);
   const doneCount = ordered.filter((pl) => steps[pl.id]).length;
   const nextUp = ordered.find((pl) => !steps[pl.id]) || null;
+
+  /* The one card actually shown (see PlanPage's top-of-file note and the
+     activeOverrideId state comment). Normal case: whatever `nextUp` is.
+     Overridden case: a check-in sent them back to an earlier, already-
+     unlocked step — validated against `ordered` again here so a stale
+     override (its target got marked done by other means, or doesn't exist
+     in a rebuilt plan after a retake) can never point at nothing; it just
+     falls back to nextUp exactly as if no override existed. */
+  const overridePlay = activeOverrideId ? ordered.find((pl) => pl.id === activeOverrideId) : null;
+  const activePlay = overridePlay || nextUp;
+  const activeIndex = activePlay ? ordered.findIndex((pl) => pl.id === activePlay.id) : -1;
+  const doneSoFar = activeIndex >= 0 ? ordered.slice(0, activeIndex).filter((pl) => steps[pl.id]) : ordered.filter((pl) => steps[pl.id]);
 
   /* Every card actually on this page — the sequence plus the help rail. A
      check-in only offers "take me there" when its `routes_to` is in here;
@@ -787,6 +869,32 @@ export default function PlanPage() {
         </p>
       </div>
 
+      {/* ---- your own idea got no written walkthrough, and we say so ----
+          The counterpart to "we borrowed a spine" below, for the case that
+          block doesn't cover: there was never a chosen path to borrow away
+          from, because the free-text idea from the assessment didn't map to
+          one of the nine paths at all. Silently walking the generic
+          best-scored fastest-win path here — which is exactly what
+          `plan.path` already is in this case — with nothing on screen
+          explaining that is the single biggest reason this page can feel
+          like it ignored what someone actually said. */}
+      {(resultsMode === "custom" || resultsMode === "doubt") && p && (
+        <div className="p-5 rounded-2xl mb-8" style={{ backgroundColor: C.yellowSoft, border: "1px solid #EAD9A8" }}>
+          <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
+            {resultsMode === "custom" ? (
+              <>
+                <b>{otherIdea ? `Why this doesn't walk through "${otherIdea}" directly:` : "Why this isn't your own idea, directly:"}</b>{" "}
+                {otherIdea ? `"${otherIdea}"` : "What you described"} doesn&apos;t have a written play library yet — it&apos;s a real idea, not one of the nine paths this walkthrough is built for. So what&apos;s below is {p.name.toLowerCase()}, your strongest scored fit from everything else you answered, as the funding path while you validate your own idea (your results page has the 3-step validation plan for that). This isn&apos;t a substitute for what you said — it&apos;s what pays the bills while you test it.
+              </>
+            ) : (
+              <>
+                <b>Why this walks {p.name.toLowerCase()}:</b>{" "}you told us you weren&apos;t sure yet, which is the normal starting point, not a gap. {p.name} scored highest across your time, inventory, and working style, so that&apos;s the walkthrough below — pick a different one any time from your results if it stops fitting.
+              </>
+            )}
+          </p>
+        </div>
+      )}
+
       {/* ---- why this looks the way it does ----
           Layer 1 of the personalization model: say their own answers back to
           them. Added this batch alongside the router changes it depends on
@@ -797,9 +905,25 @@ export default function PlanPage() {
         <div className="p-5 rounded-2xl mb-8" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
           <p className="text-[12px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.gold }}>Why this looks the way it does</p>
           <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
-            You told us {plan.gapLabel} — steps below marked <b style={{ color: "#0F6B3F" }}>&quot;Closes your gap&quot;</b>{" "}are the direct answer to that. The rest are still here in full, they&apos;re just not the part you said is missing, so feel free to move faster through them.
+            You told us {plan.gapLabel} — whichever step ahead is marked <b style={{ color: "#0F6B3F" }}>&quot;Closes your gap&quot;</b>{" "}
+            is written as the direct answer to that. The rest still come up in their turn too — they&apos;re just not the specific thing you said was missing, so most people move through them quickly.
             {plan.paceNote ? ` And ${plan.paceNote}` : ""}
           </p>
+          {/* Said plainly rather than left for someone to notice on their own:
+              "stuck" still opens on the same first step as everyone else on
+              this path, and that is easy to read as the plan not having
+              listened. It listened — the reason is that most stalls this
+              specific library was written against trace back to an offer
+              that wasn't quite specific enough, so step one is a fast
+              confirmation for someone who's stuck, not a restart from zero.
+              And the honest exit for the person who's certain that part is
+              already solid: say so below, to a real person, rather than the
+              page pretending to route around it on its own. */}
+          {plan.gap === "stuck" && (
+            <p className="text-[16px] leading-relaxed mt-3" style={{ color: C.ink }}>
+              That&apos;s also why the first step is the same one everyone on this path gets, even though you&apos;re not starting from zero: almost every &quot;I&apos;m stuck&quot; this walkthrough hears about traces back to an offer that wasn&apos;t specific enough yet, so step one here is a quick confirmation, not a rebuild. If you&apos;re already sure that part is solid, tell us exactly where you&apos;re stuck using the box at the bottom of this page — a real person reads it and can point you at the real jump-in step directly.
+            </p>
+          )}
           {plan.protectTone && (
             <p className="text-[16px] leading-relaxed mt-3" style={{ color: C.ink }}>{plan.protectTone}</p>
           )}
@@ -839,31 +963,9 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ---- where to pick up ----
-          This card used to be a fixed "Start here" pointing at step one
-          forever, which is only correct on someone's first visit. It now
-          points at the first step they have NOT finished, which is the whole
-          difference between a document and something worth reopening.
-
-          Note what it never says: nothing about days, gaps, streaks or
-          falling behind. Someone returning after three weeks gets the same
-          sentence as someone returning after an hour. */}
-      {nextUp && (
-        <div className="p-6 rounded-2xl mb-8" style={{ backgroundColor: C.green }}>
-          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C7B27A" }}>
-            {doneCount > 0 ? "Pick up here" : "Start here"}
-          </p>
-          <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>{nextUp.name}</h2>
-          <p className="text-[16px] leading-relaxed" style={{ color: "#D6E2DA" }}>
-            {nextUp.move} Give it {nextUp.time_cost}.
-            {doneCount > 0 ? "" : " Everything after it gets easier once this exists."}
-          </p>
-        </div>
-      )}
-
       {/* Everything finished. Rare, and worth marking properly rather than
           letting the page just end. */}
-      {plan.stepCount > 0 && !nextUp && (
+      {plan.stepCount > 0 && !nextUp && !overridePlay && (
         <div className="p-6 rounded-2xl mb-8" style={{ backgroundColor: C.green }}>
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C7B27A" }}>All of it</p>
           <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>
@@ -876,23 +978,77 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ---- the sequence ---- */}
-      {plan.phases.map((ph) => (
-        <section key={ph.key} className="mb-9">
-          <h2 className="font-display text-[26px] mb-1" style={{ color: C.green }}>{ph.label}</h2>
-          <p className="text-[16px] leading-relaxed mb-4" style={{ color: C.gray }}>{ph.aim}</p>
-          {ph.opensWhen && (
-            <p className="inline-flex items-center gap-2 mb-4 px-3.5 py-1.5 rounded-full text-[13px] font-bold"
-              style={{ backgroundColor: C.beige, color: C.green }}>
-              Opens once you have {factLabel(ph.opensWhen)}
-            </p>
-          )}
-          {ph.plays.map((pl) => (
-            <PlayCard key={pl.id} play={pl} openByDefault={pl.id === nextUp?.id} forceOpen={pl.id === focusId}
+      {/* ---- one task at a time (Sep 6 batch) ----
+          This used to be a page of every phase and every step, all rendered
+          at once, collapsed but still there to scroll past — the "wall of
+          text" the Sep 6 conversation named directly, worse on a phone where
+          reaching the one card that matters meant scrolling through steps
+          that were either already done or weeks away. It's replaced with
+          exactly one step: `activePlay`, either the next one not yet ticked
+          or, if a check-in routed the person back to an earlier step,
+          that one instead. Nothing not-yet-reached is shown at all — the
+          library's own "every step still appears" guarantee (see gap
+          comment in router.js) is about what the PLAN contains, not what's
+          on screen at once; nothing is removed, it just isn't rendered
+          before its turn. */}
+      {activePlay && (() => {
+        const activePhase = plan.phases.find((ph) => ph.plays.some((pl) => pl.id === activePlay.id));
+        const pct = plan.stepCount ? Math.round((doneCount / plan.stepCount) * 100) : 0;
+        return (
+          <>
+            <div className="p-6 rounded-2xl mb-4" style={{ backgroundColor: C.green }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C7B27A" }}>
+                {overridePlay ? "Back to fix this one" : doneCount > 0 ? "Pick up here" : "Start here"}
+              </p>
+              <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>{activePlay.name}</h2>
+              <p className="text-[16px] leading-relaxed" style={{ color: "#D6E2DA" }}>
+                {activePlay.week && plan.totalWeeks ? `Week ${activePlay.week} of ${plan.totalWeeks}` : `Step ${activeIndex + 1} of ${plan.stepCount}`}
+                {" · "}{doneCount} of {plan.stepCount} steps done
+                {activePhase?.opensWhen ? ` · this window opened once you had ${factLabel(activePhase.opensWhen)}` : ""}
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <div className="w-full h-1.5 rounded-full overflow-hidden mb-2" style={{ backgroundColor: C.beige }}>
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: C.green }} />
+              </div>
+              {overridePlay && (
+                <button onClick={() => setActiveOverrideId(null)} className="press text-[13px] font-semibold underline underline-offset-2"
+                  style={{ color: C.gold }}>
+                  ← Back to my current step{nextUp ? ` (${nextUp.name})` : ""}
+                </button>
+              )}
+            </div>
+
+            <PlayCard play={activePlay} standalone
               steps={steps} onToggle={onToggle} onOutcome={onOutcome} onSignal={onSignal} onGoto={onGoto} renderedIds={renderedIds} />
-          ))}
-        </section>
-      ))}
+
+            {/* Finished steps never disappear — they're just not in the way.
+                One line each, closed by default, so looking back at what you
+                already did is a choice, not something the page makes you
+                wade through to reach today's step. */}
+            {doneSoFar.length > 0 && (
+              <div className="mt-6 mb-9">
+                <button onClick={() => setHistoryOpen(!historyOpen)} className="press text-[14px] font-semibold underline underline-offset-2"
+                  style={{ color: C.gray }}>
+                  {historyOpen ? "Hide" : "Show"} the {doneSoFar.length} step{doneSoFar.length === 1 ? "" : "s"} you&apos;ve already finished
+                </button>
+                {historyOpen && (
+                  <div className="mt-3">
+                    {doneSoFar.map((pl) => (
+                      <div key={pl.id} className="flex items-center gap-3 py-2.5 px-4 rounded-xl mb-1.5" style={{ backgroundColor: C.greenSoft }}>
+                        <span aria-hidden="true" style={{ color: "#0F6B3F" }}>✓</span>
+                        <span className="text-[15px] flex-1" style={{ color: C.ink }}>{pl.name}</span>
+                        {pl.week ? <span className="text-[12px]" style={{ color: C.gray }}>Week {pl.week}</span> : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* ---- fallback when there is no written sequence ---- */}
       {plan.phases.length === 0 && plan.starterMoves.length > 0 && (

@@ -362,6 +362,37 @@ export function buildPlan(A, results, protectFrom) {
      plan than a third window padded to look complete. */
   const phases = buckets.filter((b) => b.plays.length > 0);
 
+  /* ---------- weekly breakdown ----------
+     A day-range label ("Days 1-30") is honest but not something a person
+     can act on this Tuesday. Ben's Sep 6 note: 90 days is roughly 13 weeks,
+     and knowing "which week am I on" is what actually makes progress feel
+     trackable. So every play also gets a `week` position, using the same
+     `width` its phase's day-range label was already built from (see
+     windowLabels above) — a stretched or compressed pace (paceMultiplier)
+     stretches or compresses the week count with it, it never silently
+     reverts to a flat 13.
+
+     This is a rough, even split across the plays already in the library's
+     own order — never a real hour-budget calculator. We do not have
+     reliable numeric hours-per-play to build one honestly (`time_cost` mixes
+     free text like "20 minutes" and "1-3 weeks"), and a falsely precise
+     number would be worse than an honest rough one. The view says so. */
+  /* Same formula windowLabels() used to build the day-range labels above —
+     duplicated rather than threaded through as a return value, since it's a
+     pure function of `mult` (already in scope) and threading it would mean
+     changing windowLabels' signature for every existing caller. */
+  const phaseWidthDays = Math.max(10, Math.round((30 * mult) / 5) * 5);
+  const weeksPerPhase = Math.max(1, Math.round(phaseWidthDays / 7));
+  let weekCursor = 0;
+  phases.forEach((ph) => {
+    const n = ph.plays.length;
+    ph.plays.forEach((pl, i) => {
+      pl.week = weekCursor + 1 + Math.min(weeksPerPhase - 1, Math.floor((i * weeksPerPhase) / n));
+    });
+    weekCursor += weeksPerPhase;
+  });
+  const totalWeeks = weekCursor;
+
   const onDemand = ALL.filter((p) => p.type === "on-demand" && fits(p));
   const helpRail = onDemand.filter((p) => !NOT_BUILT_YET.includes(p.id) && !NOT_IN_RAIL.includes(p.id));
   const notBuiltYet = ALL.filter((p) => NOT_BUILT_YET.includes(p.id));
@@ -398,6 +429,7 @@ export function buildPlan(A, results, protectFrom) {
     protectFrom: protectFrom || null,
     protectTone: protectTone(protectFrom),
     phases,
+    totalWeeks,
     stepCount: n,
     firstPlay,
     helpRail,
