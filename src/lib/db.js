@@ -275,6 +275,35 @@ export async function mirrorStep({ email, fid, playId, done, note }) {
   when there are no reviews yet, so the page can render an honest "no
   reviews yet" instead of a misleadingly low number.
 */
+/*
+  Private read of the real-name fields — first/middle/last — added Sep 7
+  2026 (see sql/003_names.sql). Deliberately a separate function from
+  getPublicProfile rather than a parameter on it: the two are different
+  trust levels (public link vs. proven owner), and keeping them as two
+  functions means a future call site can never accidentally leak these by
+  reusing the public one. Called only from api/profile/route.js's "get"
+  action, and only after that route has independently verified the
+  requester's edit-session token against this same personId.
+*/
+export async function getPrivateNameFields(personId) {
+  const db = sql();
+  if (!db || !personId) return null;
+  try {
+    const [person] = await db`
+      SELECT first_name, middle_name, last_name FROM people WHERE id = ${personId}
+    `;
+    if (!person) return null;
+    return {
+      firstName: person.first_name || null,
+      middleName: person.middle_name || null,
+      lastName: person.last_name || null,
+    };
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] getPrivateNameFields", e?.message);
+    return null;
+  }
+}
+
 export async function getPublicProfile(personId) {
   const db = sql();
   if (!db || !personId) return null;
@@ -374,31 +403,40 @@ export async function verifyEditSession(token) {
   { ok: false, reason: "taken" } rather than throwing, so the page can say
   something useful instead of a generic error.
 */
-export async function updateProfile({ personId, username, bio, headline }) {
+export async function updateProfile({ personId, username, bio, headline, firstName, middleName, lastName }) {
   const db = sql();
   if (!db || !personId) return { ok: false, reason: "no-db" };
   try {
-    // headline is only ever set from a value the caller computed off the
-    // person's own local plan data (src/lib/paths.js) — `undefined` here
-    // means "the caller didn't send one this time" (e.g. an ordinary
-    // display-name/bio edit) and must NOT overwrite a previously-saved
-    // headline with null, unlike username/bio which always take whatever
-    // the form currently holds.
+    // username/bio always take whatever the form currently holds — this
+    // one statement is where a taken-username collision is caught, before
+    // anything else below runs.
+    await db`
+      UPDATE people SET
+        username = ${username || null},
+        bio = ${bio || null}
+      WHERE id = ${personId}
+    `;
+
+    // headline, and now firstName/middleName/lastName (added Sep 7 2026,
+    // see sql/003_names.sql): each is only ever sent by a caller that
+    // actually means to set it — headline from the person's own local plan
+    // data, the name fields from the one-time profile-setup form (see
+    // account/page.js). `undefined` means "the caller didn't send this
+    // field this time" (e.g. an ordinary bio-only edit afterwards) and must
+    // NOT overwrite a previously-saved value with null. Four separate
+    // guarded statements rather than one dynamic one — plainer to read,
+    // and a stray typo in one can't corrupt the others.
     if (headline !== undefined) {
-      await db`
-        UPDATE people SET
-          username = ${username || null},
-          bio = ${bio || null},
-          headline = ${headline || null}
-        WHERE id = ${personId}
-      `;
-    } else {
-      await db`
-        UPDATE people SET
-          username = ${username || null},
-          bio = ${bio || null}
-        WHERE id = ${personId}
-      `;
+      await db`UPDATE people SET headline = ${headline || null} WHERE id = ${personId}`;
+    }
+    if (firstName !== undefined) {
+      await db`UPDATE people SET first_name = ${firstName || null} WHERE id = ${personId}`;
+    }
+    if (middleName !== undefined) {
+      await db`UPDATE people SET middle_name = ${middleName || null} WHERE id = ${personId}`;
+    }
+    if (lastName !== undefined) {
+      await db`UPDATE people SET last_name = ${lastName || null} WHERE id = ${personId}`;
     }
     return { ok: true };
   } catch (e) {

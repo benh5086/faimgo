@@ -74,8 +74,8 @@ export default function Account() {
   const [view, setView] = useState("checking"); // checking | ask | requesting | sent | verifying | ready | failed
   const [sessionInfo, setSessionInfo] = useState(null); // { personId, editSessionToken }
   const [profile, setProfile] = useState(null);
-  const [form, setForm] = useState({ username: "", bio: "" });
-  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error:taken | error
+  const [form, setForm] = useState({ username: "", bio: "", firstName: "", middleName: "", lastName: "" });
+  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error:taken | error:required | error
 
   useEffect(() => {
     const s = session();
@@ -107,12 +107,22 @@ export default function Account() {
         const res = await fetch("/api/profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "get", personId: sessionInfo.personId }),
+          // editSessionToken is included here (not just on "update") so the
+          // server can prove this is the profile's owner, not a stranger
+          // with a link, and hand back the private name fields too — see
+          // api/profile/route.js's "get" action and sql/003_names.sql.
+          body: JSON.stringify({ action: "get", personId: sessionInfo.personId, editSessionToken: sessionInfo.editSessionToken }),
         });
         const data = await res.json().catch(() => ({}));
         if (data?.ok && data.profile) {
           setProfile(data.profile);
-          setForm({ username: data.profile.username || "", bio: data.profile.bio || "" });
+          setForm({
+            username: data.profile.username || "",
+            bio: data.profile.bio || "",
+            firstName: data.profile.firstName || "",
+            middleName: data.profile.middleName || "",
+            lastName: data.profile.lastName || "",
+          });
         }
       } catch (e) { /* the edit form still works with blank defaults */ }
     })();
@@ -163,6 +173,15 @@ export default function Account() {
 
   async function saveProfile() {
     if (!sessionInfo?.editSessionToken) return;
+    // First name, last name, and "Your Faimgo name" are required — added
+    // Sep 7 2026 so the account page always has a real name to show at the
+    // top instead of ever needing to show the person's email (see
+    // sql/003_names.sql). Middle name stays optional on purpose — most
+    // people don't use one, and no comparable signup flow requires it.
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.username.trim()) {
+      setSaveState("error:required");
+      return;
+    }
     setSaveState("saving");
     try {
       const res = await fetch("/api/profile", {
@@ -173,6 +192,9 @@ export default function Account() {
           editSessionToken: sessionInfo.editSessionToken,
           username: form.username,
           bio: form.bio,
+          firstName: form.firstName,
+          middleName: form.middleName,
+          lastName: form.lastName,
           headline: headlineFromLocalPlan(),
         }),
       });
@@ -270,7 +292,13 @@ export default function Account() {
             <div className="flex items-center gap-4 mb-6">
               <Avatar name={form.username || "Faimgo Member"} size={64} />
               <div>
-                <h1 className="font-display text-2xl" style={{ color: C.green }}>Your account</h1>
+                {/* The username is the FIRST thing shown, above anything else —
+                    added Sep 7 2026 so it's always unmistakable which account
+                    is loaded on this device, without ever needing to show an
+                    email address. Falls back to a plain prompt only in the
+                    narrow window before the very first save. */}
+                <p className="text-[12px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: C.gray }}>Your account</p>
+                <h1 className="font-display text-2xl" style={{ color: C.green }}>{profile?.username || "Set up your profile"}</h1>
                 {profile?.headline && (
                   <p className="text-[14px] font-medium" style={{ color: C.gold }}>{profile.headline}</p>
                 )}
@@ -297,12 +325,56 @@ export default function Account() {
               </div>
             )}
 
-            <label className="block text-[14px] font-semibold mb-1" style={{ color: C.ink }}>Display name</label>
+            {/* First/last/middle name — added Sep 7 2026 (sql/003_names.sql).
+                Real name, kept private: never returned by getPublicProfile,
+                never shown on /u/[id] — this is for Ben's own records, not a
+                public field. First and last are required; middle isn't —
+                most people don't use one, and no comparable signup flow
+                requires it. */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label className="block text-[14px] font-semibold mb-1" style={{ color: C.ink }}>First name</label>
+                <input
+                  type="text"
+                  value={form.firstName}
+                  onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                  placeholder="First name"
+                  maxLength={60}
+                  className="w-full px-4 py-3 rounded-xl text-[16px]"
+                  style={{ border: `1px solid ${C.beige}`, backgroundColor: "#FFFFFF", color: C.ink }}
+                />
+              </div>
+              <div>
+                <label className="block text-[14px] font-semibold mb-1" style={{ color: C.ink }}>Last name</label>
+                <input
+                  type="text"
+                  value={form.lastName}
+                  onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                  placeholder="Last name"
+                  maxLength={60}
+                  className="w-full px-4 py-3 rounded-xl text-[16px]"
+                  style={{ border: `1px solid ${C.beige}`, backgroundColor: "#FFFFFF", color: C.ink }}
+                />
+              </div>
+            </div>
+
+            <label className="block text-[14px] font-semibold mb-1" style={{ color: C.ink }}>Middle name (optional)</label>
+            <input
+              type="text"
+              value={form.middleName}
+              onChange={(e) => setForm((f) => ({ ...f, middleName: e.target.value }))}
+              placeholder="Middle name"
+              maxLength={60}
+              className="w-full px-4 py-3 rounded-xl text-[16px] mb-4"
+              style={{ border: `1px solid ${C.beige}`, backgroundColor: "#FFFFFF", color: C.ink }}
+            />
+
+            <label className="block text-[14px] font-semibold mb-1" style={{ color: C.ink }}>Your Faimgo name</label>
             <input
               type="text"
               value={form.username}
               onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-              placeholder="How you'd like to be known"
+              placeholder="Pick anything — this is what shows on your profile"
               maxLength={40}
               className="w-full px-4 py-3 rounded-xl text-[16px] mb-4"
               style={{ border: `1px solid ${C.beige}`, backgroundColor: "#FFFFFF", color: C.ink }}
@@ -328,7 +400,8 @@ export default function Account() {
               {saveState === "saving" ? "Saving…" : "Save"}
             </button>
             {saveState === "saved" && <span className="ml-3 text-[14px]" style={{ color: C.green }}>Saved.</span>}
-            {saveState === "error:taken" && <span className="ml-3 text-[14px]" style={{ color: "#9C3B2E" }}>That display name is taken — try another.</span>}
+            {saveState === "error:taken" && <span className="ml-3 text-[14px]" style={{ color: "#9C3B2E" }}>That Faimgo name is taken — try another.</span>}
+            {saveState === "error:required" && <span className="ml-3 text-[14px]" style={{ color: "#9C3B2E" }}>First name, last name, and a Faimgo name are all required.</span>}
             {saveState === "error" && <span className="ml-3 text-[14px]" style={{ color: "#9C3B2E" }}>Couldn&apos;t save — try again.</span>}
 
             {sessionInfo?.personId && (

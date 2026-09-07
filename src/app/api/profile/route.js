@@ -38,7 +38,7 @@
   instance — a speed bump, not a wall, until real shared state exists).
 */
 
-import { createMagicToken, verifyMagicToken, createEditSession, verifyEditSession, getPublicProfile, updateProfile } from "../../../lib/db.js";
+import { createMagicToken, verifyMagicToken, createEditSession, verifyEditSession, getPublicProfile, getPrivateNameFields, updateProfile } from "../../../lib/db.js";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -168,6 +168,20 @@ export async function POST(request) {
       }
       const profile = await getPublicProfile(personId);
       if (!profile) return Response.json({ ok: false });
+
+      // Added Sep 7 2026: if the caller can prove they own this profile —
+      // their own edit-session token, verified server-side against THIS
+      // personId — also hand back the private real-name fields (see
+      // sql/003_names.sql). A stranger with just the /u/[id] link never
+      // gets these; only the owner viewing their own /account does.
+      const editSessionToken = String(body.editSessionToken || "");
+      if (editSessionToken) {
+        const ownerId = await verifyEditSession(editSessionToken);
+        if (ownerId === personId) {
+          const priv = await getPrivateNameFields(personId);
+          if (priv) Object.assign(profile, priv);
+        }
+      }
       return Response.json({ ok: true, profile });
     }
 
@@ -184,13 +198,22 @@ export async function POST(request) {
 
       const username = String(body.username || "").trim().slice(0, 40) || null;
       const bio = String(body.bio || "").trim().slice(0, 500) || null;
-      // Only pass headline through when the caller actually sent one —
-      // see updateProfile()'s own comment on why `undefined` vs `null`
-      // matters here.
+      // Only pass headline/firstName/middleName/lastName through when the
+      // caller actually sent one this time — see updateProfile()'s own
+      // comment on why `undefined` vs `null` matters here.
       const headline = body.headline !== undefined
         ? (String(body.headline || "").trim().slice(0, 80) || null)
         : undefined;
-      const result = await updateProfile({ personId, username, bio, headline });
+      const firstName = body.firstName !== undefined
+        ? (String(body.firstName || "").trim().slice(0, 60) || null)
+        : undefined;
+      const middleName = body.middleName !== undefined
+        ? (String(body.middleName || "").trim().slice(0, 60) || null)
+        : undefined;
+      const lastName = body.lastName !== undefined
+        ? (String(body.lastName || "").trim().slice(0, 60) || null)
+        : undefined;
+      const result = await updateProfile({ personId, username, bio, headline, firstName, middleName, lastName });
       return Response.json(result);
     }
 
