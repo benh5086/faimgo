@@ -41,7 +41,7 @@
 */
 
 const KEY = "faimgo.v1";
-const SCHEMA = 5;
+const SCHEMA = 6;
 const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes away = a new sitting
 const MAX_HISTORY = 20;                // archived completion sets kept on retake
 const MAX_PLANS = 5;                   // saved plans kept per device before the oldest is dropped
@@ -161,6 +161,21 @@ function migrate(obj) {
     });
   }
 
+  /* v5 → v6: adds `accountEmail` — the email address that verified into
+     accountPersonId/accountEditSessionToken above. Sep 7 2026, part of the
+     "an account can hold several plans" batch: the assessment page uses
+     this to skip re-asking for an email when the device already has a
+     verified account session, so it needs the actual address, not just the
+     opaque ids. A v5 record may already hold a session but this file never
+     stored the address that produced it, so null is the honest default —
+     the next /account verify on this device fills it in properly. */
+  if (o.schema === 5) {
+    o = Object.assign({}, o, {
+      schema: 6,
+      accountEmail: o.accountEmail !== undefined ? o.accountEmail : null,
+    });
+  }
+
   return o;
 }
 
@@ -236,6 +251,7 @@ function blank(now) {
     linkedEmail: null, // set once this device has verified an email via the restore flow
     accountPersonId: null,          // set once this device has verified an email via the /account flow
     accountEditSessionToken: null,  // long-lived proof-of-ownership for profile writes — see api/profile
+    accountEmail: null,             // the address that verified into the pair above — lets assessment skip re-asking for email
     /* src/ref deliberately absent here — see captureAttribution() below.
        Their absence (undefined, not null) is what marks "never looked yet",
        which is how first-touch capture tells itself apart from a repeat visit. */
@@ -736,15 +752,18 @@ export function mergeRestoredPlans(serverPlans, email) {
 export function getAccountSession() {
   const s = read();
   if (!s || !s.accountPersonId || !s.accountEditSessionToken) return null;
-  return { personId: s.accountPersonId, editSessionToken: s.accountEditSessionToken };
+  return { personId: s.accountPersonId, editSessionToken: s.accountEditSessionToken, email: s.accountEmail || null };
 }
 
-/* Store the session returned by a successful /api/profile verify. */
-export function setAccountSession(personId, editSessionToken) {
+/* Store the session returned by a successful /api/profile verify. `email`
+   is optional (older callers may not pass it) — omit it and any address
+   already on file is left alone rather than being wiped to null. */
+export function setAccountSession(personId, editSessionToken, email) {
   const s = read();
   if (!s) return false;
   s.accountPersonId = personId || null;
   s.accountEditSessionToken = editSessionToken || null;
+  if (email !== undefined) s.accountEmail = email || null;
   return write(s);
 }
 
@@ -757,6 +776,7 @@ export function clearAccountSession() {
   if (!s) return false;
   s.accountPersonId = null;
   s.accountEditSessionToken = null;
+  s.accountEmail = null;
   return write(s);
 }
 

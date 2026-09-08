@@ -5,7 +5,7 @@ import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
 import AccountLink from "../AccountLink";
 import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
-import { session, loadSaved, saveProgress, savePlan, clearWork, readSteps } from "../../lib/store.js";
+import { session, loadSaved, saveProgress, savePlan, clearWork, readSteps, getAccountSession } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 
 /* ============================================================
@@ -373,6 +373,22 @@ export default function Assessment() {
   // "Open my walkthrough" link so it points at THIS submission specifically,
   // not whatever is most recently active on this device (the overwrite bug).
   const [planId, setPlanId] = useState(null);
+  // Sep 7 2026: the email address this device already has a verified
+  // /account session for, if any — set once on mount, never re-derived
+  // mid-flow. When present, the gate step below stops asking for an email
+  // (see accountEmail's use in the "gate" render and submitGate's
+  // validation) since asking someone who is already signed in to retype an
+  // address they've already proven is exactly the redundant step Ben
+  // flagged. null on a device that has never verified into /account —
+  // those people still see the ordinary email field, unchanged.
+  const [accountEmail, setAccountEmail] = useState(null);
+  // Sep 7 2026: true when the most recent /api/lead submission told us this
+  // person's account already holds MAX_PLANS_PER_PERSON (5) plans and this
+  // one is genuinely new — see db.js's mirrorPlan(). Their local copy on
+  // this device is always safe either way (savePlan() already ran before
+  // the request went out); this only ever changes what the results screen
+  // says about the ACCOUNT side of things.
+  const [planLimitReached, setPlanLimitReached] = useState(false);
 
   /* ---------- MEMORY ----------
      Both of these are read after mount, never during render: `saved` and the
@@ -394,6 +410,20 @@ export default function Assessment() {
        opened this page and left — including everyone who reached it from a
        shared link rather than the home page — was invisible. */
     track(s, "assessment_view");
+
+    // If this device already has a verified /account session, prefill the
+    // gate's email with it so a signed-in person never has to type an
+    // address they've already proven. A plain prefill rather than removing
+    // the field/step entirely: reopenPlan()/resumeProgress() below still
+    // set `email` from whatever a SAVED plan or in-progress answer set
+    // actually used (which may be a different address entirely, e.g.
+    // someone assessing on behalf of someone else), and must keep winning
+    // over this default when either of those runs afterward.
+    const acct = getAccountSession();
+    if (acct?.email) {
+      setAccountEmail(acct.email);
+      setEmail(acct.email);
+    }
   }, []);
 
   /* Autosave every answer. Only once they've actually started, and never
@@ -545,6 +575,10 @@ export default function Assessment() {
         body: JSON.stringify({ type: "lead", sid: ids.sid, fid: ids.fid, visits: ids.visits, src: ids.src || undefined, ref: ids.ref || undefined, email, answers: A, otherIdea: otherTxt || undefined, protectFrom: protectFrom || undefined, results, planId: forPlanId || undefined, version: "v13", ts: new Date().toISOString() }),
       });
       const data = await res.json().catch(() => ({}));
+      // Independent of outcome/sent-vs-failed above: whether THIS account
+      // (not just this device) is at its 5-plan ceiling and this submission
+      // didn't get mirrored to it. See db.js's mirrorPlan() / MAX_PLANS_PER_PERSON.
+      setPlanLimitReached(Boolean(data?.planLimitReached));
       if (data?.outcome === "sent" || data?.outcome === "limited" || data?.outcome === "failed") {
         return data.outcome;
       }
@@ -835,6 +869,26 @@ export default function Assessment() {
     );
   }
 
+  /* Sep 7 2026 — shown only when this submission actually tried to mirror
+     into an ACCOUNT (accountEmail set) and that account was already at its
+     5-plan ceiling (see planLimitReached above / db.js's mirrorPlan()).
+     Deliberately silent for anyone without an account session at all — a
+     device-only submitter was never going to have this problem, and
+     mentioning "your account" to someone who has never seen /account would
+     be confusing, not reassuring. */
+  function PlanLimitNotice() {
+    if (!planLimitReached || !accountEmail) return null;
+    return (
+      <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.yellowSoft, border: `1px solid #EAD9A8` }}>
+        <span className="text-[17px] font-bold leading-none mt-[2px]" style={{ color: C.gold }}>!</span>
+        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
+          Your account already has 5 saved plans, so this one didn&apos;t join them — nothing here is lost, it&apos;s saved on this device the same as always. To keep this one on your account too,{" "}
+          <Link href="/account" className="underline font-medium" style={{ color: C.ink }}>open your account</Link>{" "}and delete one of the five to make room.
+        </p>
+      </div>
+    );
+  }
+
   function MailStatus() {
     if (!emailed) return null;
     if (emailed === "sent") {
@@ -1007,6 +1061,7 @@ export default function Assessment() {
     return (
       <div>
         <MailStatus />
+        <PlanLimitNotice />
         {cards}
         {/* This card used to point at /#start — an anchor on the homepage with
             nothing behind it. The walkthrough is real now, so the button goes
@@ -1145,10 +1200,22 @@ export default function Assessment() {
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>One last thing</Tag>
             <h2 className="font-display text-[26px] mb-2" style={{ color: C.green }}>Your two paths are ready.</h2>
-            <p className="text-[17px] mb-4" style={{ color: C.gray }}>Where should we send your plan so you don&apos;t lose it?</p>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com"
-              className="w-full px-4 py-3.5 rounded-xl border-2 text-[17px]" style={{ borderColor: emailErr ? C.red : C.beige, backgroundColor: "#FFFFFF" }} />
-            {emailErr && <p className="text-[14px] mt-2" style={{ color: C.red }}>{emailErr}</p>}
+            {accountEmail ? (
+              // Signed in on this device — see the mount effect above.
+              // Skips the redundant "type your email again" step entirely;
+              // `email` is already set to accountEmail, so submitGate's
+              // validation passes without anyone touching this field.
+              <p className="text-[15px] mb-4" style={{ color: C.gray }}>
+                Saving to your account (<b style={{ color: C.ink }}>{accountEmail}</b>).
+              </p>
+            ) : (
+              <>
+                <p className="text-[17px] mb-4" style={{ color: C.gray }}>Where should we send your plan so you don&apos;t lose it?</p>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com"
+                  className="w-full px-4 py-3.5 rounded-xl border-2 text-[17px]" style={{ borderColor: emailErr ? C.red : C.beige, backgroundColor: "#FFFFFF" }} />
+                {emailErr && <p className="text-[14px] mt-2" style={{ color: C.red }}>{emailErr}</p>}
+              </>
+            )}
             <p className="text-sm font-medium mt-5 mb-2" style={{ color: C.ink }}>What should your plan protect you from?{" "}<span style={{ color: C.gray, fontWeight: 400 }}>(optional)</span></p>
             <div className="flex flex-wrap gap-2">
               {PROTECT_OPTS.map((o) => (

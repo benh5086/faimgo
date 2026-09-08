@@ -439,6 +439,17 @@ function DoneControl({ play, done, step, onToggle, onOutcome, onSignal, onGoto, 
               Undo
             </button>
           </div>
+          {/* Closes the loop on the note left in the "I did this" box above.
+              Before this, markStep() saved it (locally and, once an email is
+              on file, to person_steps.note in Postgres — see api/step's
+              mirrorStep) but nothing on screen ever showed it again, so
+              writing one felt like it vanished. It didn't — it just was
+              never echoed back. This is the echo. */}
+          {step?.note && (
+            <p className="text-[14px] leading-relaxed mt-2 italic" style={{ color: C.green }}>
+              You noted: &ldquo;{step.note}&rdquo;
+            </p>
+          )}
           <OutcomeControl play={play} step={step} onOutcome={onOutcome} />
         </div>
         <CheckinControl play={play} step={step} renderedIds={renderedIds} onSignal={onSignal} onGoto={onGoto} planPathId={planPathId} planGap={planGap} doneIds={doneIds} ids={ids} />
@@ -1207,13 +1218,25 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ---- the one real channel ---- */}
+      {/* ---- the one real channel ----
+          Sep 7 2026: reworded from "stuck on a step" to plain feedback —
+          the per-step check-in above already owns "still stuck", and
+          having this box ask the same question a second time made it read
+          as a duplicate instead of a genuinely different thing. This box
+          is for what the check-ins don't cover: a gap in the product
+          itself — a step that's wrong, missing, or an idea for something
+          we should have. See api/feedback/route.js's own comment on
+          FEEDBACK_WEBHOOK_URL for where this actually goes (a Sheet, read
+          by the weekly feedback-analysis pass). Still `kind="contact"` —
+          its categories (A question / An idea / Something's off / Other)
+          already fit "tell us what's missing" without changing the widget
+          itself, only the copy around it. */}
       <div className="p-7 rounded-2xl text-center mb-8" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
-        <h3 className="font-display text-[22px] mb-2" style={{ color: C.green }}>Stuck on a step, or think one&apos;s wrong?</h3>
+        <h3 className="font-display text-[22px] mb-2" style={{ color: C.green }}>Something we should know?</h3>
         <p className="text-[15px] leading-relaxed mb-4" style={{ color: C.gray }}>
-          A real person reads these. That&apos;s slower than a chatbot and it&apos;s the honest version of what we have today.
+          Not a step check-in — this is feedback on Faimgo itself: what&apos;s missing, what&apos;s wrong, what you wish existed. A real person reads every one.
         </p>
-        <FeedbackWidget trigger="cta" kind="contact" context={"plan:" + (plan.pathId || "none")} navLabel="Tell us where you're stuck" />
+        <FeedbackWidget trigger="cta" kind="contact" context={"plan:" + (plan.pathId || "none")} navLabel="Give feedback" />
       </div>
 
       <div className="flex flex-col items-center gap-3">

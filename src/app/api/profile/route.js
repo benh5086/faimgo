@@ -33,12 +33,20 @@
         updateProfile (db.js), which owns the UNIQUE-username collision
         handling.
 
+    { action: "delete_plan", editSessionToken, planId }
+      → Sep 7 2026, part of the "an account can hold several plans, not
+        just one" batch (see claude/faimgo-open-items.md). Same trust rule
+        as "update": editSessionToken resolves to a personId server-side,
+        and only that person's own row for this planId is ever touched —
+        a bare planId is never enough on its own, so one account can never
+        delete another's plan even by guessing an id.
+
   RATE LIMITING — own independent instance, same shape and same honest
   caveat as every other route in this file (in-memory per serverless
   instance — a speed bump, not a wall, until real shared state exists).
 */
 
-import { createMagicToken, verifyMagicToken, createEditSession, verifyEditSession, getPublicProfile, getPrivateNameFields, updateProfile } from "../../../lib/db.js";
+import { createMagicToken, verifyMagicToken, createEditSession, verifyEditSession, getPublicProfile, getPrivateNameFields, updateProfile, listPlansForPerson, deletePlanForPerson } from "../../../lib/db.js";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -175,14 +183,37 @@ export async function POST(request) {
       // sql/003_names.sql). A stranger with just the /u/[id] link never
       // gets these; only the owner viewing their own /account does.
       const editSessionToken = String(body.editSessionToken || "");
+      let plans = null;
       if (editSessionToken) {
         const ownerId = await verifyEditSession(editSessionToken);
         if (ownerId === personId) {
           const priv = await getPrivateNameFields(personId);
           if (priv) Object.assign(profile, priv);
+          // Sep 7 2026: same ownership check that unlocks the private name
+          // fields also unlocks the account's saved-plans list — a
+          // stranger with just the /u/[id] link gets neither.
+          plans = await listPlansForPerson(personId);
         }
       }
-      return Response.json({ ok: true, profile });
+      return Response.json({ ok: true, profile, plans });
+    }
+
+    if (body?.action === "delete_plan") {
+      const editSessionToken = String(body.editSessionToken || "");
+      if (!editSessionToken) return Response.json({ ok: false, reason: "no-session" });
+
+      if (overLimit("delete-plan-ip:" + ip, 30, HOUR, now)) {
+        return Response.json({ ok: false, reason: "rate-limited" });
+      }
+
+      const personId = await verifyEditSession(editSessionToken);
+      if (!personId) return Response.json({ ok: false, reason: "session-invalid" });
+
+      const planId = String(body.planId || "").trim();
+      if (!planId) return Response.json({ ok: false, reason: "no-plan-id" });
+
+      const ok = await deletePlanForPerson({ personId, planId });
+      return Response.json({ ok });
     }
 
     if (body?.action === "update") {

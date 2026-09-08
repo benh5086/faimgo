@@ -77,6 +77,18 @@ async function sha256Hex(text) {
   Returns true on success, false on any failure (including "no database
   configured") — callers should log false, never surface it to the person.
 */
+/* Sep 7 2026 — Ben wants multiple plans kept per account (like separate
+   chat threads on different topics), not one plan silently overwriting the
+   last. store.js's MAX_PLANS already caps a single DEVICE at 5, dropping
+   the oldest with no warning — that was fine when a device and a person
+   were the same thing, but an account can now outlive any one device, so
+   the cap has to live here too, and it has to be a real stop, not a quiet
+   drop: once a person already has 5 plans on file, a genuinely NEW one is
+   refused (see the check below) rather than silently evicting an old one
+   they might still want. Updating one of the 5 they already have (same
+   planId) is always allowed — that's not growth, it's an edit. */
+const MAX_PLANS_PER_PERSON = 5;
+
 export async function mirrorPlan({ email, fid, planId, answers, results, protectFrom, otherIdea }) {
   const db = sql();
   if (!db || !email || !planId) return false;
@@ -96,6 +108,14 @@ export async function mirrorPlan({ email, fid, planId, answers, results, protect
       `;
     }
 
+    // Only a genuinely new plan_id counts against the cap — resubmitting/
+    // editing one already on file must never be blocked by it.
+    const existing = await db`SELECT plan_id FROM person_plans WHERE person_id = ${person.id}`;
+    const isNewPlan = !existing.some((r) => r.plan_id === planId);
+    if (isNewPlan && existing.length >= MAX_PLANS_PER_PERSON) {
+      return "limit";
+    }
+
     await db`
       INSERT INTO person_plans (person_id, plan_id, answers, results, protect_from, other_idea)
       VALUES (${person.id}, ${planId}, ${JSON.stringify(answers || {})}, ${JSON.stringify(results || null)}, ${protectFrom || null}, ${otherIdea || null})
@@ -109,6 +129,55 @@ export async function mirrorPlan({ email, fid, planId, answers, results, protect
     return true;
   } catch (e) {
     console.error("[FAIMGO DB ERROR] mirrorPlan", e?.message);
+    return false;
+  }
+}
+
+/*
+  List every plan on file for a person — the account page's "your saved
+  plans" list. Same raw row shape verifyMagicToken already returns for
+  /restore (plan_id, answers, results, protect_from, other_idea, ...),
+  deliberately NOT trimmed down to a display-only shape: /account's "Open"
+  action on one of these plans reuses store.js's mergeRestoredPlans() —
+  the exact same merge path /restore already uses to hydrate a plan onto a
+  device that has never seen it — and that function needs the real
+  `answers` to do that. Shipping a lighter payload here would work fine for
+  drawing the list itself but would silently break Open on any device other
+  than the one that originally submitted the plan, which defeats the point
+  of an account in the first place. Newest-updated first, same ordering
+  verifyMagicToken uses.
+*/
+export async function listPlansForPerson(personId) {
+  const db = sql();
+  if (!db || !personId) return [];
+  try {
+    const rows = await db`
+      SELECT plan_id, answers, results, protect_from, other_idea, created_at, updated_at
+      FROM person_plans WHERE person_id = ${personId}
+      ORDER BY updated_at DESC
+    `;
+    return rows;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] listPlansForPerson", e?.message);
+    return [];
+  }
+}
+
+/*
+  Delete one saved plan. The caller (api/profile/route.js) must have
+  already verified personId via verifyEditSession — this function trusts
+  whatever personId it's given, same separation of concerns as
+  updateProfile. Scoped to (person_id, plan_id) together so there is no way
+  to pass someone else's plan_id and delete a stranger's row.
+*/
+export async function deletePlanForPerson({ personId, planId }) {
+  const db = sql();
+  if (!db || !personId || !planId) return false;
+  try {
+    await db`DELETE FROM person_plans WHERE person_id = ${personId} AND plan_id = ${planId}`;
+    return true;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] deletePlanForPerson", e?.message);
     return false;
   }
 }

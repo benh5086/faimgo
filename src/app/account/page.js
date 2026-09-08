@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { session, loadSaved, getAccountSession, setAccountSession, clearAccountSession } from "../../lib/store.js";
+import { session, loadSaved, getAccountSession, setAccountSession, clearAccountSession, mergeRestoredPlans } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 import { pathById } from "../../lib/paths.js";
 import Avatar from "../Avatar.js";
@@ -66,16 +66,45 @@ function fmtMonthYear(iso) {
   }
 }
 
+function fmtDate(iso) {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch (e) {
+    return "";
+  }
+}
+
+/* Same "Working on: X" naming used for the headline above, applied to a
+   single saved-plan row instead of the device's own current plan — a name
+   people recognize is worth more here than the raw path id. Falls back to
+   a plain label rather than hiding the row when a plan's results don't
+   resolve to a known path (e.g. an older plan from before a path was
+   renamed or retired). */
+function planLabel(row) {
+  try {
+    const results = row?.results;
+    const pathId = results?.chosen || results?.fastestWin;
+    const p = pathId ? pathById(pathId) : null;
+    return p ? p.name : "Your plan";
+  } catch (e) {
+    return "Your plan";
+  }
+}
+
 export default function Account() {
   const [ids, setIds] = useState({ fid: null, sid: null });
   const [token, setToken] = useState(null);
   const [email, setEmail] = useState("");
   const [emailErr, setEmailErr] = useState("");
   const [view, setView] = useState("checking"); // checking | ask | requesting | sent | verifying | ready | failed
-  const [sessionInfo, setSessionInfo] = useState(null); // { personId, editSessionToken }
+  const [sessionInfo, setSessionInfo] = useState(null); // { personId, editSessionToken, email }
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ username: "", bio: "", firstName: "", middleName: "", lastName: "" });
   const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error:taken | error:required | error
+  const [plans, setPlans] = useState(null); // null = not loaded yet; [] = loaded, none saved
+  const [deletingId, setDeletingId] = useState(null); // planId currently mid-delete, for a disabled button
 
   useEffect(() => {
     const s = session();
@@ -124,6 +153,13 @@ export default function Account() {
             lastName: data.profile.lastName || "",
           });
         }
+        // `plans` rides along on the same "get" response, gated server-side
+        // by the same editSessionToken ownership check as the private name
+        // fields above — see api/profile/route.js. `[]` (loaded, none saved)
+        // and `null` (request failed / owner not verified) stay distinct so
+        // the section below can tell "you have no saved plans yet" apart
+        // from "couldn't load your plans right now".
+        setPlans(Array.isArray(data?.plans) ? data.plans : (data?.ok ? [] : null));
       } catch (e) { /* the edit form still works with blank defaults */ }
     })();
   }, [view, sessionInfo]);
@@ -139,8 +175,8 @@ export default function Account() {
         });
         const data = await res.json().catch(() => ({}));
         if (data?.ok && data.personId && data.editSessionToken) {
-          setAccountSession(data.personId, data.editSessionToken);
-          setSessionInfo({ personId: data.personId, editSessionToken: data.editSessionToken });
+          setAccountSession(data.personId, data.editSessionToken, data.email || null);
+          setSessionInfo({ personId: data.personId, editSessionToken: data.editSessionToken, email: data.email || null });
           setView("ready");
           track(ids, "account_verified");
         } else {
@@ -210,6 +246,44 @@ export default function Account() {
     } catch (e) {
       setSaveState("error");
     }
+  }
+
+  /* Bring one saved plan onto THIS device and open it. Reuses
+     mergeRestoredPlans() exactly as /restore already does — same shape,
+     same MAX_PLANS trimming — so a plan saved from a phone opens correctly
+     on a laptop even though /plan itself only ever reads from this
+     device's own localStorage (see loadSaved() in store.js). Plain <Link>
+     navigation with a synchronous onClick: the merge write finishes before
+     the browser follows the href, no router import needed for a pattern
+     this file doesn't use anywhere else. */
+  function openPlan(row) {
+    try {
+      mergeRestoredPlans([row], sessionInfo?.email || "");
+    } catch (e) { /* /plan's own empty-state handles a failed merge gracefully */ }
+  }
+
+  /* Removes this plan from the ACCOUNT's saved list only — deliberately
+     does not touch whatever copy may still sit in this device's own
+     localStorage (a person who opened it here first keeps their local
+     copy; that's a separate, lower-stakes thing than the account record,
+     governed by its own MAX_PLANS trimming). Confirms first: this is one
+     of the few genuinely irreversible actions on this page. */
+  async function deletePlanRow(planId) {
+    if (!sessionInfo?.editSessionToken || !planId) return;
+    if (!window.confirm("Delete this saved plan from your account? This can't be undone.")) return;
+    setDeletingId(planId);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_plan", editSessionToken: sessionInfo.editSessionToken, planId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data?.ok) {
+        setPlans((list) => (Array.isArray(list) ? list.filter((p) => p.plan_id !== planId) : list));
+      }
+    } catch (e) { /* row stays in the list — the button just stops spinning */ }
+    setDeletingId(null);
   }
 
   return (
@@ -403,6 +477,66 @@ export default function Account() {
             {saveState === "error:taken" && <span className="ml-3 text-[14px]" style={{ color: "#9C3B2E" }}>That Faimgo name is taken — try another.</span>}
             {saveState === "error:required" && <span className="ml-3 text-[14px]" style={{ color: "#9C3B2E" }}>First name, last name, and a Faimgo name are all required.</span>}
             {saveState === "error" && <span className="ml-3 text-[14px]" style={{ color: "#9C3B2E" }}>Couldn&apos;t save — try again.</span>}
+
+            {/* "Your saved plans" — added Sep 7 2026. An account can now
+                hold up to 5 plans (see MAX_PLANS_PER_PERSON in db.js), the
+                same idea as separate chat threads for separate topics:
+                retaking the assessment for a different idea doesn't have
+                to erase the last one. plans === null means either still
+                loading or the fetch didn't come back with an owner-verified
+                answer; plans === [] is a real, loaded "nothing saved yet". */}
+            <div className="mt-8 pt-6" style={{ borderTop: `1px solid ${C.beige}` }}>
+              <h2 className="font-display text-xl mb-3" style={{ color: C.green }}>Your saved plans</h2>
+              {plans === null && (
+                <p className="text-[14px]" style={{ color: C.gray }}>Loading…</p>
+              )}
+              {Array.isArray(plans) && plans.length === 0 && (
+                <p className="text-[14px] leading-relaxed" style={{ color: C.gray }}>
+                  Nothing saved to your account yet — plans you submit from the assessment land here.
+                </p>
+              )}
+              {Array.isArray(plans) && plans.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {plans.map((row) => (
+                    <div
+                      key={row.plan_id}
+                      className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl"
+                      style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-semibold truncate" style={{ color: C.ink }}>{planLabel(row)}</p>
+                        <p className="text-[13px]" style={{ color: C.gray }}>Updated {fmtDate(row.updated_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <Link
+                          href={`/plan?id=${encodeURIComponent(row.plan_id)}`}
+                          onClick={() => openPlan(row)}
+                          className="text-[14px] font-medium underline"
+                          style={{ color: C.green }}
+                        >
+                          Open
+                        </Link>
+                        <button
+                          onClick={() => deletePlanRow(row.plan_id)}
+                          disabled={deletingId === row.plan_id}
+                          className="text-[14px] underline"
+                          style={{ color: "#9C3B2E", opacity: deletingId === row.plan_id ? 0.6 : 1 }}
+                        >
+                          {deletingId === row.plan_id ? "Deleting…" : "Delete"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {Array.isArray(plans) && (
+                <p className="text-[13px] mt-3" style={{ color: C.gray }}>
+                  {plans.length >= 5
+                    ? "You're at 5 of 5 — delete one above to save a new plan from the assessment."
+                    : `${plans.length} of 5 saved.`}
+                </p>
+              )}
+            </div>
 
             {sessionInfo?.personId && (
               <div className="mt-8 pt-6" style={{ borderTop: `1px solid ${C.beige}` }}>

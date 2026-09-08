@@ -376,8 +376,17 @@ export async function POST(request) {
       cost the restore feature for this one plan, never the Sheet write or
       the email that just happened above.
     */
+    // mirrorPlan returns "limit" (Sep 7 2026) when this person already has
+    // MAX_PLANS_PER_PERSON (5) plans on file and this one is genuinely new —
+    // see db.js. The local copy in this browser's own storage is untouched
+    // either way (savePlan() already ran before this request was sent), so
+    // nothing is lost; the person just isn't saved to their ACCOUNT yet.
+    // `planLimitReached` lets the assessment screen say that honestly
+    // instead of the plan quietly failing to sync with no explanation.
+    let planLimitReached = false;
     if (planId) {
-      await mirrorPlan({ email, fid, planId, answers, results, protectFrom, otherIdea });
+      const mirrored = await mirrorPlan({ email, fid, planId, answers, results, protectFrom, otherIdea });
+      planLimitReached = mirrored === "limit";
     }
 
     // `outcome`/`emailed` let the results screen tell the truth about what
@@ -388,6 +397,7 @@ export async function POST(request) {
       emailed: mail === "sent",
       outcome: mail === "sent" ? "sent" : "failed",
       reason: mail === "sent" ? null : mail,
+      planLimitReached,
     });
   } catch (e) {
     console.error("[FAIMGO LEAD ERROR]", e?.message);
