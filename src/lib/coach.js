@@ -116,8 +116,12 @@ const COACH_REPLY_TOOL = {
         enum: ["full", "partial"],
         description: "'full' if the provided library content actually covers this person's situation well; 'partial' if it only partly applies and the message should say so honestly.",
       },
+      has_idea: {
+        type: ["boolean", "null"],
+        description: "classify_idea only: true if their own words describe an actual side-income idea — even one phrased alongside a practical question ('I want to sell custom meal prep, how do I get licensed cheaply?' is has_idea:true with a question in it). false ONLY when there is no real idea at all — pure confusion or a bare question with nothing to classify ('what should I do?', 'no idea, help'). A question mark alone never makes this false; look at whether an idea was actually stated. Always null for stuck_help.",
+      },
     },
-    required: ["message", "coverage", "tool_name", "path_id"],
+    required: ["message", "coverage", "tool_name", "path_id", "has_idea"],
   },
 };
 
@@ -137,7 +141,7 @@ export function buildGroundingContext(params) {
       model: "haiku",
       userContent: JSON.stringify({
         instructions:
-          "Someone was asked to describe, in their own words, the side-income idea they're actually pursuing (not one of the listed paths). Read what they wrote. If it genuinely matches one of the path descriptions below, return that path's id. If it's a real, different idea with no written playbook for it, return path_id: null, coverage: 'partial', and a short honest message (quoting their own words if it helps) explaining that this specific idea isn't one Faimgo has a written walkthrough for yet, so what follows will be the closest scored fit as a funding path while they validate their own idea.",
+          "Someone was asked to describe, in their own words, the side-income idea they're actually pursuing (not one of the listed paths). Read what they wrote. First decide has_idea: did they actually state a real income idea, even if they also asked a practical question about it (e.g. \"I want to sell custom meal prep — how do I get licensed cheaply?\" is has_idea:true, the licensing question doesn't erase the stated idea)? Set has_idea:false only when there is genuinely no idea in there — just confusion or a bare question with nothing to classify. If has_idea is true and it genuinely matches one of the path descriptions below, return that path's id. If has_idea is true but it's a real, different idea with no written playbook for it, return path_id: null, coverage: 'partial', and a short honest message (quoting their own words if it helps) explaining that this specific idea isn't one Faimgo has a written walkthrough for yet, so what follows will be the closest scored fit as a funding path while they validate their own idea. If has_idea is false, path_id must be null and the message should acknowledge they don't have a direction yet, not invent one.",
         their_own_words: text,
         available_paths: pathList,
       }),
@@ -230,7 +234,7 @@ export async function callCoach({ userContent, model }) {
     const toolUse = Array.isArray(data?.content) ? data.content.find((c) => c.type === "tool_use" && c.name === "coach_reply") : null;
     if (!toolUse || !toolUse.input) return { ok: false, reason: "no_structured_reply" };
 
-    const { message, tool_name, path_id, coverage } = toolUse.input;
+    const { message, tool_name, path_id, coverage, has_idea } = toolUse.input;
     if (typeof message !== "string" || !message.trim()) return { ok: false, reason: "empty_reply" };
 
     return {
@@ -240,6 +244,11 @@ export async function callCoach({ userContent, model }) {
         toolName: tool_name || null,
         pathId: path_id || null,
         coverage: coverage === "partial" ? "partial" : "full",
+        // Sep 8 2026 — see has_idea's schema comment above and
+        // assessment/page.js's effectiveOtherRead(). Only meaningful for
+        // classify_idea; stuck_help never sets it, so this comes back null
+        // there and effectiveOtherRead never looks at it for that call.
+        hasIdea: typeof has_idea === "boolean" ? has_idea : null,
       },
       usage: data?.usage || null,
       model: modelId,

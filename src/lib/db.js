@@ -517,3 +517,61 @@ export async function updateProfile({ personId, username, bio, headline, firstNa
     return { ok: false, reason: "error" };
   }
 }
+
+/*
+  ---------- AI coach usage ledger (added Sep 8 2026) ----------
+
+  See sql/004_ai_usage.sql for the schema and the full reasoning on why this
+  is keyed by fid rather than person_id. This is the build-out of the $5
+  allowance already decided in claude/faimgo-ai-coach-usage-pricing-sep6.md
+  -- gates ONLY src/lib/coach.js's two calls, never the plan/walkthrough.
+
+  FAILS OPEN, deliberately, unlike verifyMagicToken/verifyEditSession above.
+  Those two protect against showing a stranger someone else's private data
+  -- a real harm a swallowed error must never risk. This protects against
+  overspending during a database hiccup -- a cost risk, not a privacy one,
+  and the wrong failure mode here (silently refusing real help because a
+  balance check couldn't be read) is worse than the risk it's guarding
+  against, per this whole file's "must never break the flow" discipline
+  (see mirrorPlan/mirrorStep above). A DB outage is also rare and short —
+  the global MAX_COACH_CALLS_PER_DAY ceiling in api/coach/route.js is the
+  backstop that still applies even if this fails open.
+*/
+export async function getAiUsageCents(fid) {
+  const db = sql();
+  if (!db || !fid) return 0; // no database, or no device id at all — fail open, see above
+  try {
+    const [row] = await db`SELECT total_cost_cents FROM ai_usage WHERE fid = ${fid}`;
+    return row ? row.total_cost_cents : 0;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] getAiUsageCents", e?.message);
+    return 0; // fail open — see comment above
+  }
+}
+
+/*
+  Best-effort record of one coach call's real cost, in cents, computed by
+  the caller (api/coach/route.js) from the actual token usage Anthropic's
+  API reports back and its published per-model pricing — never estimated
+  or flat-rated here. Never blocks or throws; a failed write here only
+  ever costs accuracy of the running total, never the reply the person is
+  waiting on (same discipline as mirrorStep).
+*/
+export async function recordAiUsage({ fid, costCents }) {
+  const db = sql();
+  if (!db || !fid || !Number.isFinite(costCents) || costCents <= 0) return false;
+  try {
+    await db`
+      INSERT INTO ai_usage (fid, total_cost_cents, calls)
+      VALUES (${fid}, ${Math.round(costCents)}, 1)
+      ON CONFLICT (fid) DO UPDATE SET
+        total_cost_cents = ai_usage.total_cost_cents + EXCLUDED.total_cost_cents,
+        calls = ai_usage.calls + 1,
+        updated_at = now()
+    `;
+    return true;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] recordAiUsage", e?.message);
+    return false;
+  }
+}

@@ -140,15 +140,23 @@ function resolveOther(txt) {
   resolveOther() always returned, so there is zero regression risk either
   way (coach-constraints.md rule 4: degrade, never refuse).
 
-  Doubt stays authoritative even when a classification exists: a real
-  question ("what should I do?") is about HOW someone wrote it, not what it
-  means, so it's checked first regardless of what the model returned.
-*/
+  Sep 8 2026 — FIXED a real bug a live test surfaced: this used to run
+  DOUBT_PATTERNS (a bare regex for "?", "not sure", etc.) against the raw
+  text and treat any match as doubt EVEN WHEN the AI had already classified
+  the idea successfully — so "I want to sell custom meal prep. How do I get
+  licensed cheaply?" got its stated idea thrown away and replaced with two
+  generic, unrelated paths, purely because of the trailing question mark.
+  The AI already reads the whole message in context and now returns its own
+  `has_idea` verdict (see coach.js) instead of a client-side punctuation
+  guess — that's what gets trusted below. DOUBT_PATTERNS is now ONLY the
+  fallback for when the AI hasn't answered at all (still loading, not
+  configured, failed) — the exact same job it always did before AI
+  classification existed, no regression there. */
 function effectiveOtherRead(A) {
   const c = A.otherClassify;
   if (c && c.ok) {
-    const t = (A.otherTxt || "").trim().toLowerCase();
-    if (!t || DOUBT_PATTERNS.some((r) => r.test(t))) return { kind: "doubt" };
+    const t = (A.otherTxt || "").trim();
+    if (!t || c.hasIdea === false) return { kind: "doubt" };
     return c.pathId ? { kind: "matched", pathId: c.pathId } : { kind: "custom" };
   }
   return resolveOther(A.otherTxt);
@@ -479,11 +487,20 @@ export default function Assessment() {
     daily ceiling hit) is silently absorbed — A.otherClassify simply stays
     unset or gets { ok:false }, and effectiveOtherRead() already treats both
     of those exactly like "hasn't answered yet."
+
+    Sep 8 2026 — this used to skip the call entirely (`return`) whenever
+    DOUBT_PATTERNS matched the raw text, on the theory that a "?" meant
+    "a question, not an idea to classify." In practice that also skipped it
+    for anyone who stated a real idea AND asked a practical question in the
+    same breath — extremely normal phrasing ("...how do I get licensed
+    cheaply?") — which meant a real idea never even reached the model. The
+    model is better at this judgment than a punctuation check: it now
+    decides has_idea itself (see coach.js), so every non-empty answer gets
+    sent, and effectiveOtherRead() is what acts on the verdict.
   */
   function classifyOtherIdea() {
     const txt = (A.otherTxt || "").trim();
     if (!txt) return;
-    if (DOUBT_PATTERNS.some((r) => r.test(txt.toLowerCase()))) return; // a question, not an idea to classify
     fetch("/api/coach", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -504,6 +521,7 @@ export default function Assessment() {
               pathId: data.reply?.pathId || null,
               coverage: data.reply?.coverage || "partial",
               message: data.reply?.message || null,
+              hasIdea: typeof data.reply?.hasIdea === "boolean" ? data.reply.hasIdea : null,
             },
           };
         });
