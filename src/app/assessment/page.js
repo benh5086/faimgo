@@ -108,6 +108,8 @@ const PROTECT_OPTS = [
    really one of our paths in different words, (c) give true custom ideas
    the full validation treatment — positive-first. */
 const OTHER_KEYWORDS = [
+  // food is first on purpose: "catering" contains "cat", which the care list below would otherwise swallow.
+  { id: "food", words: ["meal prep", "meal-prep", "mealprep", "personal chef", "private chef", "chef", "caterin", "cater", "bakery", "baking", "baker", "baked good", "pastr", "cake", "cupcake", "cookie", "dessert", "granola", "jam", "jelly", "canning", "hot sauce", "spice blend", "home cook", "cooking", "cottage food", "sell food", "sell my food", "food truck", "meals for"] },
   { id: "care", words: ["babysit", "baby sit", "childcare", "child care", "pet ", "pets", "dog", "cat", "senior", "elder", "nanny", "caregiv"] },
   { id: "local", words: ["clean", "lawn", "mow", "landscap", "pressure wash", "power wash", "handyman", "paint", "moving help", "snow", "junk", "detail"] },
   { id: "tutor", words: ["tutor", "teach", "coach", "lesson", "training", "fitness", "language", "piano", "math", "mentor"] },
@@ -181,24 +183,24 @@ function computeScores(A) {
   else { add("gig", 2); add("local", 2); }
   if (!inv.includes("computer")) ["freelance", "va", "digital", "content"].forEach((i) => add(i, -2));
   else ["freelance", "va", "digital", "content"].forEach((i) => add(i, 1));
-  if (inv.includes("tools")) add("local", 2);
-  if (!inv.includes("space")) add("resell", -1); else add("resell", 2);
-  if (cash) { add("resell", 1); add("local", 1); }
+  if (inv.includes("tools")) { add("local", 2); add("food", 2); }
+  if (!inv.includes("space")) add("resell", -1); else { add("resell", 2); add("food", 1); }
+  if (cash) { add("resell", 1); add("local", 1); add("food", 1); }
   else { add("resell", -1); ["va", "tutor", "care", "freelance"].forEach((i) => add(i, 1)); }
   // hours
-  const hourBoost = { lt5: ["gig", "resell", "care"], "5to10": ["resell", "care", "local", "tutor"], "10to20": ["freelance", "local", "tutor", "va"], "20plus": ["freelance", "digital", "content"] }[A.qhours] || [];
+  const hourBoost = { lt5: ["gig", "resell", "care"], "5to10": ["resell", "care", "local", "tutor", "food"], "10to20": ["freelance", "local", "tutor", "va", "food"], "20plus": ["freelance", "digital", "content"] }[A.qhours] || [];
   hourBoost.forEach((i) => add(i, 2));
   // timeline (also carries the risk posture: urgency = sure things, patience = bigger bets)
   if (A.qtime === "week") PATHS.filter((p) => p.speed === 5).forEach((p) => add(p.id, 2));
   if (A.qtime === "week" || A.qtime === "month") PATHS.filter((p) => p.speed >= 4).forEach((p) => add(p.id, 1));
   if (A.qtime === "norush") PATHS.filter((p) => p.ceiling >= 4).forEach((p) => add(p.id, 3));
   // work style (merged energy + online comfort)
-  if (A.qwork === "face") ["local", "care", "tutor"].forEach((i) => add(i, 2));
+  if (A.qwork === "face") ["local", "care", "tutor", "food"].forEach((i) => add(i, 2));
   if (A.qwork === "onlineBehind") { ["va", "freelance"].forEach((i) => add(i, 2)); add("digital", 1); add("content", -2); }
   if (A.qwork === "onlineVisible") { add("content", 3); ["tutor", "freelance", "va"].forEach((i) => add(i, 1)); }
-  if (A.qwork === "offlineSolo") { excluded.add("content"); add("resell", 2); add("local", 1); add("care", 1); ["freelance", "va", "digital"].forEach((i) => add(i, -1)); }
+  if (A.qwork === "offlineSolo") { excluded.add("content"); add("resell", 2); add("local", 1); add("care", 1); add("food", 1); ["freelance", "va", "digital"].forEach((i) => add(i, -1)); }
   // identity style
-  const styleBoost = { make: ["digital", "freelance", "content"], sell: ["resell", "freelance", "local"], help: ["care", "tutor", "local"], systems: ["va", "freelance"] }[A.qstyle] || [];
+  const styleBoost = { make: ["digital", "freelance", "content", "food"], sell: ["resell", "freelance", "local"], help: ["care", "tutor", "local"], systems: ["va", "freelance"] }[A.qstyle] || [];
   styleBoost.forEach((i) => add(i, 2));
   // desire boost + relationship weight (also applies to keyword-matched "something else" ideas)
   const chosen = effectiveChosen(A);
@@ -243,11 +245,12 @@ function whyFits(A, p) {
   if ((p.id === "gig" || p.id === "local") && inv.includes("car")) bits.push("you have the car it runs on");
   if (["freelance", "va", "digital", "content"].includes(p.id) && inv.includes("computer")) bits.push("your computer is the only equipment it needs");
   if (p.id === "resell" && inv.includes("cash")) bits.push("your starting cash covers the first inventory run");
-  if (A.qwork === "face" && ["local", "care", "tutor"].includes(p.id)) bits.push("it puts you face to face with people, which is how you like to work");
-  if (A.qwork === "offlineSolo" && ["resell", "local"].includes(p.id)) bits.push("you can run it offline and mostly solo");
+  if (A.qwork === "face" && ["local", "care", "tutor", "food"].includes(p.id)) bits.push("it puts you face to face with people, which is how you like to work");
+  if (A.qwork === "offlineSolo" && ["resell", "local", "food"].includes(p.id)) bits.push("you can run it offline and mostly solo");
   if ((A.qwork === "onlineBehind") && ["freelance", "va", "digital"].includes(p.id)) bits.push("it runs online without putting you on camera");
   if (A.qstyle === "help" && ["care", "tutor"].includes(p.id)) bits.push("it's built on taking care of people — your natural mode");
-  if (A.qstyle === "make" && ["digital", "content", "freelance"].includes(p.id)) bits.push("it rewards making things");
+  if (A.qstyle === "make" && ["digital", "content", "freelance", "food"].includes(p.id)) bits.push("it rewards making things");
+  if (p.id === "food" && inv.includes("tools")) bits.push("your kitchen is most of the equipment it needs");
   if (A.qstyle === "sell" && ["resell", "local"].includes(p.id)) bits.push("it rewards your seller instincts");
   if (A.qtime === "week" && p.speed >= 5) bits.push("it can genuinely pay within days");
   if (bits.length === 0) bits.push("it scored highest across your time, inventory, and working style");

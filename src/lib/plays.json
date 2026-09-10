@@ -1,6 +1,6 @@
 {
-  "version": "0.7",
-  "note": "Faimgo play library. v0.7 is a routing release, not a writing one: no prose changed. It (a) widens `paths` tags on five existing core plays to the paths whose content they already fit — tutor and care were being handed a three-step plan made entirely of cold-outreach steps while the offer/pricing/setup/retainer plays they obviously need sat one tag away; (b) adds `spine_does_not_apply`, because for gig apps and content creation the universal outreach spine is not thin, it is wrong, and a router needs to be told the difference; (c) adds `path_coverage` so the plan view can say out loud which paths we have fully written and which we have not, instead of quietly serving a short plan as if it were the whole thing. v0.6 added if_it_stalls (the 'recalculating' layer), checkin (the step exits through a question, not a checkbox), and time_cost.",
+  "version": "0.8",
+  "note": "Faimgo play library. v0.7 is a routing release, not a writing one: no prose changed. It (a) widens `paths` tags on five existing core plays to the paths whose content they already fit — tutor and care were being handed a three-step plan made entirely of cold-outreach steps while the offer/pricing/setup/retainer plays they obviously need sat one tag away; (b) adds `spine_does_not_apply`, because for gig apps and content creation the universal outreach spine is not thin, it is wrong, and a router needs to be told the difference; (c) adds `path_coverage` so the plan view can say out loud which paths we have fully written and which we have not, instead of quietly serving a short plan as if it were the whole thing. v0.6 added if_it_stalls (the 'recalculating' layer), checkin (the step exits through a question, not a checkbox), and time_cost. v0.8 (Sep 10): added the food/catering path — two bespoke plays (food.legal-on-ramp as the food spine's step 1, food.climb-the-ladder in grow) plus food tags on the universal sales spine, and food marked partial in path_coverage. The on-ramp play never states food law; it routes the user to their own state cottage-food rules and county health department, because that law is local and varies.",
   "availability_model": {
     "core": "Sequenced. The spine — order matters because doing these out of order genuinely doesn't work.",
     "on_demand": "NOT sequenced, never given a position. Surfaced the moment a need_signal fires, from any step. Help is not a step.",
@@ -70,6 +70,139 @@
   },
   "plays": [
     {
+      "id": "food.legal-on-ramp",
+      "name": "Find what you can legally sell from your kitchen",
+      "short_name": "Your legal on-ramp",
+      "sub": "Start legal, then climb",
+      "icon": "①",
+      "type": "core",
+      "move": "Start with the food you can legally sell from your home kitchen today, then treat each step up as a gate you clear on purpose, not a wall.",
+      "paths": [
+        "food"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill",
+        "can-market",
+        "stuck",
+        "scratch"
+      ],
+      "phase": "find",
+      "prerequisites": [],
+      "unlocks": [
+        "offer.define"
+      ],
+      "time_cost": "1 hour of checking, before you cook anything to sell",
+      "payoff": {
+        "speed": "days",
+        "effort": "low",
+        "ceiling": "foundational"
+      },
+      "confidence": "high",
+      "quick_win": true,
+      "fear_it_calms": "Worrying you need a commercial kitchen, a license and a logo before you can sell a single cookie. In most US states you don't. 'Cottage food' laws let you sell certain home-kitchen foods with little or no license. The catch is they're non-perishable things, and the rules are set where you live, so the one real task is checking yours.",
+      "common_needs_here": [
+        "help.ai-coach",
+        "help.get-a-human"
+      ],
+      "how_to": {
+        "diy_ai": "Tell the AI your state and what you want to make; it points you to your state's cottage food rules and whether your product is likely allowed, then tells you to confirm with your county health department rather than guessing the law for you.",
+        "community": "Someone who already sells food in your state tells you what they actually had to do to start.",
+        "skip": null
+      },
+      "content": {
+        "goal": "One sentence you're sure of: 'In my state I can legally sell [this food] from my home kitchen, and to grow past that I'd need [the next step].'",
+        "steps": [
+          "Look up your state's cottage food law: what it lets you sell from a home kitchen, and the yearly sales cap",
+          "Sort your idea into lane 1 (non-perishable, usually allowed at home: baked goods, jams, granola, candy, dry mixes) or lane 2 (perishable: meal prep, anything needing refrigeration, usually needs a licensed or shared kitchen)",
+          "Check with your county health department once to confirm, before you sell anything",
+          "Write down the next rung up (a shared or commercial kitchen, a food handler permit, a catering license) so you know what 'bigger' costs before you need it"
+        ],
+        "done_when": "You know exactly what you can sell from home today, and what the next level requires."
+      },
+      "concrete": {
+        "right_now": "Search '[your state] cottage food law' and read the list of allowed foods and the sales cap. Five minutes tells you whether your idea starts at home or starts in a rented kitchen, and that single fact changes your whole first month.",
+        "tools": [
+          {
+            "name": "Your state's cottage food page",
+            "cost": "Free",
+            "at": "search '[your state] cottage food law'",
+            "for": "The list of foods you can sell from home and the yearly cap. This is the law for you; a national article is not."
+          },
+          {
+            "name": "Your county health department",
+            "cost": "Free to ask",
+            "at": "search '[your county] health department food'",
+            "for": "The one authority that can actually confirm what you're allowed to do. One call settles it."
+          },
+          {
+            "name": "A shared / commissary kitchen (for later)",
+            "cost": "Rented by the hour, often ~$15–35/hr",
+            "at": "search 'commissary kitchen near me'",
+            "for": "The next rung: what lets you legally make perishable food, meal prep and catering at volume. Not now, but when orders pay for it."
+          }
+        ],
+        "numbers": [
+          "Two lanes: non-perishable usually starts at home; perishable usually needs a licensed kitchen. Know which one your idea is in before you spend a dollar.",
+          "Most states cap cottage-food sales (often in the tens of thousands of dollars a year). That cap is the signal you've outgrown the home lane, not a failure.",
+          "One health-department check before your first sale. It's free, and it's the difference between a side income and a fine."
+        ],
+        "say_this": {
+          "when": "Labeling what you sell. Cottage food laws in most states require a label, and a clear one also builds trust. Check your state's exact wording, but it's usually this shape.",
+          "text": "[Product name]\nMade in a home kitchen not inspected by the [state] health department.\nIngredients: [list]\n[Your name] · [contact]\nMade on: [date]"
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "My idea is meal prep / perishable and my state won't let me sell it from home.",
+          "likely_cause": "You're at lane 2, which is normal for the most profitable food ideas. It's not a no, it's a 'not from your kitchen.'",
+          "do_this": "Two honest moves: start with a non-perishable version to build customers and cash (a meal-prep cook can start with spice blends, granola or baked goods), or rent hours at a shared / commissary kitchen, which is cheaper than people expect and makes perishable food legal. Pick the one that lets you start this month."
+        },
+        {
+          "symptom": "The rules are confusing and I can't tell what applies to me.",
+          "likely_cause": "You're reading national articles, which average over fifty different state laws.",
+          "do_this": "Ignore anything not about your state. Read only your state's cottage food page, then call your county health department with your specific product. Two sources, both local, end the confusion."
+        }
+      ],
+      "checkin": {
+        "question": "Do you know what you can sell?",
+        "options": [
+          {
+            "label": "Yes, I know my lane and what's legal.",
+            "signal": "has:food-legal-lane",
+            "then": "Now you can build the offer around a food you can actually sell, instead of guessing.",
+            "routes_to": null
+          },
+          {
+            "label": "I'm in the perishable lane and need a kitchen.",
+            "signal": "food:needs-kitchen",
+            "then": "That's the most common spot for the best food ideas. We'll start you on a version you can sell now and treat the kitchen as the next rung, funded by early sales.",
+            "routes_to": null
+          },
+          {
+            "label": "I still can't find my state's rules.",
+            "signal": "blocked:food-rules",
+            "then": "This is exactly what the AI and a person who's done it are for. One of them will get you to your state's actual rule in a few minutes.",
+            "routes_to": "help.ai-coach"
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "answer",
+          "name": "The two-lane test: non-perishable vs perishable",
+          "for": "Knowing whether you start at home or in a rented kitchen.",
+          "why": "It's the one distinction that decides your first month, and it holds in almost every state even though the details differ."
+        },
+        {
+          "kind": "template",
+          "name": "The cottage-food label",
+          "for": "Selling legally and looking trustworthy at the same time.",
+          "why": "Most states require a label; a clear one also does your first bit of marketing."
+        }
+      ]
+    },
+    {
       "id": "offer.define",
       "name": "Define your one offer",
       "short_name": "Define your one offer",
@@ -83,7 +216,8 @@
         "va",
         "tutor",
         "care",
-        "digital"
+        "digital",
+        "food"
       ],
       "universal": false,
       "gap": [
@@ -210,7 +344,8 @@
         "resell",
         "digital",
         "tutor",
-        "care"
+        "care",
+        "food"
       ],
       "universal": false,
       "gap": [
@@ -343,7 +478,8 @@
         "va",
         "tutor",
         "care",
-        "digital"
+        "digital",
+        "food"
       ],
       "universal": false,
       "gap": [
@@ -495,7 +631,8 @@
         "tutor",
         "care",
         "digital",
-        "resell"
+        "resell",
+        "food"
       ],
       "universal": false,
       "gap": [
@@ -633,7 +770,8 @@
         "tutor",
         "care",
         "digital",
-        "resell"
+        "resell",
+        "food"
       ],
       "universal": false,
       "gap": [
@@ -786,7 +924,8 @@
         "tutor",
         "care",
         "digital",
-        "resell"
+        "resell",
+        "food"
       ],
       "universal": false,
       "gap": [
@@ -897,7 +1036,8 @@
         "va",
         "local",
         "tutor",
-        "care"
+        "care",
+        "food"
       ],
       "universal": false,
       "gap": [
@@ -2979,6 +3119,124 @@
       "launch_note": "Right now we match these by hand, so it isn't instant. What that buys you: we only send you requests you can actually do."
     },
     {
+      "id": "food.climb-the-ladder",
+      "name": "Clear the next gate and sell bigger",
+      "short_name": "Climb the ladder",
+      "sub": "Home lane proved it, now scale",
+      "icon": "▲",
+      "type": "core",
+      "move": "Once the home-kitchen version is selling, use that proof and that cash to clear the next legal gate, a shared kitchen, which unlocks the perishable, higher-ticket food you couldn't sell before.",
+      "paths": [
+        "food"
+      ],
+      "universal": false,
+      "gap": [
+        "has-skill"
+      ],
+      "phase": "grow",
+      "prerequisites": [
+        "has:first-client"
+      ],
+      "unlocks": [],
+      "time_cost": "a few hours to set up, then ongoing",
+      "payoff": {
+        "speed": "weeks",
+        "effort": "medium",
+        "ceiling": "high"
+      },
+      "confidence": "medium",
+      "quick_win": false,
+      "fear_it_calms": "Feeling that selling cookies from home means you've hit your limit. You haven't: the home lane was the on-ramp. Every step up in food (a rented commercial kitchen, a food handler permit, a catering license) is a gate, and each one you clear opens a bigger, higher-paying lane. The trick is clearing them with sales, not savings.",
+      "common_needs_here": [
+        "help.get-a-human",
+        "help.ai-coach"
+      ],
+      "how_to": {
+        "diy_ai": "AI helps you price the jump: what a shared kitchen costs per hour in your area versus what perishable or catering orders would bring in, so you clear the gate only when the math works.",
+        "community": "Someone who's rented a commissary kitchen tells you how the booking and the health inspection actually work.",
+        "skip": "Stay in the home lane as long as it's paying and you're happy. Scaling is a choice, not a requirement."
+      },
+      "content": {
+        "goal": "A concrete next rung, priced, with a date to clear it.",
+        "steps": [
+          "Confirm the perishable or bigger thing customers are actually asking you for: the demand comes first, not the kitchen",
+          "Price the gate: a shared / commissary kitchen by the hour, plus any permit or catering license your county requires",
+          "Clear it only when early sales (or pre-orders) cover the cost: fund the jump with the business, not your savings",
+          "Raise your prices at the new level; perishable, custom and catering carry higher margins than home-lane goods"
+        ],
+        "done_when": "You're legally selling the higher-ticket food you couldn't sell from home, and it's paying for its own kitchen."
+      },
+      "concrete": {
+        "right_now": "Write down the one thing customers keep asking for that you can't legally sell from home yet. That's your ladder: the next gate exists to let you sell exactly that.",
+        "tools": [
+          {
+            "name": "A commissary / shared kitchen",
+            "cost": "Rented by the hour, often ~$15–35/hr",
+            "at": "search 'commissary kitchen near me'",
+            "for": "Legal space to make perishable food, meal prep and catering at volume. You book hours; you don't buy a building."
+          },
+          {
+            "name": "Your county health department",
+            "cost": "Free to ask",
+            "at": "—",
+            "for": "What permit or inspection the next level needs. Ask before you book the kitchen, not after."
+          }
+        ],
+        "numbers": [
+          "Demand first, kitchen second. Don't rent a kitchen for orders you don't have yet.",
+          "Clear the gate with pre-orders or early profit, not savings. That's what keeps this a side income and not a gamble.",
+          "Expect higher prices at the new level: perishable, custom and catering carry margins home-lane baked goods can't."
+        ],
+        "say_this": {
+          "when": "Telling your home-lane customers you're leveling up. It turns them into your first higher-ticket buyers.",
+          "text": "Quick update: I'm adding [the perishable / catering thing] from a licensed kitchen starting [month]. You've been buying my [home-lane product], want first dibs on a pre-order? Reply and I'll save you a spot."
+        }
+      },
+      "if_it_stalls": [
+        {
+          "symptom": "The kitchen rent looks like too much.",
+          "likely_cause": "You're comparing it to zero (your home kitchen), not to what the new orders would bring in.",
+          "do_this": "Price it against the orders, not against free. Book the fewest hours that fill the orders you already have, and add hours only as orders grow. Many kitchens let you book a single block to test."
+        },
+        {
+          "symptom": "I'm happy staying at the home level.",
+          "likely_cause": "Nothing. That's a legitimate choice.",
+          "do_this": "Then stay. The home lane is a real side income on its own. This rung is here when you want it, and the numbers you've kept will still make sense when you do."
+        }
+      ],
+      "checkin": {
+        "question": "Is there a bigger rung in sight?",
+        "options": [
+          {
+            "label": "Cleared it, selling the bigger thing legally.",
+            "signal": "has:food-scaled",
+            "then": "That's the path doing what it's meant to: a home-kitchen side income that grew into a real food business, one gate at a time.",
+            "routes_to": null
+          },
+          {
+            "label": "I know the rung, haven't cleared it.",
+            "signal": "food:rung-planned",
+            "then": "Put a date on it and fund it from orders. An intention without a date stays an intention.",
+            "routes_to": null
+          },
+          {
+            "label": "Home level is enough for now.",
+            "signal": "food:staying-home",
+            "then": "Good. That's a real win, not a stall. Come back when demand outgrows your kitchen.",
+            "routes_to": null
+          }
+        ]
+      },
+      "resources": [
+        {
+          "kind": "answer",
+          "name": "The food ladder: home → shared kitchen → catering",
+          "for": "Seeing that the path scales and knowing what each rung costs.",
+          "why": "Every rung is a gate with a known price, so growth becomes a decision you can time, not a cliff."
+        }
+      ]
+    },
+    {
       "id": "consolidate.tune-the-machine",
       "name": "Tighten what's already working",
       "short_name": "Tighten what's working",
@@ -2993,7 +3251,8 @@
         "tutor",
         "care",
         "digital",
-        "resell"
+        "resell",
+        "food"
       ],
       "universal": false,
       "phase": "grow",
@@ -3096,13 +3355,15 @@
     ],
     "partial": [
       "resell",
-      "digital"
+      "digital",
+      "food"
     ],
     "starter": [],
     "omissions_on_purpose": [
       "resell — offer.define and setup.minimum-hireable were NOT added. Reselling has no offer to define and no portfolio to show; its equivalents are sourcing and listing, which are not written yet.",
       "digital — freelance.retainer and freelance.productize were NOT added. The real spine for digital is digital.package-into-product and digital.storefront, both referenced by unlocks and neither written.",
-      "gig — WRITTEN Aug 7. Five plays, including one that says plainly that the path has a ceiling and treats it as a bridge. A gig walkthrough that pretended it compounds would be the dishonest version."
+      "gig — WRITTEN Aug 7. Five plays, including one that says plainly that the path has a ceiling and treats it as a bridge. A gig walkthrough that pretended it compounds would be the dishonest version.",
+      "food — ADDED Sep 10. Two bespoke plays (food.legal-on-ramp, food.climb-the-ladder) plus the universal sales spine. Marked partial, not full, on purpose: the food-specific operational depth (ingredient costing, commercial-kitchen operations, catering/event pricing, packaging and shipping) is NOT written, and the one thing Faimgo must never do is assert location-specific food law. The on-ramp play deliberately hands the legal question back to the user's own state cottage-food page and county health department rather than stating a rule, because food law is set per-state/county and varies wildly. The spine is: food.legal-on-ramp -> offer.define -> pricing.lower-risk -> setup.minimum-hireable -> outreach.find-buyer -> outreach.reach-and-close -> proof.testimonial-referral -> freelance.retainer (meal-prep subscriptions) -> food.climb-the-ladder -> consolidate.tune-the-machine."
     ]
   },
   "concrete_layer": {

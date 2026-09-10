@@ -34,6 +34,9 @@ export const PATHS = [
   { id: "care", name: "Care Services", plain: "Care services (pet sitting, babysitting, senior help)", dollar: "1–2 weeks", speed: 4, ceiling: 3,
     moves: ["Create profiles on Rover/Care.com and tell your own network you're available", "Get 3 references lined up — trust is the entire product", "Nail the first bookings, ask every happy client for a review and a referral"],
     kit: ["Certifications (CPR, first aid) cost ~$30–50 online and double your credibility — worth it after first jobs, not before"] },
+  { id: "food", name: "Food & Catering", plain: "Food you make (baked goods, meal prep, catering, personal chef)", dollar: "1–2 weeks", speed: 4, ceiling: 4,
+    moves: ["Start in your state's cottage food lane — the non-perishable things you can legally sell from a home kitchen today (baked goods, jams, granola)", "Sell the first batches where buyers already gather: your own network, a farmers market stall, local FB groups — take orders before you scale up", "Check your county health department once before you sell — it's the one step that decides what's legal where you live, and clearing the next gate (a shared kitchen) is how the path grows bigger"],
+    kit: ["Your home kitchen and simple packaging is enough to start under cottage food law — no commercial kitchen until orders pay for it", "The whole legal setup is usually your state's cottage food rules, a label listing ingredients and your contact, and a cheap permit in some states — check your state's allowed-foods list and sales cap"] },
 ];
 export const CEILING_LABEL = { 2: "Modest", 3: "Solid", 4: "High", 5: "Very high" };
 export const pathById = (id) => PATHS.find((p) => p.id === id);
