@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# secrets & office temp files — never commit keys (repo is public; see Sep 10 incident)
+*.docx
+*.doc
+~$*
+*.env
