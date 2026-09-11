@@ -118,7 +118,11 @@ const COACH_REPLY_TOOL = {
       },
       has_idea: {
         type: ["boolean", "null"],
-        description: "classify_idea only: true if their own words describe an actual side-income idea — even one phrased alongside a practical question ('I want to sell custom meal prep, how do I get licensed cheaply?' is has_idea:true with a question in it). false ONLY when there is no real idea at all — pure confusion or a bare question with nothing to classify ('what should I do?', 'no idea, help'). A question mark alone never makes this false; look at whether an idea was actually stated. Always null for stuck_help.",
+        description: "classify_idea only: true if their own words describe an actual side-income idea — even one phrased alongside a practical question ('I want to sell custom meal prep, how do I get licensed cheaply?' is has_idea:true with a question in it). false ONLY when there is no real idea at all — pure confusion or a bare question with nothing to classify ('what should I do?', 'no idea, help'). A question mark alone never makes this false; look at whether an idea was actually stated. Always null for stuck_help and chat.",
+      },
+      escalate: {
+        type: ["boolean", "null"],
+        description: "chat only (null otherwise): true when the honest next move is a real person, not another AI turn — e.g. two rounds have not unstuck them, they explicitly want a human, or the thing genuinely needs someone to build/check it or introduce them. Per the coach's rules, an AI that keeps rephrasing itself is the exact experience Faimgo exists to fix, so raise this rather than looping. Default false while there is still a concrete grounded next step to give.",
       },
     },
     required: ["message", "coverage", "tool_name", "path_id", "has_idea"],
@@ -185,16 +189,88 @@ export function buildGroundingContext(params) {
 }
 
 /*
+  PHASE 2 (Sep 11 2026) — the multi-turn shape. Same grounding discipline as
+  stuck_help (only the relevant play + this person's record), but instead of
+  one detached user turn it returns a full Anthropic `messages` array built
+  from the running conversation, so the coach can actually hold a back-and-
+  forth. See claude/faimgo-phase2-multiturn-design.md.
+
+  Anthropic requires messages to start with a user turn, so the grounding
+  block is PREPENDED onto the first user message rather than sent as its own
+  turn. Prior coach replies ride along as plain assistant text — fine even
+  though the new reply is still forced through the coach_reply tool. History
+  is capped (a hard turn cap also lives in the route) so context stays cheap.
+*/
+export function buildChatMessages(params) {
+  const history = Array.isArray(params?.history) ? params.history : [];
+  if (!history.length) return null;
+
+  const surface = params?.surface === "assessment" ? "assessment" : "plan";
+  const path = params?.path || null;
+  const gap = params?.gap || null;
+  const doneIds = Array.isArray(params?.doneIds) ? params.doneIds.slice(0, 40) : [];
+  const focus = findPlay(params?.focusPlayId || null);
+  const focusSlim = focus
+    ? {
+        id: focus.id,
+        name: focus.name,
+        goal: focus.content?.goal,
+        concrete: focus.concrete || null,
+        if_it_stalls: focus.if_it_stalls || null,
+        checkin: focus.checkin || null,
+      }
+    : null;
+
+  const nudgeMoveOn = Boolean(params?.nudgeMoveOn);
+  const grounding = {
+    instructions:
+      "You are in an ongoing back-and-forth with this person — a conversation, not a one-shot answer. Read the whole exchange so far and reply to their LATEST message with the single next concrete action, grounded only in the content below (the play library and their own record). Ask a short clarifying question ONLY when you genuinely cannot give a useful next step without it; otherwise give the step. If the library doesn't cover their situation, say so honestly (coverage:'partial') instead of guessing. If they clearly want a person, or the thing genuinely needs a human to build/check it or introduce them, set escalate:true and say plainly that a real person will pick it up (that hand-off is manual today; never pretend it is an automated feature). Keep every reply short, concrete, and in the coach's voice — never a wall of text, never shame or time-pressure."
+      + (nudgeMoveOn
+        ? " MOVE-ON NUDGE: you have now gone several rounds with this person. Do not let them get stuck perfecting the early details. Give the one concrete next move, then warmly tell them the best thing right now is to GO TRY IT and come back after — real progress beats more planning. They can absolutely keep chatting if they need to; this is a gentle nudge, never a shut-down, and never a word about limits or time. If it genuinely needs more depth than the library has, set escalate:true and offer a real person."
+        : ""),
+    surface,
+    their_path: path,
+    their_gap: gap,
+    completed_step_ids: doneIds,
+    current_step: focusSlim,
+    available_paths:
+      surface === "assessment" ? PATHS.map((p) => ({ id: p.id, name: p.name, plain: p.plain })) : undefined,
+  };
+  const groundingStr = JSON.stringify(grounding);
+
+  const msgs = history.slice(-24).map((m) => ({
+    role: m?.role === "coach" ? "assistant" : "user",
+    content: String(m?.content || "").slice(0, 2000),
+  }));
+
+  // Drop any leading assistant turns so the array starts with a user turn
+  // (Anthropic requirement); then fold the grounding into that first user turn.
+  while (msgs.length && msgs[0].role === "assistant") msgs.shift();
+  if (!msgs.length) return null;
+  msgs[0] = { role: "user", content: groundingStr + "\n\nThe conversation so far, their first message:\n" + msgs[0].content };
+
+  return { model: "haiku", messages: msgs };
+}
+
+/*
   The actual Anthropic call. Returns { ok:false, reason } on ANY problem —
   no key configured, network failure, bad response, model declining to use
   the tool — so every caller can degrade exactly like the rest of this
   codebase (money-seams §2.4 / coach-constraints.md rule 4: degrade, never
   refuse). Never throws.
+
+  Accepts EITHER a single `userContent` string (classify_idea / stuck_help,
+  the one-shot shapes) OR a full `messages` array (chat, the multi-turn
+  shape from buildChatMessages). Everything downstream — system prompt,
+  forced coach_reply tool, model tiering — is identical either way.
 */
-export async function callCoach({ userContent, model }) {
+export async function callCoach({ userContent, messages, model }) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return { ok: false, reason: "not_configured" };
-  if (!userContent) return { ok: false, reason: "bad_input" };
+  const msgs = Array.isArray(messages) && messages.length
+    ? messages
+    : (userContent ? [{ role: "user", content: userContent }] : null);
+  if (!msgs) return { ok: false, reason: "bad_input" };
 
   /* Dated snapshots, not the bare aliases, so a model refresh upstream is a
      deliberate one-line bump here rather than a silent behavior change under
@@ -217,7 +293,7 @@ export async function callCoach({ userContent, model }) {
         model: modelId,
         max_tokens: 500,
         system: COACH_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userContent }],
+        messages: msgs,
         tools: [COACH_REPLY_TOOL],
         tool_choice: { type: "tool", name: "coach_reply" },
       }),
@@ -234,7 +310,7 @@ export async function callCoach({ userContent, model }) {
     const toolUse = Array.isArray(data?.content) ? data.content.find((c) => c.type === "tool_use" && c.name === "coach_reply") : null;
     if (!toolUse || !toolUse.input) return { ok: false, reason: "no_structured_reply" };
 
-    const { message, tool_name, path_id, coverage, has_idea } = toolUse.input;
+    const { message, tool_name, path_id, coverage, has_idea, escalate } = toolUse.input;
     if (typeof message !== "string" || !message.trim()) return { ok: false, reason: "empty_reply" };
 
     return {
@@ -249,6 +325,10 @@ export async function callCoach({ userContent, model }) {
         // classify_idea; stuck_help never sets it, so this comes back null
         // there and effectiveOtherRead never looks at it for that call.
         hasIdea: typeof has_idea === "boolean" ? has_idea : null,
+        // Sep 11 2026 (Phase 2) — chat only; the model's signal that the
+        // honest next move is a real person, not another AI turn. Null for
+        // the one-shot kinds, which never set it.
+        escalate: typeof escalate === "boolean" ? escalate : null,
       },
       usage: data?.usage || null,
       model: modelId,

@@ -575,3 +575,85 @@ export async function recordAiUsage({ fid, costCents }) {
     return false;
   }
 }
+
+/* ============================================================
+   PHASE 2 (Sep 11 2026) — AI coach multi-turn conversations.
+   Storage half of claude/faimgo-phase2-multiturn-design.md; table in
+   sql/005_coach_conversations.sql. One row per conversation, the whole
+   running transcript kept as a JSONB `messages` array that the API route
+   overwrites each turn (it holds the full history). All fail-open, never
+   throw — same discipline as getAiUsageCents/recordAiUsage above: a
+   database problem only ever costs resume-later, never the reply the
+   person is waiting on.
+   ============================================================ */
+
+export async function upsertConversation({ conversationId, fid, personId, surface, context, messages, status }) {
+  const db = sql();
+  if (!db || !conversationId || !fid) return false;
+  try {
+    await db`
+      INSERT INTO coach_conversations (conversation_id, fid, person_id, surface, context, messages, status)
+      VALUES (
+        ${conversationId}, ${fid}, ${personId || null}, ${surface || "plan"},
+        ${JSON.stringify(context || {})}::jsonb, ${JSON.stringify(messages || [])}::jsonb, ${status || "open"}
+      )
+      ON CONFLICT (conversation_id) DO UPDATE SET
+        messages   = EXCLUDED.messages,
+        status     = EXCLUDED.status,
+        person_id  = COALESCE(EXCLUDED.person_id, coach_conversations.person_id),
+        context    = COALESCE(coach_conversations.context, EXCLUDED.context),
+        updated_at = now()
+    `;
+    return true;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] upsertConversation", e?.message);
+    return false;
+  }
+}
+
+export async function getConversation(conversationId) {
+  const db = sql();
+  if (!db || !conversationId) return null;
+  try {
+    const [row] = await db`
+      SELECT conversation_id, fid, person_id, surface, context, messages, status, created_at, updated_at
+      FROM coach_conversations WHERE conversation_id = ${conversationId}
+    `;
+    return row || null;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] getConversation", e?.message);
+    return null;
+  }
+}
+
+export async function listConversationsForFid(fid) {
+  const db = sql();
+  if (!db || !fid) return [];
+  try {
+    return await db`
+      SELECT conversation_id, surface, status, context, updated_at,
+             jsonb_array_length(messages) AS turns
+      FROM coach_conversations WHERE fid = ${fid}
+      ORDER BY updated_at DESC LIMIT 50
+    `;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] listConversationsForFid", e?.message);
+    return [];
+  }
+}
+
+export async function listConversationsForPerson(personId) {
+  const db = sql();
+  if (!db || !personId) return [];
+  try {
+    return await db`
+      SELECT conversation_id, surface, status, context, updated_at,
+             jsonb_array_length(messages) AS turns
+      FROM coach_conversations WHERE person_id = ${personId}
+      ORDER BY updated_at DESC LIMIT 50
+    `;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] listConversationsForPerson", e?.message);
+    return [];
+  }
+}

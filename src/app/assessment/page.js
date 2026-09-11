@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
+import CoachChat from "../CoachChat";
 import AccountLink from "../AccountLink";
 import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
 import { session, loadSaved, saveProgress, savePlan, clearWork, readSteps, getAccountSession } from "../../lib/store.js";
@@ -983,6 +984,32 @@ export default function Assessment() {
   function Results() {
     const rf = realityFlag(A);
     const cards = [];
+    /* Phase 2 (Sep 11 2026): the "something else" free-text idea becomes a
+       real back-and-forth. Seed the chat with what they wrote + the coach's
+       classify_idea reply (if it landed), then CoachChat carries any
+       follow-up via kind:"chat". Degrades and hands off to a person exactly
+       like the /plan seam — same shared component. See
+       claude/faimgo-phase2-multiturn-design.md. */
+    const ideaChatCard = (key, idea, classify) => (
+      <div key={key} className="mb-4">
+        <p className="text-[14px] font-semibold mb-2" style={{ color: C.gray }}>
+          Want to talk it through? The coach is grounded in what Faimgo actually knows — no hype, and it&apos;ll hand you to a real person if that&apos;s what you need.
+        </p>
+        <CoachChat
+          fid={ids?.fid || null}
+          sid={ids?.sid || null}
+          personId={ids?.accountPersonId || null}
+          hasAccount={Boolean(ids?.accountPersonId)}
+          surface="assessment"
+          context={{ gap: A.qgap || null }}
+          initialMessages={classify?.message ? [
+            { role: "user", content: idea || "my idea" },
+            { role: "coach", content: classify.message, meta: { coverage: classify.coverage || null, escalate: false } },
+          ] : []}
+          placeholder="Ask the coach about your idea…"
+        />
+      </div>
+    );
     const toneMap = { steam: "Your plan is built as a day-by-day walkthrough — the thing that kills momentum is deciding what's next, so we decide it for you.", scared: "Every step starts with the $0 version. You don't spend until something has already worked.", start: "Step one is deliberately tiny. You'll know exactly where to start because it's the only thing on the list.", time: "The plan fits your real hours — short, fixed sessions, nothing that needs a free weekend.", first: "First real attempt — good. No bad habits to unlearn. The plan assumes nothing and explains everything." };
     const tone = toneMap[protectFrom] || "";
 
@@ -1015,6 +1042,7 @@ export default function Assessment() {
           {needsKit(A, p) && p.kit.length > 0 && <Kit items={p.kit} />}
         </ResultCard>
       );
+      if (matchedFromText) cards.push(ideaChatCard("chosen-chat", otherTxt, A.otherClassify));
       const fw = fastestWin(A, p.id);
       if (fw && rf !== "green") {
         cards.push(
@@ -1061,6 +1089,7 @@ export default function Assessment() {
           </p>
         </ResultCard>
       );
+      cards.push(ideaChatCard("other-chat", idea, A.otherClassify));
       if (fw) cards.push(<FwCard key="fw" fw={fw} />);
       if (lt) cards.push(<LtCard key="lt" lt={lt} />);
       if (fw && lt) cards.push(

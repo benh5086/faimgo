@@ -60,8 +60,16 @@
   both callers already reads as a person, not a token-meter error).
 */
 
-import { buildGroundingContext, callCoach } from "../../../lib/coach.js";
-import { getAiUsageCents, recordAiUsage } from "../../../lib/db.js";
+import { buildGroundingContext, buildChatMessages, callCoach } from "../../../lib/coach.js";
+import { getAiUsageCents, recordAiUsage, upsertConversation } from "../../../lib/db.js";
+
+// Phase 2 (Sep 11 2026) — SOFT nudge threshold for the multi-turn `chat` kind.
+// After this many coach replies the coach starts gently telling the person to
+// go try it / offering a real person for deeper help — but the chat does NOT
+// stop: they can keep going as long as their $5 allowance and the hourly rate
+// limit (the real cost ceilings) permit. Ben's Sep 11 call: a visible, gentle
+// countdown, never a wall. Must match NUDGE_AT in src/app/CoachChat.js.
+const NUDGE_AT_TURNS = 7;
 
 const MAX_COACH_CALLS_PER_DAY = 300;
 let ceilingDayKey = null;
@@ -122,7 +130,7 @@ export async function POST(request) {
     const ip = (request.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
     prune(now);
 
-    if (kind !== "classify_idea" && kind !== "stuck_help") {
+    if (kind !== "classify_idea" && kind !== "stuck_help" && kind !== "chat") {
       return Response.json({ ok: false, reason: "bad_kind" }, { status: 400 });
     }
 
@@ -148,6 +156,88 @@ export async function POST(request) {
       if (spent >= ALLOWANCE_CENTS) {
         return Response.json({ ok: false, reason: "allowance_exhausted" });
       }
+    }
+
+    // PHASE 2 (Sep 11 2026) — the multi-turn `chat` kind is handled here and
+    // returns; the one-shot kinds (classify_idea / stuck_help) fall through to
+    // the original flow below, unchanged. Metering above already applied.
+    if (kind === "chat") {
+      const history = Array.isArray(body?.messages) ? body.messages : [];
+      const last = history[history.length - 1];
+      if (!history.length || !last || last.role !== "user") {
+        return Response.json({ ok: false, reason: "bad_input" }, { status: 400 });
+      }
+      const surface = body?.surface === "assessment" ? "assessment" : "plan";
+      const coachTurns = history.filter((m) => m && m.role === "coach").length;
+      // Soft nudge, never a stop: once past the threshold the coach starts
+      // telling them to go try it (the model does this via the nudge flag),
+      // but we still make the call — cost is bounded by the allowance + rate
+      // limit already checked above, per Ben's Sep 11 call.
+      const nudgeMoveOn = coachTurns >= NUDGE_AT_TURNS - 1;
+
+      const cctx = buildChatMessages({
+        history,
+        surface,
+        path: body?.path,
+        gap: body?.gap,
+        focusPlayId: body?.focusPlayId,
+        doneIds: body?.doneIds,
+        nudgeMoveOn,
+      });
+      if (!cctx) return Response.json({ ok: false, reason: "bad_input" }, { status: 400 });
+
+      const cres = await callCoach({ messages: cctx.messages, model: cctx.model });
+      if (!cres.ok) return Response.json({ ok: false, reason: cres.reason });
+      const reply = cres.reply;
+
+      if (fid) {
+        const costCents = costCentsFor(cctx.model, cres.usage);
+        if (costCents > 0) await recordAiUsage({ fid, costCents });
+      }
+      try {
+        fetch(new URL("/api/lead", request.url).toString(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "usage",
+            kind: "coach_chat",
+            fid: body?.fid || null,
+            sid: body?.sid || null,
+            unitsIn: cres?.usage?.input_tokens ?? null,
+            unitsOut: cres?.usage?.output_tokens ?? null,
+            ts: new Date().toISOString(),
+          }),
+        }).catch(() => {});
+      } catch (e) { /* metering must never break the reply */ }
+
+      // Persist the conversation — best-effort, never blocks the reply, keyed
+      // by fid (person_id when the caller knows it), same fail-open discipline
+      // as the rest of db.js. If the DB is unset or the write fails, the chat
+      // still works in-session; only resume-later is lost.
+      if (body?.conversationId && fid) {
+        const fullMessages = history.concat([{
+          role: "coach",
+          content: reply.message,
+          meta: { toolName: reply.toolName || null, coverage: reply.coverage || null, escalate: reply.escalate || false },
+          ts: new Date().toISOString(),
+        }]);
+        await upsertConversation({
+          conversationId: body.conversationId,
+          fid,
+          personId: body?.personId || null,
+          surface,
+          context: { path: body?.path || null, gap: body?.gap || null, focusPlayId: body?.focusPlayId || null, planId: body?.planId || null },
+          messages: fullMessages,
+          status: reply.escalate ? "escalated" : "open",
+        });
+      }
+
+      // The gentle countdown, computed server-side so the client never has to
+      // hardcode the threshold. `turnsLeft` counts coach replies remaining
+      // before the move-on nudge; `nudged` is true once we're at/past it.
+      const coachTurnsAfter = coachTurns + 1;
+      const turnsLeft = Math.max(0, NUDGE_AT_TURNS - coachTurnsAfter);
+      return Response.json({ ok: true, reply, turnsLeft, nudged: coachTurnsAfter >= NUDGE_AT_TURNS });
     }
 
     const ctx = buildGroundingContext(

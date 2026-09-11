@@ -9,6 +9,7 @@ import { loadSaved, session, markStep, markOutcome, markSignal, readSteps, hasEv
 import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
 import { toolHref } from "../../lib/affiliate.js";
+import CoachChat from "../CoachChat";
 
 /* ============================================================
    FAIMGO — THE WALKTHROUGH (/plan)
@@ -346,34 +347,29 @@ function CheckinRoute({ option, play, renderedIds, onGoto, planPathId, planGap, 
   }
 
   if (isCoach && coach.status === "done") {
-    /* Same lookup Concrete() uses for every other tool row on this page
-       (line ~124): find the tool's real domain from the play's own
-       concrete.tools so a not-yet-affiliate tool still links to its real
-       site, not just plain text. The coach is instructed to only ever name
-       a tool that's actually in this play's concrete.tools, so this should
-       always resolve. */
-    const toolAt = (play.concrete?.tools || []).find((t) => t.name === coach.reply.toolName)?.at || null;
-    const toolLink = coach.reply.toolName ? toolHref(coach.reply.toolName, toolAt) : null;
+    /* Phase 2 (Sep 11 2026): the first grounded reply came from the one-shot
+       stuck_help call above; from here it becomes a real back-and-forth. We
+       seed CoachChat with that first exchange (what they clicked + the
+       coach's answer) and it carries every follow-up via kind:"chat", still
+       grounded on this same focus play. CoachChat owns the real-person door,
+       so the standalone FeedbackWidget is no longer needed here. */
     return (
-      <div className="mt-3 p-4 rounded-xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
-        <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>{coach.reply.message}</p>
-        {coach.reply.toolName && (
-          <p className="text-[14px] mt-2" style={{ color: C.gray }}>
-            Tool: {toolLink ? (
-              <a href={toolLink.href} target="_blank" rel={toolLink.isAffiliate ? "sponsored noopener" : "noopener"} className="underline font-semibold" style={{ color: C.gold }}>
-                {coach.reply.toolName}
-              </a>
-            ) : coach.reply.toolName}
-          </p>
-        )}
-        {coach.reply.coverage === "partial" && (
-          <p className="text-[13px] mt-2" style={{ color: C.gray }}>
-            This only partly covers it — if it's not enough, use the box below to reach a real person.
-          </p>
-        )}
-        <div className="mt-3">
-          <FeedbackWidget trigger="cta" kind="contact" context={"checkin:" + play.id + ":" + option.signal} navLabel="Still stuck? Tell us exactly where" />
-        </div>
+      <div className="mt-3">
+        <CoachChat
+          fid={ids?.fid || null}
+          sid={ids?.sid || null}
+          personId={ids?.accountPersonId || null}
+          hasAccount={Boolean(ids?.accountPersonId)}
+          surface="plan"
+          context={{ path: planPathId || null, gap: planGap || null, focusPlayId: play.id, doneIds: doneIds || [] }}
+          toolTools={play.concrete?.tools || []}
+          escalateContext={play.id + ":" + option.signal}
+          initialMessages={[
+            { role: "user", content: option.label || "I'm stuck on this step." },
+            { role: "coach", content: coach.reply.message, meta: { toolName: coach.reply.toolName || null, coverage: coach.reply.coverage || null, escalate: false } },
+          ]}
+          placeholder="Tell the coach what happened when you tried…"
+        />
       </div>
     );
   }
