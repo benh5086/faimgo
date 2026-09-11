@@ -5,7 +5,7 @@ import Link from "next/link";
 import FeedbackWidget from "../FeedbackWidget";
 import AccountLink from "../AccountLink";
 import Gate from "../Gate.js";
-import { loadSaved, session, markStep, markOutcome, markSignal, readSteps, hasEverEarned, OUTCOMES } from "../../lib/store.js";
+import { loadSaved, session, markStep, markOutcome, markSignal, readSteps, hasEverEarned, OUTCOMES, getAccountSession, getLinkedEmail } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 import { buildPlan, factLabel } from "../../lib/router.js";
 import { toolHref } from "../../lib/affiliate.js";
@@ -353,13 +353,20 @@ function CheckinRoute({ option, play, renderedIds, onGoto, planPathId, planGap, 
        coach's answer) and it carries every follow-up via kind:"chat", still
        grounded on this same focus play. CoachChat owns the real-person door,
        so the standalone FeedbackWidget is no longer needed here. */
+    // Account state for the save nudge (verified => no nudge; email on file but
+    // unverified => "verify it"; nothing => "add your email"). session() does
+    // NOT carry these — read them straight from the store.
+    const acct = getAccountSession();
+    const savedNow = loadSaved();
+    const planEmail = savedNow?.plan?.email || savedNow?.progress?.email || null;
     return (
       <div className="mt-3">
         <CoachChat
           fid={ids?.fid || null}
           sid={ids?.sid || null}
-          personId={ids?.accountPersonId || null}
-          hasAccount={Boolean(ids?.accountPersonId)}
+          personId={acct?.personId || null}
+          verified={Boolean(acct?.personId)}
+          emailEntered={Boolean(acct?.email || getLinkedEmail() || planEmail)}
           surface="plan"
           context={{ path: planPathId || null, gap: planGap || null, focusPlayId: play.id, doneIds: doneIds || [] }}
           toolTools={play.concrete?.tools || []}

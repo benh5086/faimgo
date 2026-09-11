@@ -53,7 +53,8 @@ export default function CoachChat({
   fid = null,
   sid = null,
   personId = null,
-  hasAccount = true,     // false => show a "saved to this device only" nudge toward making an account
+  verified = false,      // true once the device has a VERIFIED /account session (getAccountSession) — no save nudge then
+  emailEntered = false,  // true when an email is on file but NOT yet verified — nudge to VERIFY, not to add one
   surface = "plan",
   context = {},          // { path, gap, focusPlayId, planId, doneIds }
   initialMessages = [],  // [{ role: "user"|"coach", content, meta? }]
@@ -161,9 +162,11 @@ export default function CoachChat({
 
   return (
     <div className="rounded-xl p-3" style={{ backgroundColor: C.white, border: `1px solid ${C.beige}` }}>
-      {!hasAccount && (
+      {!verified && (
         <p className="text-[13px] mb-2 rounded-lg px-3 py-2" style={{ backgroundColor: C.cream, color: C.gray, border: `1px solid ${C.beige}` }}>
-          Heads up: this conversation is saved to this device only. Add your email up top (&ldquo;My account&rdquo;) to keep it — otherwise it&apos;s gone if you switch devices or clear your browser.
+          {emailEntered
+            ? <>Heads up: you&apos;ve entered your email but haven&apos;t verified it yet. Verify it (check your inbox, or &ldquo;My account&rdquo; up top) to keep this conversation — until then it&apos;s saved to this device only.</>
+            : <>Heads up: this conversation is saved to this device only. Add your email up top (&ldquo;My account&rdquo;) to keep it — otherwise it&apos;s gone if you switch devices or clear your browser.</>}
         </p>
       )}
       <div ref={listRef} className="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1">

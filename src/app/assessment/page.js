@@ -6,7 +6,7 @@ import FeedbackWidget from "../FeedbackWidget";
 import CoachChat from "../CoachChat";
 import AccountLink from "../AccountLink";
 import { PATHS, CEILING_LABEL, pathById } from "../../lib/paths.js";
-import { session, loadSaved, saveProgress, savePlan, clearWork, readSteps, getAccountSession } from "../../lib/store.js";
+import { session, loadSaved, saveProgress, savePlan, clearWork, readSteps, getAccountSession, getLinkedEmail } from "../../lib/store.js";
 import { track } from "../../lib/track.js";
 
 /* ============================================================
@@ -990,6 +990,7 @@ export default function Assessment() {
        follow-up via kind:"chat". Degrades and hands off to a person exactly
        like the /plan seam — same shared component. See
        claude/faimgo-phase2-multiturn-design.md. */
+    const ideaAcct = getAccountSession();
     const ideaChatCard = (key, idea, classify) => (
       <div key={key} className="mb-4">
         <p className="text-[14px] font-semibold mb-2" style={{ color: C.gray }}>
@@ -998,8 +999,9 @@ export default function Assessment() {
         <CoachChat
           fid={ids?.fid || null}
           sid={ids?.sid || null}
-          personId={ids?.accountPersonId || null}
-          hasAccount={Boolean(ids?.accountPersonId)}
+          personId={ideaAcct?.personId || null}
+          verified={Boolean(ideaAcct?.personId)}
+          emailEntered={Boolean(ideaAcct?.email || getLinkedEmail() || email)}
           surface="assessment"
           context={{ gap: A.qgap || null }}
           initialMessages={classify?.message ? [
