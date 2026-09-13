@@ -44,6 +44,16 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Impact.com site-ownership verification (added Sep 13 2026 for the
+            affiliate enrollment — see claude/faimgo-affiliate-checklist.md).
+            Impact's verifier looks for the `value` attribute specifically, so
+            this is rendered as a raw head tag rather than via the metadata API
+            (which would emit `content`). It's a public verification token, not
+            a secret. One Impact verification covers every Impact-run program
+            (CapCut, and commonly Canva/Calendly too). */}
+        <meta name="impact-site-verification" value="c0124b3e-4a1b-487a-86a6-f756ac8db330" />
+      </head>
       <body className="min-h-full flex flex-col">
         {/* Wraps the whole app so any page can eventually opt into
             useLocale(), not just the homepage — but only the homepage
