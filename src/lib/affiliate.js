@@ -40,7 +40,21 @@
      "Calendly": "https://calendly.com/?ref=REPLACE_WITH_YOUR_CODE",
      "Wave": "https://www.waveapps.com/?via=REPLACE_WITH_YOUR_CODE",
 */
-export const AFFILIATE = {};
+export const AFFILIATE = {
+  // beehiiv — JOINED Sep 13 2026 (personal partner account, ben-huang).
+  // 50% commission for 12 months; the audience gets a 14-day trial + 20% off
+  // for 3 months, so the partner link is a BETTER deal for the user than the
+  // plain site — this is a link that helps the reader and pays us, exactly the
+  // shape this seam is for.
+  // Keyed by the EXACT tool names in plays.json. Both newsletter rows pair
+  // beehiiv with Substack, and Substack has no affiliate program; both plays
+  // also tell the user "either is fine, don't spend an evening comparing", so
+  // the newsletter row resolving to beehiiv is honest and helpful. Keying by
+  // the full name also sidesteps the combined `at` ("a.com · b.com"), which is
+  // not a single valid URL.
+  "A newsletter (Substack or beehiiv)": "https://www.beehiiv.com/?via=ben-huang",
+  "beehiiv or Substack": "https://www.beehiiv.com/?via=ben-huang",
+};
 
 /*
   The link for a tool row on the plan page. Returns one of:
