@@ -657,3 +657,169 @@ export async function listConversationsForPerson(personId) {
     return [];
   }
 }
+
+/*
+  Best-effort mirror of a tracked event into Postgres (events table, sql/006).
+  Called from api/lead's event branch, alongside the Sheet forward — same
+  must-never-break-the-flow discipline as mirrorPlan: a DB hiccup here can only
+  be logged, never surfaced, and the Sheet still gets every event regardless.
+  This is what lets /admin count arrivals ('landed:*') and the drop-off funnel.
+*/
+export async function recordEvent({ name, fid, sid, visits, src, ref }) {
+  const db = sql();
+  if (!db || !name) return false;
+  try {
+    await db`
+      INSERT INTO events (name, fid, sid, visits, src, ref)
+      VALUES (
+        ${String(name).slice(0, 120)},
+        ${fid || null}, ${sid || null},
+        ${Number.isFinite(visits) ? visits : null},
+        ${src || null}, ${ref || null}
+      )`;
+    return true;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] recordEvent", e?.message);
+    return false;
+  }
+}
+
+/*
+  Admin dashboard aggregates — read-only, adds NO schema. Powers /admin via
+  api/admin/stats (which is the ONLY caller and gates access on ADMIN_TOKEN;
+  this function does no auth of its own, so never wire it to an unauthed route).
+
+  HONEST SCOPE (state this on the page too): these are counts of what the
+  DATABASE holds — verified/email accounts, saved plans, coach usage,
+  conversations, completed steps. They are NOT raw pageviews. A truly
+  anonymous visitor who never enters an email is not mirrored to Postgres at
+  all (see mirrorPlan's `if (!email) return false`), so "visitors" here means
+  "people who got far enough to leave a trace," not site traffic. Raw traffic
+  needs Vercel Analytics.
+
+  Every sub-query is wrapped so one failure degrades to a null/[] slice
+  rather than blanking the whole board — same fail-soft posture as the rest of
+  this file. A totally absent DB returns { ok:false, reason:"no_db" }.
+*/
+export async function getAdminStats() {
+  const db = sql();
+  if (!db) return { ok: false, reason: "no_db" };
+  const out = { ok: true, generatedAt: new Date().toISOString() };
+  const q = async (label, fn, fallback) => {
+    try {
+      return await fn();
+    } catch (e) {
+      console.error("[FAIMGO ADMIN] " + label, e?.message);
+      return fallback;
+    }
+  };
+
+  out.people = await q("people", async () => {
+    const [r] = await db`
+      SELECT count(*)::int AS total,
+        count(*) FILTER (WHERE created_at >= now() - interval '7 days')::int  AS last7,
+        count(*) FILTER (WHERE created_at >= now() - interval '30 days')::int AS last30
+      FROM people`;
+    return r || null;
+  }, null);
+
+  out.plans = await q("plans", async () => {
+    const [r] = await db`
+      SELECT count(*)::int AS total,
+        count(*) FILTER (WHERE created_at >= now() - interval '7 days')::int AS last7,
+        count(DISTINCT person_id)::int AS people_with_plan
+      FROM person_plans`;
+    return r || null;
+  }, null);
+
+  out.byPath = await q("byPath", async () =>
+    await db`
+      SELECT COALESCE(results->>'chosen', results->>'fastestWin', results->>'longTerm', '(none)') AS path,
+             count(*)::int AS n
+      FROM person_plans GROUP BY 1 ORDER BY n DESC`,
+  []);
+
+  out.byMode = await q("byMode", async () =>
+    await db`
+      SELECT COALESCE(results->>'mode', '(none)') AS mode, count(*)::int AS n
+      FROM person_plans GROUP BY 1 ORDER BY n DESC`,
+  []);
+
+  out.devices = await q("devices", async () => {
+    const [r] = await db`SELECT count(DISTINCT fid)::int AS linked_devices FROM person_devices`;
+    return r || null;
+  }, null);
+
+  out.ai = await q("ai", async () => {
+    const [r] = await db`
+      SELECT count(*)::int AS devices_used,
+        COALESCE(sum(calls), 0)::int AS total_calls,
+        COALESCE(sum(total_cost_cents), 0)::int AS total_cost_cents
+      FROM ai_usage`;
+    return r || null;
+  }, null);
+
+  out.conversations = await q("conversations", async () => {
+    const [tot] = await db`
+      SELECT count(*)::int AS total,
+        count(*) FILTER (WHERE created_at >= now() - interval '7 days')::int AS last7
+      FROM coach_conversations`;
+    const bySurface = await db`SELECT surface, count(*)::int AS n FROM coach_conversations GROUP BY 1 ORDER BY n DESC`;
+    const byStatus  = await db`SELECT status,  count(*)::int AS n FROM coach_conversations GROUP BY 1 ORDER BY n DESC`;
+    return { ...(tot || {}), bySurface, byStatus };
+  }, null);
+
+  out.steps = await q("steps", async () => {
+    const [r] = await db`
+      SELECT count(*)::int AS total_done, count(DISTINCT person_id)::int AS people_with_step
+      FROM person_steps`;
+    const byPlay = await db`SELECT play_id, count(*)::int AS n FROM person_steps GROUP BY 1 ORDER BY n DESC LIMIT 12`;
+    return { ...(r || {}), byPlay };
+  }, null);
+
+  out.reviews = await q("reviews", async () => {
+    const [r] = await db`SELECT count(*)::int AS total FROM reviews`;
+    return r || null;
+  }, null);
+
+  out.daily = await q("daily", async () =>
+    await db`
+      SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day, count(*)::int AS n
+      FROM person_plans
+      WHERE created_at >= now() - interval '14 days'
+      GROUP BY 1 ORDER BY 1`,
+  []);
+
+  // Traffic — from the events table (sql/006). This is the piece that answers
+  // "someone came and left": every arrival fires a 'landed:<page>' event, so
+  // arrivals count real visits (including bounces), unique visitors = distinct
+  // fid, and the funnel shows the drop-off from arrived -> clicked CTA ->
+  // started the assessment. Reads nothing if the events table doesn't exist
+  // yet (the q() wrapper degrades to null), so it's safe before sql/006 runs.
+  out.traffic = await q("traffic", async () => {
+    const [tot] = await db`
+      SELECT
+        count(*) FILTER (WHERE name LIKE 'landed:%')::int AS arrivals,
+        count(*) FILTER (WHERE name LIKE 'landed:%' AND created_at >= now() - interval '7 days')::int AS arrivals_7d,
+        count(DISTINCT fid) FILTER (WHERE name LIKE 'landed:%')::int AS unique_visitors,
+        count(DISTINCT sid) FILTER (WHERE name LIKE 'landed:%')::int AS sittings
+      FROM events`;
+    const byPage = await db`
+      SELECT split_part(name, ':', 2) AS page, count(*)::int AS n
+      FROM events WHERE name LIKE 'landed:%' GROUP BY 1 ORDER BY n DESC`;
+    const daily = await db`
+      SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day, count(*)::int AS n
+      FROM events
+      WHERE name LIKE 'landed:%' AND created_at >= now() - interval '14 days'
+      GROUP BY 1 ORDER BY 1`;
+    const [funnel] = await db`
+      SELECT
+        count(DISTINCT fid) FILTER (WHERE name LIKE 'landed:%')::int    AS arrived,
+        count(DISTINCT fid) FILTER (WHERE name LIKE 'cta_click:%')::int AS clicked_cta,
+        count(DISTINCT fid) FILTER (WHERE name = 'start')::int          AS started
+      FROM events`;
+    return { ...(tot || {}), byPage, daily, funnel: funnel || {} };
+  }, null);
+
+  return out;
+}

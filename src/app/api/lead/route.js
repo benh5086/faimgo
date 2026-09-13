@@ -93,7 +93,7 @@
 
 import { renderPlanEmail } from "../../../lib/planEmail.js";
 import { PATHS } from "../../../lib/paths.js";
-import { mirrorPlan } from "../../../lib/db.js";
+import { mirrorPlan, recordEvent } from "../../../lib/db.js";
 
 const SANDBOX_FROM = "Faimgo <onboarding@resend.dev>";
 
@@ -286,7 +286,16 @@ export async function POST(request) {
       console.log("[FAIMGO EVENT]", JSON.stringify({
         name: body.name, sid: body.sid, fid: body.fid, visits: body.visits, ts: body.ts,
       }));
-      await forward(body);
+      // Mirror into Postgres (events table) alongside the Sheet, so /admin can
+      // count arrivals and the drop-off funnel. Best-effort, fail-open — the
+      // Sheet forward still runs regardless (see recordEvent's contract).
+      await Promise.all([
+        forward(body),
+        recordEvent({
+          name: body.name, fid: body.fid, sid: body.sid, visits: body.visits,
+          src: body.src, ref: body.ref,
+        }),
+      ]);
       return Response.json({ ok: true });
     }
 

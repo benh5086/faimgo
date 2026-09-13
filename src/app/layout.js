@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { LocaleProvider } from "../lib/i18n/LocaleContext";
 
@@ -60,6 +61,12 @@ export default function RootLayout({ children }) {
             actually reads translated strings today. See LocaleContext.js
             for the reasoning on what's translated now vs. deferred. */}
         <LocaleProvider>{children}</LocaleProvider>
+        {/* Vercel Web Analytics — managed, cookie-less traffic (pageviews,
+            visitors, sources, top pages) shown in the Vercel project's
+            Analytics tab. Zero maintenance on our side; this line plus enabling
+            Analytics in the Vercel dashboard is the whole setup. Complements
+            /admin's own event-based funnel — the two are cross-checkable. */}
+        <Analytics />
       </body>
     </html>
   );
