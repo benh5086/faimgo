@@ -52,6 +52,17 @@ import AccountLink from "../AccountLink";
   accounts, usernames, or public profiles exist yet — the database's
   `people` table has empty, unused columns reserved for that later, and this
   page will need another pass the day those are actually built and rendered.
+
+  REVISED AGAIN Sep 14, 2026 — the standing rule fired twice more. (1) The AI
+  coach now sends what a person types to Anthropic and stores the conversation
+  in Neon; that was a real disclosure gap (user text leaving to a third party,
+  undisclosed) and now has its own section. (2) Vercel Web Analytics was turned
+  on, so the old flat claim "there are no third-party analytics on this site"
+  was no longer true; the analytics paragraph now names it (cookieless, no
+  stored IP, no cross-site profile). STILL PENDING: the moment paid top-ups go
+  live, a payment processor joins the list and this page needs another pass
+  (what it stores: a payment id, amount and tier, never card numbers — the
+  processor handles those and we never see them).
 */
 
 export const metadata = {
@@ -119,10 +130,12 @@ export default function Privacy() {
           message, the rating, the page you sent it from and that same random id.
         </P>
         <P>
-          Worth being specific, since &ldquo;analytics&rdquo; usually hides more than it says:
-          there are no third-party analytics on this site, we do not record your IP address, and
-          nothing here follows you to any other website. What we keep is the random id above plus
-          a line saying which page it opened and when.
+          Worth being specific, since &ldquo;analytics&rdquo; usually hides more than it says: we use
+          Vercel&apos;s own privacy-friendly Web Analytics, which sets no cookies and does not build a
+          profile that follows you to other websites, plus our own count of which page the random id
+          above opened and when, kept in our database. We use your IP address only in the moment, to
+          rate-limit abuse and to let the analytics tell rough location apart, and we do not store it
+          against you. Nothing here is sold, and nothing follows you around the web.
         </P>
         <P>
           <b>What you finish.</b> When you mark a step of your plan as done, we record that — which
@@ -143,14 +156,26 @@ export default function Privacy() {
           work: your email, the answers behind each plan, and which browser you used it from.
         </P>
 
+        <H>The AI coach</H>
+        <P>
+          If you use the built-in coach — the chat on your plan, or the &ldquo;something else&rdquo;
+          box in the assessment — what you type is sent to <b>Anthropic</b>, the company whose AI
+          model writes the reply back to you. A good rule: share your situation, not your secrets.
+          We keep the conversation in our database, tied to the random id above (and your account, if
+          you have one), so you can pick it back up later and so the coaching can get better over
+          time. You can have it removed the same way as everything else below.
+        </P>
+
         <H>Who else sees it</H>
         <P>
-          Four services, and nobody else. <b>Vercel</b> hosts the site and briefly holds server
-          logs. <b>Resend</b> sends your plan email and therefore handles your email address.
-          <b> Google Sheets</b> is where the human-readable records are kept — a private spreadsheet
-          that only we can open. <b>Neon</b> hosts the database behind &ldquo;get your plan
-          back&rdquo; above — your email, your plans, and which browser you&apos;ve used. That is
-          the complete list. Nothing is sold, and nothing is shared for advertising.
+          Five services, and nobody else. <b>Vercel</b> hosts the site, briefly holds server logs,
+          and provides the privacy-friendly Web Analytics described above. <b>Resend</b> sends your
+          plan email and therefore handles your email address. <b>Google Sheets</b> is where the
+          human-readable records are kept — a private spreadsheet that only we can open. <b>Neon</b>
+          hosts the database behind &ldquo;get your plan back&rdquo; above, and the coach
+          conversations — your email, your plans, which browser you&apos;ve used, and what you told
+          the coach. <b>Anthropic</b> runs the AI model behind the coach and receives what you type
+          into it. That is the complete list. Nothing is sold, and nothing is shared for advertising.
         </P>
 
         <H>How long we keep it</H>
@@ -203,7 +228,7 @@ export default function Privacy() {
           </p>
         </div>
 
-        <p className="text-[14px] mt-8" style={{ color: C.gray }}>Last updated: August 16, 2026.</p>
+        <p className="text-[14px] mt-8" style={{ color: C.gray }}>Last updated: September 14, 2026.</p>
       </div>
     </main>
   );
