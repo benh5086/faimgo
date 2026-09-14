@@ -61,8 +61,8 @@
 */
 
 import { buildGroundingContext, buildChatMessages, callCoach } from "../../../lib/coach.js";
-import { getBalance, recordAiUsage, upsertConversation } from "../../../lib/db.js";
-import { usedPct } from "../../../lib/pricing.js";
+import { getBalance, recordAiUsage, upsertConversation, hasCreditGrant } from "../../../lib/db.js";
+import { usedPct, TIERS, discountedPriceCents, FIRST_UPGRADE_DISCOUNT } from "../../../lib/pricing.js";
 
 // Phase 2 (Sep 11 2026) — SOFT nudge threshold for the multi-turn `chat` kind.
 // After this many coach replies the coach starts gently telling the person to
@@ -158,7 +158,26 @@ export async function POST(request) {
     if (fid) {
       balance = await getBalance(fid);
       if (balance.exhausted) {
-        return Response.json({ ok: false, reason: "allowance_exhausted" });
+        // Attach the top-up offer so the coach can show real buy options —
+        // but ONLY when payments are actually configured (no fake button
+        // otherwise; the client falls back to the honest "coming soon" copy).
+        const paymentsEnabled = Boolean(process.env.STRIPE_SECRET_KEY);
+        let offer = null;
+        if (paymentsEnabled) {
+          const firstTime = !(await hasCreditGrant(fid));
+          offer = {
+            firstTime,
+            discountPct: FIRST_UPGRADE_DISCOUNT.pct,
+            tiers: TIERS.map((t) => ({
+              id: t.id,
+              label: t.label,
+              priceCents: t.priceCents,
+              firstPriceCents: discountedPriceCents(t.priceCents),
+              best: Boolean(t.best),
+            })),
+          };
+        }
+        return Response.json({ ok: false, reason: "allowance_exhausted", paymentsEnabled, offer });
       }
     }
 

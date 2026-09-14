@@ -611,6 +611,24 @@ export async function getBalance(fid) {
   across devices. That person-merge is a deliberate later step, safe to defer
   while payments are still off.
 */
+/*
+  Has this device ever bought a top-up? Used to gate the one-time first-upgrade
+  discount (server-side, so the "first time" offer can't be replayed). Fails
+  open to "true" (treat as first-time) only for the no-fid case; on a DB error
+  we return false so we never hand out the discount we can't verify.
+*/
+export async function hasCreditGrant(fid) {
+  const db = sql();
+  if (!db || !fid) return false;
+  try {
+    const rows = await db`SELECT 1 FROM credit_grants WHERE fid = ${fid} LIMIT 1`;
+    return rows.length > 0;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] hasCreditGrant", e?.message);
+    return false;
+  }
+}
+
 export async function addCredits({ fid, personId = null, cents, paymentId, tier = null, amountPaidCents = null }) {
   const db = sql();
   if (!db || !fid || !paymentId || !Number.isFinite(cents) || cents <= 0) return false;

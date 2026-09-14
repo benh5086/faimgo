@@ -75,7 +75,40 @@ export default function CoachChat({
   // A rough concept, like a Pro-plan usage bar, never an exact number or a
   // dollar figure. null until the first reply reports it.
   const [usedPct, setUsedPct] = useState(null);
+  // Top-up offer shown when the free coaching runs out AND payments are live
+  // (server sends `offer`); null otherwise. `toppedUp` shows a one-line thanks
+  // when the person comes back from a successful Stripe checkout.
+  const [offer, setOffer] = useState(null);
+  const [toppedUp, setToppedUp] = useState(false);
+  const [buying, setBuying] = useState(false);
   const listRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && window.location.search.includes("topup=success")) {
+        setToppedUp(true);
+      }
+    } catch {}
+  }, []);
+
+  async function buy(tierId) {
+    if (buying) return;
+    setBuying(true);
+    try {
+      const res = await fetch("/api/pay/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: tierId, fid, personId }),
+      });
+      const d = await res.json();
+      if (d && d.ok && d.url) {
+        window.location.href = d.url; // Stripe-hosted checkout
+        return;
+      }
+    } catch {}
+    // If checkout can't start, leave the honest offer in place; nothing charged.
+    setBuying(false);
+  }
 
   const lastCoach = [...messages].reverse().find((m) => m.role === "coach");
   const escalated = Boolean(lastCoach?.meta?.escalate);
@@ -140,7 +173,13 @@ export default function CoachChat({
       // that doesn't exist yet — "coming soon" is the honest framing.
       const reason = data?.reason || "network_error";
       let content;
-      if (reason === "allowance_exhausted") {
+      if (reason === "allowance_exhausted" && data?.paymentsEnabled && data?.offer) {
+        // Payments are live: show the real top-up offer (buttons below), and
+        // keep the words soft — the plan stays free, this only keeps the coach.
+        setOffer(data.offer);
+        content =
+          "You've used the free coaching for now. The plan and everything you've done stays free — this just keeps the coach with you for the next stretch.";
+      } else if (reason === "allowance_exhausted") {
         content =
           "You've used the free AI coaching for now — and the plan itself, plus everything you've done so far, stays free. Being able to top up and keep the coach going is something we're adding soon. Until then, tell us below and a real person can pick this up.";
       } else if (reason === "rate_limited") {
@@ -259,6 +298,59 @@ export default function CoachChat({
           <div className="rounded" style={{ backgroundColor: C.cream, height: 6 }}>
             <div className="rounded h-full" style={{ width: usedPct + "%", backgroundColor: usedPct >= 90 ? C.gold : C.green }} />
           </div>
+        </div>
+      )}
+
+      {/* Came back from a successful top-up. */}
+      {toppedUp && (
+        <p className="text-[13px] mt-3 rounded-lg px-3 py-2" style={{ backgroundColor: C.greenSoft, color: C.green, border: `1px solid ${C.beige}` }}>
+          Thanks — your coach is topped up. Pick up right where you left off.
+        </p>
+      )}
+
+      {/* Top-up offer — only rendered when the free coaching ran out AND
+          payments are live (server sent `offer`). The buttons carry the CTA;
+          the words stay soft. First top-up shows the one-time discount. */}
+      {offer && (
+        <div className="mt-3 rounded-xl p-3" style={{ border: `1px solid ${C.beige}`, backgroundColor: C.cream }}>
+          <p className="text-[14px] font-semibold mb-2" style={{ color: C.green }}>
+            Keep your coach with you
+          </p>
+          <div className="flex flex-col gap-2">
+            {(offer.tiers || []).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => buy(t.id)}
+                disabled={buying}
+                className="press rounded-lg px-3 py-2 text-[14px] font-semibold flex items-center justify-between"
+                style={{
+                  backgroundColor: t.best ? C.green : C.white,
+                  color: t.best ? C.cream : C.ink,
+                  border: `1px solid ${t.best ? C.green : C.beige}`,
+                }}
+              >
+                <span>{t.label}{t.best ? " · best value" : ""}</span>
+                <span>
+                  {offer.firstTime ? (
+                    <>
+                      ${(t.firstPriceCents / 100).toFixed(2)}{" "}
+                      <span style={{ textDecoration: "line-through", opacity: 0.55 }}>${(t.priceCents / 100).toFixed(2)}</span>
+                    </>
+                  ) : (
+                    <>${(t.priceCents / 100).toFixed(2)}</>
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+          {offer.firstTime && (
+            <p className="text-[12px] mt-2" style={{ color: C.gold }}>
+              {offer.discountPct}% off your first top-up, this once.
+            </p>
+          )}
+          <p className="text-[12px] mt-2" style={{ color: C.gray }}>
+            No rush. The plan and every step you&apos;ve done stay free — this just keeps the coach going.
+          </p>
         </div>
       )}
 
