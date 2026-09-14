@@ -46,6 +46,7 @@
 */
 
 import { neon } from "@neondatabase/serverless";
+import { FREE_GRANT_CENTS } from "./pricing.js";
 
 let _sql = null;
 function sql() {
@@ -572,6 +573,66 @@ export async function recordAiUsage({ fid, costCents }) {
     return true;
   } catch (e) {
     console.error("[FAIMGO DB ERROR] recordAiUsage", e?.message);
+    return false;
+  }
+}
+
+/*
+  Coach credit balance for a device (payments skeleton, sql/007). Everything in
+  real backend-cost cents:  remaining = credit_cents - total_cost_cents.
+  credit_cents defaults to FREE_GRANT_CENTS, so a device with no purchase and no
+  row behaves exactly like today's free allowance. FAILS OPEN, same discipline as
+  getAiUsageCents: if the DB is down or unreadable we report the full free grant
+  available rather than wall a real person over a balance we can't read.
+*/
+export async function getBalance(fid) {
+  const free = FREE_GRANT_CENTS;
+  const db = sql();
+  if (!db || !fid) return { creditCents: free, usedCents: 0, remainingCents: free, exhausted: false };
+  try {
+    const [row] = await db`SELECT total_cost_cents, credit_cents FROM ai_usage WHERE fid = ${fid}`;
+    const used = row ? row.total_cost_cents : 0;
+    const credit = row && row.credit_cents != null ? row.credit_cents : free;
+    const remaining = credit - used;
+    return { creditCents: credit, usedCents: used, remainingCents: remaining, exhausted: remaining <= 0 };
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] getBalance", e?.message);
+    return { creditCents: free, usedCents: 0, remainingCents: free, exhausted: false };
+  }
+}
+
+/*
+  Apply a paid top-up to a device's balance. IDEMPOTENT via credit_grants'
+  payment_id primary key: a Stripe webhook that fires twice for the same payment
+  records the grant once and adds the credits once. Called by Layer 2 (the
+  Stripe webhook) — defined now so that layer is a thin drop-in. Never throws.
+  Note (Layer 2 TODO): balance is device-keyed (fid) to match the existing
+  meter; when a paying user has an account, credits should follow person_id
+  across devices. That person-merge is a deliberate later step, safe to defer
+  while payments are still off.
+*/
+export async function addCredits({ fid, personId = null, cents, paymentId, tier = null, amountPaidCents = null }) {
+  const db = sql();
+  if (!db || !fid || !paymentId || !Number.isFinite(cents) || cents <= 0) return false;
+  const add = Math.round(cents);
+  try {
+    const claimed = await db`
+      INSERT INTO credit_grants (payment_id, fid, person_id, tier, amount_paid_cents, credits_cents)
+      VALUES (${paymentId}, ${fid}, ${personId}, ${tier}, ${amountPaidCents}, ${add})
+      ON CONFLICT (payment_id) DO NOTHING
+      RETURNING payment_id
+    `;
+    if (!claimed.length) return true; // already applied — idempotent no-op
+    await db`
+      INSERT INTO ai_usage (fid, credit_cents)
+      VALUES (${fid}, ${FREE_GRANT_CENTS + add})
+      ON CONFLICT (fid) DO UPDATE SET
+        credit_cents = ai_usage.credit_cents + ${add},
+        updated_at = now()
+    `;
+    return true;
+  } catch (e) {
+    console.error("[FAIMGO DB ERROR] addCredits", e?.message);
     return false;
   }
 }

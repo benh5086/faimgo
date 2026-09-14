@@ -61,7 +61,8 @@
 */
 
 import { buildGroundingContext, buildChatMessages, callCoach } from "../../../lib/coach.js";
-import { getAiUsageCents, recordAiUsage, upsertConversation } from "../../../lib/db.js";
+import { getBalance, recordAiUsage, upsertConversation } from "../../../lib/db.js";
+import { usedPct } from "../../../lib/pricing.js";
 
 // Phase 2 (Sep 11 2026) — SOFT nudge threshold for the multi-turn `chat` kind.
 // After this many coach replies the coach starts gently telling the person to
@@ -112,8 +113,6 @@ const PRICE_CENTS_PER_TOKEN = {
   haiku: { in: 100 / 1_000_000, out: 500 / 1_000_000 },
   sonnet: { in: 200 / 1_000_000, out: 1000 / 1_000_000 },
 };
-const ALLOWANCE_CENTS = 500; // $5, Ben's placeholder — see the file header
-
 function costCentsFor(modelAlias, usage) {
   const price = PRICE_CENTS_PER_TOKEN[modelAlias] || PRICE_CENTS_PER_TOKEN.haiku;
   const inTok = usage?.input_tokens || 0;
@@ -151,9 +150,14 @@ export async function POST(request) {
     // The $5-per-fid allowance (claude/faimgo-ai-coach-usage-pricing-sep6.md)
     // — see the file header for why this fails open on a database problem
     // rather than refusing a real person over an unreadable balance.
+    // Credit balance (sql/007): remaining = credit_cents - total_cost_cents, in
+    // real backend-cost cents. Defaults to the free grant for a device with no
+    // purchase, so behaviour is unchanged until a top-up adds credits. Fails
+    // open (getBalance never throws), same as the old fixed-allowance check.
+    let balance = null;
     if (fid) {
-      const spent = await getAiUsageCents(fid);
-      if (spent >= ALLOWANCE_CENTS) {
+      balance = await getBalance(fid);
+      if (balance.exhausted) {
         return Response.json({ ok: false, reason: "allowance_exhausted" });
       }
     }
@@ -237,7 +241,14 @@ export async function POST(request) {
       // before the move-on nudge; `nudged` is true once we're at/past it.
       const coachTurnsAfter = coachTurns + 1;
       const turnsLeft = Math.max(0, NUDGE_AT_TURNS - coachTurnsAfter);
-      return Response.json({ ok: true, reply, turnsLeft, nudged: coachTurnsAfter >= NUDGE_AT_TURNS });
+      // Coarse "% used" for the client's gauge — never a number/dollar figure.
+      // Computed from the pre-call balance, so it lags this turn's cost by one
+      // reply; that is fine for a soft gauge and keeps it to one DB read.
+      return Response.json({
+        ok: true, reply, turnsLeft,
+        nudged: coachTurnsAfter >= NUDGE_AT_TURNS,
+        usedPct: balance ? usedPct(balance.usedCents, balance.creditCents) : null,
+      });
     }
 
     const ctx = buildGroundingContext(

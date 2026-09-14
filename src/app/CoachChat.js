@@ -71,6 +71,10 @@ export default function CoachChat({
   const [turnsLeft, setTurnsLeft] = useState(() =>
     Math.max(0, NUDGE_AT - initialMessages.filter((m) => m.role === "coach").length)
   );
+  // Coarse "% of coaching used" for a soft gauge (server sends it each turn).
+  // A rough concept, like a Pro-plan usage bar, never an exact number or a
+  // dollar figure. null until the first reply reports it.
+  const [usedPct, setUsedPct] = useState(null);
   const listRef = useRef(null);
 
   const lastCoach = [...messages].reverse().find((m) => m.role === "coach");
@@ -127,6 +131,7 @@ export default function CoachChat({
         escalate: Boolean(data.reply.escalate),
       } }]));
       if (typeof data.turnsLeft === "number") setTurnsLeft(data.turnsLeft);
+      if (typeof data.usedPct === "number") setUsedPct(data.usedPct);
     } else {
       // Honest degrade — never a wall. The message depends on WHY it stopped.
       // Per Ben (Sep 11): never name a dollar figure or a specific allowance;
@@ -241,6 +246,21 @@ export default function CoachChat({
           Send
         </button>
       </div>
+
+      {/* Soft usage gauge — a rough concept of how much coaching's been used,
+          like a Pro-plan bar. Coarse %, no exact number, no dollars. Only shows
+          once there's something to show. */}
+      {usedPct != null && usedPct > 0 && (
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-[11px] mb-1" style={{ color: C.gray }}>
+            <span>Coaching used</span>
+            <span>{usedPct}%</span>
+          </div>
+          <div className="rounded" style={{ backgroundColor: C.cream, height: 6 }}>
+            <div className="rounded h-full" style={{ width: usedPct + "%", backgroundColor: usedPct >= 90 ? C.gold : C.green }} />
+          </div>
+        </div>
+      )}
 
       {/* Gentle countdown — the chat is bounded but never yanked away. */}
       <p className="text-[12px] mt-2" style={{ color: C.gray }}>
