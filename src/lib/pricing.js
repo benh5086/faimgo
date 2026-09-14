@@ -52,6 +52,13 @@ export const TIERS = [
 // more concrete; decide per tier.)
 export const FIRST_UPGRADE_DISCOUNT = { pct: 20, oneTime: true };
 
+// Stripe product tax code — REQUIRED by Managed Payments (Stripe's MoR) so it
+// can compute the right sales tax/VAT. txcd_10000000 = "General - Electronically
+// Supplied Services", the digital-service category that fits AI coaching
+// delivered over the web. Without this, checkout.sessions.create is rejected
+// ("product tax code is missing"). See docs.stripe.com/tax/tax-codes.
+export const TAX_CODE = "txcd_10000000";
+
 export function tierById(id) {
   return TIERS.find((t) => t.id === id) || null;
 }

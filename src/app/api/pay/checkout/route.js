@@ -22,7 +22,7 @@
 */
 
 import Stripe from "stripe";
-import { tierById, discountedPriceCents } from "../../../../lib/pricing.js";
+import { tierById, discountedPriceCents, TAX_CODE } from "../../../../lib/pricing.js";
 import { hasCreditGrant } from "../../../../lib/db.js";
 
 export const runtime = "nodejs";
@@ -57,7 +57,7 @@ export async function POST(request) {
           price_data: {
             currency: "usd",
             unit_amount: unit,
-            product_data: { name: "Faimgo coaching — " + tier.label },
+            product_data: { name: "Faimgo coaching — " + tier.label, tax_code: TAX_CODE },
           },
         },
       ],
