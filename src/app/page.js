@@ -94,7 +94,7 @@ export default function Home() {
               {t("hero.badge")}
             </a>
             <h1 className="hero-rise font-display text-5xl md:text-6xl leading-[1.08] mb-6" style={{color: C.green, animationDelay: '80ms'}}>
-              {t("hero.titlePre")}<span style={{color: "#6B2131"}}>{t("hero.titleHighlight")}</span>{t("hero.titlePost")}
+              {t("hero.titlePre")}<span style={{color: "#9C2A22"}}>{t("hero.titleHighlight")}</span>{t("hero.titlePost")}
             </h1>
             <p className="hero-rise text-xl leading-relaxed mb-9" style={{color: C.body, animationDelay: '160ms'}}>
               {t("hero.subtitle")}
@@ -163,7 +163,7 @@ export default function Home() {
             {problemItems.map((item, i) => (
               <Reveal key={i} delay={i * 80}>
                 <div className="lift h-full p-8 rounded-2xl" style={{backgroundColor: C.white, border: `1px solid ${C.line}`, boxShadow: C.soft}}>
-                  <p className="text-[15px] font-bold mb-3 tracking-widest" style={{color: C.gold}}>{String(i + 1).padStart(2, '0')}</p>
+                  <p className="text-[15px] font-bold mb-3 tracking-widest" style={{color: "#9C2A22"}}>{String(i + 1).padStart(2, '0')}</p>
                   <h3 className="font-semibold text-xl mb-2.5" style={{color: C.green}}>{item.title}</h3>
                   <p className="text-[16px] leading-relaxed" style={{color: C.body}}>{item.desc}</p>
                 </div>
@@ -193,7 +193,7 @@ export default function Home() {
           {stepItems.map((item, i) => (
             <Reveal key={i} delay={i * 90}>
               <div className="flex flex-col gap-3">
-                <span className="font-display text-5xl" style={{color: C.gold}}>{item.step}</span>
+                <span className="font-display text-5xl" style={{color: "#9C2A22"}}>{item.step}</span>
                 <h3 className="text-2xl font-bold" style={{color: C.green}}>{item.title}</h3>
                 <p className="text-[16px] leading-relaxed" style={{color: C.body}}>{item.desc}</p>
               </div>
