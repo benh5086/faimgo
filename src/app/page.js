@@ -94,7 +94,7 @@ export default function Home() {
               {t("hero.badge")}
             </a>
             <h1 className="hero-rise font-display text-5xl md:text-6xl leading-[1.08] mb-6" style={{color: C.green, animationDelay: '80ms'}}>
-              {t("hero.titlePre")}<span style={{color: C.ink}}>{t("hero.titleHighlight")}</span>{t("hero.titlePost")}
+              {t("hero.titlePre")}<span style={{color: "#6B2131"}}>{t("hero.titleHighlight")}</span>{t("hero.titlePost")}
             </h1>
             <p className="hero-rise text-xl leading-relaxed mb-9" style={{color: C.body, animationDelay: '160ms'}}>
               {t("hero.subtitle")}

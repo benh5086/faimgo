@@ -724,7 +724,7 @@ export default function Assessment() {
         <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
           <Tag>Welcome back</Tag>
           <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
-            Your plan is <span style={{ color: C.ink }}>still here</span>.
+            Your plan is <span style={{ color: "#6B2131" }}>still here</span>.
           </h1>
           <p className="text-[17px] leading-relaxed mb-2" style={{ color: C.gray }}>
             You finished this {when(plan.ts)}. Nothing was lost — pick it back up where you left it.
@@ -764,7 +764,7 @@ export default function Assessment() {
       <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
         <Tag>Welcome back</Tag>
         <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
-          You were <span style={{ color: C.ink }}>partway through</span>.
+          You were <span style={{ color: "#6B2131" }}>partway through</span>.
         </h1>
         <p className="text-[17px] leading-relaxed mb-6" style={{ color: C.gray }}>
           {answered > 0
@@ -1199,7 +1199,7 @@ export default function Assessment() {
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>Faimgo Assessment</Tag>
             <h1 className="font-display text-4xl md:text-5xl leading-[1.1] mb-3" style={{ color: C.green }}>
-              Find your <span style={{ color: C.ink }}>two paths</span>.
+              Find your <span style={{ color: "#6B2131" }}>two paths</span>.
             </h1>
             <p className="text-[17px] leading-relaxed mb-6" style={{ color: C.gray }}>
               About 2 minutes, and every answer counts toward your plan. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b>{" "}and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b>{" "}on it. No fluff, no &quot;just believe in yourself.&quot;
