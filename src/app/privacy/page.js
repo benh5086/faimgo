@@ -71,13 +71,13 @@ export const metadata = {
 };
 
 const C = {
-  cream: "#F1F4F2",
-  green: "#1B3A2D",
-  gold: "#8A6A14",
-  beige: "#E4E8E5",
-  gray: "#464C54",
-  ink: "#15181B",
-  greenSoft: "#E4EEE9",
+  cream: "#F4EADF",
+  green: "#C0603A",
+  gold: "#9A4A12",
+  beige: "#E8DCCD",
+  gray: "#6B5A52",
+  ink: "#2A1A18",
+  greenSoft: "#F7E3D8",
 };
 
 function H({ children }) {
@@ -93,7 +93,7 @@ export default function Privacy() {
     <main className="min-h-screen font-sans" style={{ backgroundColor: C.cream }}>
       <div style={{ backgroundColor: C.green }} className="px-8 py-4 flex items-center justify-between">
         <Link href="/" className="text-2xl font-bold tracking-tight" style={{ color: "#FFFFFF" }}>
-          faim<span style={{ color: "#D2A54A" }}>go</span>
+          faim<span style={{ color: "#FBE4B8" }}>go</span>
         </Link>
         <div className="flex items-center gap-5">
           <Link href="/" className="text-[15px] font-medium" style={{ color: "#FFFFFF" }}>Back to Faimgo</Link>

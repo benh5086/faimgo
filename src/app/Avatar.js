@@ -8,7 +8,7 @@
   consistent everywhere it appears without storing anything extra.
 */
 
-const PALETTE = ["#1B3A2D", "#8A6A14", "#5B3A8A", "#2E5C8A", "#8A3A3A", "#3A8A6E", "#8A5A2E"];
+const PALETTE = ["#C0603A", "#9A4A12", "#5B3A8A", "#2E5C8A", "#8A3A3A", "#3A8A6E", "#8A5A2E"];
 
 function colorFor(seed) {
   const s = String(seed || "faimgo");

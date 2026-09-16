@@ -21,13 +21,13 @@ import { whoAmI } from "../lib/store.js";
 
 const C = {
   white: "#FFFFFF",
-  tint: "#F1F4F2",
-  line: "#E4E8E5",
-  green: "#1B3A2D",
-  ink: "#15181B",
-  body: "#464C54",
-  greenSoft: "#E4EEE9",
-  mintText: "#0F6B3F",
+  tint: "#F4EADF",
+  line: "#E8DCCD",
+  green: "#C0603A",
+  ink: "#2A1A18",
+  body: "#6B5A52",
+  greenSoft: "#F7E3D8",
+  mintText: "#9A4A12",
 };
 
 const RATINGS = [
@@ -132,7 +132,7 @@ export default function FeedbackWidget({ trigger = "link", kind = "feedback", co
     );
   } else {
     triggerEl = (
-      <button onClick={() => setOpen(true)} className="text-[14px] transition-opacity hover:opacity-80" style={{ color: "#9DB0A6" }}>
+      <button onClick={() => setOpen(true)} className="text-[14px] transition-opacity hover:opacity-80" style={{ color: "#B3A399" }}>
         {navLabel}
       </button>
     );
@@ -144,9 +144,9 @@ export default function FeedbackWidget({ trigger = "link", kind = "feedback", co
 
       {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4"
-          style={{ backgroundColor: "rgba(20,36,27,0.45)" }} onClick={close}>
+          style={{ backgroundColor: "rgba(42,26,24,0.45)" }} onClick={close}>
           <div className="reveal-in w-full max-w-md rounded-2xl p-7"
-            style={{ backgroundColor: C.white, boxShadow: "0 24px 60px -20px rgba(20,36,27,0.5)" }}
+            style={{ backgroundColor: C.white, boxShadow: "0 24px 60px -20px rgba(42,26,24,0.5)" }}
             onClick={(e) => e.stopPropagation()}>
             {sent ? (
               <div className="text-center py-4">

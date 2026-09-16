@@ -19,13 +19,13 @@ import { useState } from "react";
 import { pathById } from "../../lib/paths.js";
 
 const C = {
-  green: "#1B3A2D",
-  gold: "#8A6A14",
-  beige: "#E4E8E5",
-  gray: "#464C54",
-  ink: "#15181B",
-  cream: "#F1F4F2",
-  greenSoft: "#E4EEE9",
+  green: "#C0603A",
+  gold: "#9A4A12",
+  beige: "#E8DCCD",
+  gray: "#6B5A52",
+  ink: "#2A1A18",
+  cream: "#F4EADF",
+  greenSoft: "#F7E3D8",
   white: "#FFFFFF",
 };
 

@@ -35,14 +35,14 @@ import CoachChat from "../CoachChat";
    ============================================================ */
 
 const C = {
-  cream: "#F1F4F2",
-  green: "#1B3A2D",
-  gold: "#8A6A14",
-  beige: "#E4E8E5",
-  gray: "#464C54",
-  ink: "#15181B",
-  greenSoft: "#E4EEE9",
-  yellowSoft: "#FBF3DE",
+  cream: "#F4EADF",
+  green: "#C0603A",
+  gold: "#9A4A12",
+  beige: "#E8DCCD",
+  gray: "#6B5A52",
+  ink: "#2A1A18",
+  greenSoft: "#F7E3D8",
+  yellowSoft: "#FCEFD9",
   redSoft: "#F9E9E5",
   red: "#9C3B2E",
 };
@@ -60,10 +60,10 @@ function Shell({ children }) {
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link href="/" className="font-display text-[20px] font-bold" style={{ color: C.cream }}>Faimgo</Link>
           <div className="flex items-center gap-5">
-            <Link href="/assessment" className="text-[15px] font-medium hover:opacity-80" style={{ color: "#9DB0A6" }}>
+            <Link href="/assessment" className="text-[15px] font-medium hover:opacity-80" style={{ color: "#B3A399" }}>
               Back to my results
             </Link>
-            <AccountLink color="#9DB0A6" />
+            <AccountLink color="#B3A399" />
           </div>
         </div>
       </header>
@@ -497,7 +497,7 @@ function DoneControl({ play, done, step, onToggle, onOutcome, onSignal, onGoto, 
 function GapBadge() {
   return (
     <span className="inline-flex items-center gap-1.5 text-[12px] font-bold px-2.5 py-1 rounded-full mb-2"
-      style={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }}>
+      style={{ backgroundColor: C.greenSoft, color: "#9A4A12" }}>
       Closes your gap
     </span>
   );
@@ -1006,7 +1006,7 @@ export default function PlanPage() {
         <div className="p-5 rounded-2xl mb-8" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
           <p className="text-[12px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.gold }}>Why this looks the way it does</p>
           <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
-            You told us {plan.gapLabel} — whichever step ahead is marked <b style={{ color: "#0F6B3F" }}>&quot;Closes your gap&quot;</b>{" "}
+            You told us {plan.gapLabel} — whichever step ahead is marked <b style={{ color: "#9A4A12" }}>&quot;Closes your gap&quot;</b>{" "}
             is written as the direct answer to that. The rest still come up in their turn too — they&apos;re just not the specific thing you said was missing, so most people move through them quickly.
             {plan.paceNote ? ` And ${plan.paceNote}` : ""}
           </p>
@@ -1072,7 +1072,7 @@ export default function PlanPage() {
           <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>
             You finished every step we&apos;ve written.
           </h2>
-          <p className="text-[16px] leading-relaxed" style={{ color: "#D6E2DA" }}>
+          <p className="text-[16px] leading-relaxed" style={{ color: "#EDE0D2" }}>
             Tell us what happened — what worked, what didn&apos;t, what you needed and couldn&apos;t find. At this point
             you know things about this path that we don&apos;t.
           </p>
@@ -1102,7 +1102,7 @@ export default function PlanPage() {
                 {overridePlay ? "Back to fix this one" : doneCount > 0 ? "Pick up here" : "Start here"}
               </p>
               <h2 className="font-display text-[24px] leading-snug mb-2" style={{ color: C.cream }}>{activePlay.name}</h2>
-              <p className="text-[16px] leading-relaxed" style={{ color: "#D6E2DA" }}>
+              <p className="text-[16px] leading-relaxed" style={{ color: "#EDE0D2" }}>
                 {activePlay.week && plan.totalWeeks ? `Week ${activePlay.week} of ${plan.totalWeeks}` : `Step ${activeIndex + 1} of ${plan.stepCount}`}
                 {" · "}{doneCount} of {plan.stepCount} steps done
                 {activePhase?.opensWhen ? ` · this window opened once you had ${factLabel(activePhase.opensWhen)}` : ""}
@@ -1139,7 +1139,7 @@ export default function PlanPage() {
                   <div className="mt-3">
                     {doneSoFar.map((pl) => (
                       <div key={pl.id} className="flex items-center gap-3 py-2.5 px-4 rounded-xl mb-1.5" style={{ backgroundColor: C.greenSoft }}>
-                        <span aria-hidden="true" style={{ color: "#0F6B3F" }}>✓</span>
+                        <span aria-hidden="true" style={{ color: "#9A4A12" }}>✓</span>
                         <span className="text-[15px] flex-1" style={{ color: C.ink }}>{pl.name}</span>
                         {pl.week ? <span className="text-[12px]" style={{ color: C.gray }}>Week {pl.week}</span> : null}
                       </div>

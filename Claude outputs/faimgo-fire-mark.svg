@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <title>Faimgo mark — three flames with inner flame</title>
+  <!-- Flat layers, no mix-blend-mode (blend modes fail in some SVG rasterizers / launchers).
+       Z-order back to front: left side flame, right side flame, main flame, inner flame. -->
+
+  <!-- 左侧焰 left side flame -->
+  <path d="M62,206
+           C40,182 36,150 50,120
+           C56,132 66,138 70,128
+           C64,150 70,168 84,178
+           C90,190 84,202 70,208
+           C67,209 64,208 62,206 Z"
+        fill="#D98C33"/>
+
+  <!-- 右侧焰 right side flame -->
+  <path d="M138,206
+           C160,182 164,150 150,120
+           C144,132 134,138 130,128
+           C136,150 130,168 116,178
+           C110,190 116,202 130,208
+           C133,209 136,208 138,206 Z"
+        fill="#C0603A"/>
+
+  <!-- 主焰 main flame -->
+  <path d="M100,208
+           C66,208 44,184 44,150
+           C44,122 58,100 72,80
+           C70,100 78,112 88,108
+           C82,84 90,54 112,32
+           C108,58 116,76 130,84
+           C140,92 148,110 148,132
+           C148,146 142,156 134,160
+           C140,144 136,126 124,116
+           C126,138 116,154 100,160
+           C112,168 118,182 112,196
+           C109,203 104,208 100,208 Z"
+        fill="#A82F10"/>
+
+  <!-- 内焰 inner flame -->
+  <path d="M100,190
+           C84,190 74,178 74,162
+           C74,146 84,132 96,120
+           C94,132 98,140 104,138
+           C100,124 104,108 116,98
+           C112,112 116,124 124,130
+           C130,136 134,146 134,156
+           C134,174 118,190 100,190 Z"
+        fill="#F7C948"/>
+</svg>

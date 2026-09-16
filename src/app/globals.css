@@ -21,16 +21,16 @@
    only be missing what you thought to look at, the running page
    cannot.
 
-   The palette is fixed and light on purpose: cream, green,
-   gold. Every surface in the app sets its own colors inline
+   The palette is fixed and light on purpose: cream, terracotta,
+   warm ink. Every surface in the app sets its own colors inline
    from that palette, so there is no dark variant to honor —
    the old prefers-color-scheme block only ever produced a
    black band behind a cream page, and is gone.
    ============================================================ */
 
 :root {
-  --background: #F1F4F2; /* cream — the brand's paper */
-  --foreground: #15181B; /* ink */
+  --background: #F4EADF; /* cream — the brand's paper */
+  --foreground: #2A1A18; /* ink */
 }
 
 @theme inline {
@@ -80,7 +80,7 @@ body {
   transform: translateY(1px) scale(0.985);
 }
 .press:focus-visible {
-  outline: 2px solid #8A6A14; /* gold */
+  outline: 2px solid #9A4A12; /* terracotta accent */
   outline-offset: 3px;
 }
 .press:disabled,

@@ -30,17 +30,17 @@ export default function Home() {
   // Crisp modern palette
   const C = {
     white: '#FFFFFF',
-    tint: '#F1F4F2',
-    line: '#E4E8E5',
-    green: '#1B3A2D',
-    greenDeep: '#14241B',
-    ink: '#15181B',
-    body: '#464C54',
-    gold: '#8A6A14',
-    goldBright: '#D2A54A',
-    mint: '#E4EEE9', mintText: '#0F6B3F',
-    sand: '#FBF3DE', sandText: '#8A6A14',
-    soft: '0 1px 2px rgba(20,36,27,0.04), 0 14px 34px -20px rgba(20,36,27,0.14)',
+    tint: '#F4EADF',
+    line: '#E8DCCD',
+    green: '#C0603A',
+    greenDeep: '#241713',
+    ink: '#2A1A18',
+    body: '#6B5A52',
+    gold: '#9A4A12',
+    goldBright: '#FBE4B8',
+    mint: '#F7E3D8', mintText: '#9A4A12',
+    sand: '#FCEFD9', sandText: '#9A4A12',
+    soft: '0 1px 2px rgba(42,26,24,0.04), 0 14px 34px -20px rgba(42,26,24,0.14)',
   };
 
   const problemItems = tRaw("problem.items");
@@ -72,7 +72,7 @@ export default function Home() {
           <LanguageSwitcher tone="dark" />
           <AccountLink label={t("footer.myAccount")} color={C.white} />
           <a href="/assessment" className="press px-5 py-2.5 rounded-full text-[15px] font-semibold hover:opacity-90"
-            style={{backgroundColor: C.goldBright, color: C.green}}>
+            style={{backgroundColor: C.goldBright, color: C.ink}}>
             {t("common.getStarted")}
           </a>
         </div>
@@ -86,7 +86,7 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0" style={{background: 'radial-gradient(1100px 460px at 82% -10%, rgba(210,165,74,0.16), transparent 60%), radial-gradient(900px 500px at 6% 8%, rgba(27,58,45,0.06), transparent 55%)'}} />
+        <div className="pointer-events-none absolute inset-0" style={{background: 'radial-gradient(1100px 460px at 82% -10%, rgba(228,162,60,0.16), transparent 60%), radial-gradient(900px 500px at 6% 8%, rgba(192,96,58,0.06), transparent 55%)'}} />
         <div className="relative px-8 py-24 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
           <div className="flex-1">
             <a href="/assessment" className="hero-rise inline-flex items-center gap-2 px-4 py-2 rounded-full text-[14px] font-semibold mb-7 transition-all hover:opacity-80"
@@ -94,7 +94,7 @@ export default function Home() {
               {t("hero.badge")}
             </a>
             <h1 className="hero-rise font-display text-5xl md:text-6xl leading-[1.08] mb-6" style={{color: C.green, animationDelay: '80ms'}}>
-              {t("hero.titlePre")}<span style={{color: C.gold}}>{t("hero.titleHighlight")}</span>{t("hero.titlePost")}
+              {t("hero.titlePre")}<span style={{color: C.ink}}>{t("hero.titleHighlight")}</span>{t("hero.titlePost")}
             </h1>
             <p className="hero-rise text-xl leading-relaxed mb-9" style={{color: C.body, animationDelay: '160ms'}}>
               {t("hero.subtitle")}
@@ -251,12 +251,12 @@ export default function Home() {
           <h2 className="font-display text-4xl md:text-5xl mb-5" style={{color: C.white}}>
             {t("cta.titlePre")}<span style={{color: C.goldBright}}>{t("cta.titleHighlight")}</span>
           </h2>
-          <p className="text-xl mb-11 max-w-xl mx-auto leading-relaxed" style={{color: '#B7C9BF'}}>
+          <p className="text-xl mb-11 max-w-xl mx-auto leading-relaxed" style={{color: '#D6C9BC'}}>
             {t("cta.subtitle")}
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <a href="/assessment" className="press px-10 py-4 rounded-full font-semibold text-[17px] hover:opacity-90"
-              style={{backgroundColor: C.goldBright, color: C.green}}>
+              style={{backgroundColor: C.goldBright, color: C.ink}}>
               {t("cta.startFree")}
             </a>
             <a href="#how-it-works" className="press px-10 py-4 rounded-full font-semibold text-[17px] border-2 hover:bg-white/10"
@@ -273,24 +273,24 @@ export default function Home() {
         <span className="text-xl font-bold tracking-tight" style={{color: C.white}}>
           faim<span style={{color: C.goldBright}}>go</span>
         </span>
-        <p className="text-[14px]" style={{color: '#9DB0A6'}}>{t("footer.copyright")}</p>
+        <p className="text-[14px]" style={{color: '#B3A399'}}>{t("footer.copyright")}</p>
         <div className="flex gap-6 items-center">
           {/* Privacy is a real page now. Terms was removed rather than left
               pointing at "#": a dead link on a site that collects email reads
               as a document you are not being shown, which is worse than an
               absent one. It comes back when it exists. */}
-          <Link href="/privacy" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>{t("footer.privacy")}</Link>
+          <Link href="/privacy" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#B3A399'}}>{t("footer.privacy")}</Link>
           {/* Added Aug 16 alongside /restore — a second, quieter door back to
               a plan for anyone who lands on the homepage instead of straight
               into the assessment (a bookmark, a search result, a share). The
               assessment's own start screen carries the same link for the
               more common case of clicking "Start" first. */}
-          <Link href="/restore" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>{t("footer.getPlanBack")}</Link>
+          <Link href="/restore" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#B3A399'}}>{t("footer.getPlanBack")}</Link>
           {/* Added Sep 6, same understated treatment as the link above —
               this is a private "my account" page (display name, bio, your
               own stats), not a public directory. See
               claude/faimgo-profile-scope-sep6.md. */}
-          <Link href="/account" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#9DB0A6'}}>{t("footer.myAccount")}</Link>
+          <Link href="/account" className="text-[14px] transition-opacity hover:opacity-80" style={{color: '#B3A399'}}>{t("footer.myAccount")}</Link>
           <FeedbackWidget trigger="link" kind="contact" navLabel={t("common.contact")} context="footer-contact" />
         </div>
       </footer>

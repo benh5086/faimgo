@@ -51,8 +51,8 @@ export default function Gate({ need, fid, children, fallback }) {
 
 function DefaultUpgradeCard({ need, reason }) {
   return (
-    <div className="p-5 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: "1px dashed #464C54" }}>
-      <p className="text-[15px] leading-relaxed" style={{ color: "#464C54" }}>
+    <div className="p-5 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: "1px dashed #6B5A52" }}>
+      <p className="text-[15px] leading-relaxed" style={{ color: "#6B5A52" }}>
         {reason || `This needs ${need || "something"} we can't offer right now.`}
       </p>
     </div>

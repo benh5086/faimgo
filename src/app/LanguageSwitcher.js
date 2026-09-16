@@ -34,9 +34,9 @@ export default function LanguageSwitcher({ tone = "dark" }) {
     };
   }, [open]);
 
-  const textColor = tone === "dark" ? "#FFFFFF" : "#15181B";
-  const panelBg = tone === "dark" ? "#14241B" : "#FFFFFF";
-  const panelBorder = tone === "dark" ? "rgba(255,255,255,0.14)" : "#E4E8E5";
+  const textColor = tone === "dark" ? "#FFFFFF" : "#2A1A18";
+  const panelBg = tone === "dark" ? "#241713" : "#FFFFFF";
+  const panelBorder = tone === "dark" ? "rgba(255,255,255,0.14)" : "#E8DCCD";
 
   return (
     <div ref={ref} className="relative">
@@ -65,7 +65,7 @@ export default function LanguageSwitcher({ tone = "dark" }) {
               }}
               className="w-full text-left px-4 py-2 text-[14px] font-medium transition-opacity hover:opacity-80"
               style={{
-                color: tone === "dark" ? "#FFFFFF" : "#15181B",
+                color: tone === "dark" ? "#FFFFFF" : "#2A1A18",
                 fontWeight: code === locale ? 700 : 500,
               }}
             >

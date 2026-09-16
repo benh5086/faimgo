@@ -51,7 +51,7 @@ export default function MobileNav({ C, children }) {
   return (
     <div className="md:hidden flex items-center gap-3">
       <a href="/assessment" className="press px-4 py-2 rounded-full text-[14px] font-semibold"
-        style={{ backgroundColor: C.goldBright, color: C.green }}>
+        style={{ backgroundColor: C.goldBright, color: C.ink }}>
         {t("common.getStarted")}
       </a>
 

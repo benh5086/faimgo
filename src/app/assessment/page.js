@@ -19,15 +19,15 @@ import { track } from "../../lib/track.js";
 
 /* ---------- BRAND ---------- */
 const C = {
-  cream: "#F1F4F2",   // page background (cards sit on this as white)
-  green: "#1B3A2D",
-  gold: "#8A6A14",    // readable accent on light
-  beige: "#E4E8E5",   // hairline borders
-  gray: "#464C54",    // readable body text (was light #6B7280)
-  ink: "#15181B",
-  greenSoft: "#E4EEE9",
-  yellowSoft: "#FBF3DE",
-  yellow: "#8A6A14",
+  cream: "#F4EADF",   // page background (cards sit on this as white)
+  green: "#C0603A",
+  gold: "#9A4A12",    // readable accent on light
+  beige: "#E8DCCD",   // hairline borders
+  gray: "#6B5A52",    // readable body text (was light #6B7280)
+  ink: "#2A1A18",
+  greenSoft: "#F7E3D8",
+  yellowSoft: "#FCEFD9",
+  yellow: "#9A4A12",
   redSoft: "#F9E9E5",
   red: "#9C3B2E",
 };
@@ -306,7 +306,7 @@ function Opt({ label, sub, selected, onClick, multi }) {
       style={{ borderColor: selected ? C.green : C.beige, backgroundColor: selected ? C.greenSoft : "#FFFFFF", color: C.ink, fontWeight: selected ? 600 : 400 }}>
       {multi && (
         <span aria-hidden="true" className="flex-shrink-0 w-5 h-5 mt-[3px] rounded-[6px] border-2 flex items-center justify-center text-[12px] font-bold"
-          style={{ borderColor: selected ? C.green : "#C3CCC6", backgroundColor: selected ? C.green : "#FFFFFF", color: C.cream }}>
+          style={{ borderColor: selected ? C.green : "#D3C7BC", backgroundColor: selected ? C.green : "#FFFFFF", color: C.cream }}>
           {selected ? "✓" : ""}
         </span>
       )}
@@ -724,7 +724,7 @@ export default function Assessment() {
         <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
           <Tag>Welcome back</Tag>
           <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
-            Your plan is <span style={{ color: C.gold }}>still here</span>.
+            Your plan is <span style={{ color: C.ink }}>still here</span>.
           </h1>
           <p className="text-[17px] leading-relaxed mb-2" style={{ color: C.gray }}>
             You finished this {when(plan.ts)}. Nothing was lost — pick it back up where you left it.
@@ -764,7 +764,7 @@ export default function Assessment() {
       <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `2px solid ${C.green}` }}>
         <Tag>Welcome back</Tag>
         <h1 className="font-display text-3xl md:text-4xl leading-[1.15] mb-3" style={{ color: C.green }}>
-          You were <span style={{ color: C.gold }}>partway through</span>.
+          You were <span style={{ color: C.ink }}>partway through</span>.
         </h1>
         <p className="text-[17px] leading-relaxed mb-6" style={{ color: C.gray }}>
           {answered > 0
@@ -875,7 +875,7 @@ export default function Assessment() {
   }
   function FwCard({ fw }) {
     return (
-      <ResultCard badge="Fastest first win" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={fw.name} meta={`First dollar: typically ${fw.dollar}`}>
+      <ResultCard badge="Fastest first win" badgeStyle={{ backgroundColor: C.greenSoft, color: "#9A4A12" }} title={fw.name} meta={`First dollar: typically ${fw.dollar}`}>
         <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
         <Moves moves={fw.moves} />
         {needsKit(A, fw) && fw.kit.length > 0 && <Kit items={fw.kit} />}
@@ -915,8 +915,8 @@ export default function Assessment() {
     if (!emailed) return null;
     if (emailed === "sent") {
       return (
-        <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.greenSoft, border: `1px solid #BFD8CB` }}>
-          <span className="text-[17px] leading-none mt-[2px]" style={{ color: "#0F6B3F" }}>✓</span>
+        <div className="p-4 rounded-2xl mb-5 flex items-start gap-3" style={{ backgroundColor: C.greenSoft, border: `1px solid #E3D2C2` }}>
+          <span className="text-[17px] leading-none mt-[2px]" style={{ color: "#9A4A12" }}>✓</span>
           <p className="text-[15px] leading-relaxed" style={{ color: C.ink }}>
             The whole plan is in your inbox at <b>{email}</b>{" "}— every move, not a summary. Nothing to log into. If it isn&apos;t there in a minute, check spam and mark it &quot;not spam&quot; so the next one lands.
           </p>
@@ -1019,7 +1019,7 @@ export default function Assessment() {
     const matchedFromText = chosenId && A.q1b === "other";
     if (chosenId) {
       const p = pathById(chosenId);
-      const vmap = { green: [{ backgroundColor: C.greenSoft, color: "#0F6B3F" }, "You can start this now"], yellow: [{ backgroundColor: C.yellowSoft, color: C.yellow }, "You can get there — here's the real ramp"], red: [{ backgroundColor: C.redSoft, color: C.red }, "Here's the truth about this path for you today"] };
+      const vmap = { green: [{ backgroundColor: C.greenSoft, color: "#9A4A12" }, "You can start this now"], yellow: [{ backgroundColor: C.yellowSoft, color: C.yellow }, "You can get there — here's the real ramp"], red: [{ backgroundColor: C.redSoft, color: C.red }, "Here's the truth about this path for you today"] };
       cards.push(
         <ResultCard key="chosen" badge={vmap[rf][1]} badgeStyle={vmap[rf][0]} title={`Your Chosen Path: ${p.name}`} meta={`First dollar: typically ${p.dollar} · Income ceiling: ${CEILING_LABEL[p.ceiling]}`}>
           {rf === "red" && (
@@ -1048,7 +1048,7 @@ export default function Assessment() {
       const fw = fastestWin(A, p.id);
       if (fw && rf !== "green") {
         cards.push(
-          <ResultCard key="fw" badge="Pays while you build" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={`Your Fastest First Win: ${fw.name}`} meta={`First dollar: typically ${fw.dollar}`}>
+          <ResultCard key="fw" badge="Pays while you build" badgeStyle={{ backgroundColor: C.greenSoft, color: "#9A4A12" }} title={`Your Fastest First Win: ${fw.name}`} meta={`First dollar: typically ${fw.dollar}`}>
             <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>{whyFits(A, fw)}</p>
             <Moves moves={fw.moves} />
           </ResultCard>,
@@ -1067,7 +1067,7 @@ export default function Assessment() {
       const fw = fastestWin(A);
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(
-        <ResultCard key="doubt" badge="You're in good hands" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title="You don't need the answer yet — that's our job." meta="Matched from everything you told us">
+        <ResultCard key="doubt" badge="You're in good hands" badgeStyle={{ backgroundColor: C.greenSoft, color: "#9A4A12" }} title="You don't need the answer yet — that's our job." meta="Matched from everything you told us">
           <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
             {otherTxt ? <>You wrote: &quot;{otherTxt}&quot;. </> : null}Most people start exactly here — real skills, no target yet. That&apos;s not a gap, it&apos;s the normal starting point, and finding the target is what this assessment is for. Based on your time, your inventory, and how you like to work, here are the two paths that fit you best. Pick one, start small, and build up from there — we&apos;ll walk you through finding it, aiming it at real earnings, and growing it.
           </p>
@@ -1085,7 +1085,7 @@ export default function Assessment() {
       const fw = fastestWin(A);
       const lt = longTerm(A, fw ? fw.id : undefined);
       cards.push(
-        <ResultCard key="other" badge="Your own path — we're on it with you" badgeStyle={{ backgroundColor: C.greenSoft, color: "#0F6B3F" }} title={`Your idea: "${idea}"`} meta="Custom path — full validation treatment">
+        <ResultCard key="other" badge="Your own path — we're on it with you" badgeStyle={{ backgroundColor: C.greenSoft, color: "#9A4A12" }} title={`Your idea: "${idea}"`} meta="Custom path — full validation treatment">
           <p className="text-[16px] leading-relaxed" style={{ color: C.ink }}>
             You&apos;re carving your own path, and that deserves a real plan, not a canned one. Here&apos;s how we&apos;d validate any idea worth your time: (1) find 3 people already doing it and study how they actually get paid, (2) define the smallest version you could sell in 30 days, (3) pitch it to 5 real people before building anything. Run those three and you&apos;ll know more than months of thinking could tell you. And below are the two proven paths your answers scored highest — either one can fund the idea while you validate it.
           </p>
@@ -1156,7 +1156,7 @@ export default function Assessment() {
     <main className="min-h-screen font-sans" style={{ backgroundColor: C.cream, color: C.ink }}>
       <nav style={{ backgroundColor: C.green }} className="px-8 py-4 flex items-center justify-between">
         <Link href="/" className="text-2xl font-bold tracking-tight" style={{ color: C.cream }}>
-          faim<span style={{ color: C.gold }}>go</span>
+          faim<span style={{ color: "#FBE4B8" }}>go</span>
         </Link>
         <div className="flex items-center gap-5">
           <Link href="/" className="text-sm font-medium" style={{ color: C.cream }}>← Back to home</Link>
@@ -1199,7 +1199,7 @@ export default function Assessment() {
           <div className="p-8 rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${C.beige}` }}>
             <Tag>Faimgo Assessment</Tag>
             <h1 className="font-display text-4xl md:text-5xl leading-[1.1] mb-3" style={{ color: C.green }}>
-              Find your <span style={{ color: C.gold }}>two paths</span>.
+              Find your <span style={{ color: C.ink }}>two paths</span>.
             </h1>
             <p className="text-[17px] leading-relaxed mb-6" style={{ color: C.gray }}>
               About 2 minutes, and every answer counts toward your plan. You&apos;ll get your <b style={{ color: C.ink }}>fastest first win</b>{" "}and, if you already have a dream in mind, an <b style={{ color: C.ink }}>honest reality check</b>{" "}on it. No fluff, no &quot;just believe in yourself.&quot;
