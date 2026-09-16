@@ -933,7 +933,7 @@ export default function Assessment() {
             </p>
             <button onClick={retrySend} disabled={retrying}
               className="mt-3 px-5 py-2.5 press rounded-full font-semibold text-[15px] hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: C.gold, color: C.green }}>
+              style={{ backgroundColor: C.gold, color: C.cream }}>
               {retrying ? "Sending…" : "Email me the updated plan"}
             </button>
           </div>
@@ -957,7 +957,7 @@ export default function Assessment() {
             </p>
             <button onClick={retrySend} disabled={retrying}
               className="mt-3 px-5 py-2.5 press rounded-full font-semibold text-[15px] hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: C.gold, color: C.green }}>
+              style={{ backgroundColor: C.gold, color: C.cream }}>
               {retrying ? "Trying…" : "Try again"}
             </button>
           </div>
@@ -973,7 +973,7 @@ export default function Assessment() {
           </p>
           <button onClick={retrySend} disabled={retrying}
             className="mt-3 px-5 py-2.5 press rounded-full font-semibold text-[15px] hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: C.gold, color: C.green }}>
+            style={{ backgroundColor: C.gold, color: C.cream }}>
             {retrying ? "Trying…" : "Try sending again"}
           </button>
         </div>
@@ -1283,7 +1283,7 @@ export default function Assessment() {
               <button onClick={back} className="px-4 py-2.5 text-[15px] font-medium" style={{ color: C.gray }}>Back</button>
               <button onClick={submitGate} disabled={submitting}
                 className="px-8 py-3 press rounded-full font-semibold text-base hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: C.gold, color: C.green }}>
+                style={{ backgroundColor: C.gold, color: C.cream }}>
                 {submitting ? "One moment…" : "Show me my plan"}
               </button>
             </div>
